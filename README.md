@@ -40,6 +40,21 @@ python journal.py stats         # View your performance
 python journal.py compare       # Compare vs historical
 ```
 
+### Run Dashboard A (Edge Research)
+
+```bash
+# Install dashboard dependencies
+pip install -r requirements.txt
+
+# Launch Streamlit dashboard (reads gold.db and v_orb_trades)
+streamlit run app_edge_research.py
+
+# Quick DB connectivity test (PowerShell/cmd safe)
+python -c "import duckdb; con=duckdb.connect('gold.db'); print(con.execute('SELECT COUNT(*) FROM v_orb_trades').fetchone())"
+```
+
+Use the left sidebar to filter by date, ORB time, break direction, outcomes (WIN/LOSS/NO_TRADE), session type codes, and optional ATR/Asia range bounds. Charts and tables update instantly; download the drilldown table for CSV analysis.
+
 ---
 
 ## System Overview

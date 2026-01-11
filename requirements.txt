@@ -24,12 +24,12 @@ python-dateutil==2.9.0.post0
 fastapi==0.128.0
 uvicorn==0.40.0
 
+# Dashboard A (Streamlit)
+streamlit==1.40.1
+matplotlib==3.9.2
+
 # Optional: Data compression
 zstandard==0.25.0
 
 # Optional: Better SSL handling on Windows
 pip-system-certs==5.3
-
-# Optional: Visualization (for charts and graphs)
-# Uncomment to install:
-# matplotlib>=3.7.0

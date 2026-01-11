@@ -1,4 +1,5 @@
 import duckdb
+import argparse
 from datetime import datetime, date, timedelta
 
 DB_PATH = "gold.db"
@@ -8,7 +9,7 @@ TICK_SIZE = 0.1
 
 # RULES (locked)
 MAX_STOP_TICKS = 100
-RR = 2.0
+RR_DEFAULT = 2.0
 ASIA_TP_CAP_TICKS = 150
 
 # ORB open times (local Brisbane time)
@@ -46,6 +47,7 @@ def ensure_schema(con: duckdb.DuckDBPyConnection):
             date_local DATE NOT NULL,
             orb VARCHAR NOT NULL,
             close_confirmations INTEGER NOT NULL,
+            rr DOUBLE NOT NULL,
 
             direction VARCHAR,
             entry_ts TIMESTAMP,
@@ -57,12 +59,18 @@ def ensure_schema(con: duckdb.DuckDBPyConnection):
             outcome VARCHAR,
             r_multiple DOUBLE,
             entry_delay_min INTEGER,
+            mae_r DOUBLE,
+            mfe_r DOUBLE,
 
             PRIMARY KEY (date_local, orb, close_confirmations)
         )
     """)
+    # Backward-compatible column adds (non-destructive)
+    con.execute("ALTER TABLE orb_trades_1m_exec ADD COLUMN IF NOT EXISTS rr DOUBLE;")
+    con.execute("ALTER TABLE orb_trades_1m_exec ADD COLUMN IF NOT EXISTS mae_r DOUBLE;")
+    con.execute("ALTER TABLE orb_trades_1m_exec ADD COLUMN IF NOT EXISTS mfe_r DOUBLE;")
 
-def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
+def run_backtest(close_confirmations: int = 1, rr: float = RR_DEFAULT, commit_every_days: int = 10):
     con = duckdb.connect(DB_PATH)
 
     ensure_schema(con)
@@ -82,7 +90,7 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
     skipped_big_stop = 0
     scanned_orbs = 0
 
-    print(f"\nRUN: close_confirmations={close_confirmations} | max_stop={MAX_STOP_TICKS} | RR={RR} | asia_tp_cap={ASIA_TP_CAP_TICKS}")
+    print(f"\nRUN: close_confirmations={close_confirmations} | max_stop={MAX_STOP_TICKS} | RR={rr} | asia_tp_cap={ASIA_TP_CAP_TICKS}")
     print(f"Days: {total_days} | Orbs per day: {len(ORB_TIMES)} | Total orb scans: {total_days * len(ORB_TIMES)}\n")
 
     for idx, (d,) in enumerate(days, start=1):
@@ -120,7 +128,7 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
             bars = con.execute("""
                 SELECT
                   (ts_utc AT TIME ZONE 'Australia/Brisbane') AS ts_local,
-                  close
+                  high, low, close
                 FROM bars_1m
                 WHERE symbol = ?
                   AND (ts_utc AT TIME ZONE 'Australia/Brisbane') > CAST(? AS TIMESTAMP)
@@ -139,7 +147,7 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
             entry_ts = None
             entry_idx = None
 
-            for i, (ts_local, close) in enumerate(bars):
+            for i, (ts_local, high, low, close) in enumerate(bars):
                 if close > orb_high:
                     if direction != "UP":
                         direction = "UP"
@@ -174,7 +182,7 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
 
             # Target = RR * risk
             risk = abs(entry_price - stop_price)
-            target_price = entry_price + RR * risk if direction == "UP" else entry_price - RR * risk
+            target_price = entry_price + rr * risk if direction == "UP" else entry_price - rr * risk
 
             # Asia TP cap in ticks
             if is_asia(orb):
@@ -184,42 +192,69 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
                 else:
                     target_price = max(target_price, entry_price - cap)
 
-            # Outcome scan (close-based, consistent with your current approach)
+            # Outcome scan (HIGH/LOW-based, conservative: if both hit same bar => LOSS)
             outcome = "NO_TRADE"
             r_mult = 0.0
+            max_fav_ticks = 0.0
+            max_adv_ticks = 0.0
 
-            for _, close in bars[entry_idx + 1:]:
+            for _, high, low, close in bars[entry_idx + 1:]:
+                high = float(high)
+                low = float(low)
+
                 if direction == "UP":
-                    if close >= target_price:
-                        outcome = "WIN"
-                        r_mult = RR
+                    max_fav_ticks = max(max_fav_ticks, (high - entry_price) / TICK_SIZE)
+                    max_adv_ticks = max(max_adv_ticks, (entry_price - low) / TICK_SIZE)
+
+                    hit_stop = low <= stop_price
+                    hit_target = high >= target_price
+                    if hit_stop and hit_target:
+                        outcome = "LOSS"
+                        r_mult = -1.0
                         break
-                    if close <= stop_price:
+                    if hit_target:
+                        outcome = "WIN"
+                        r_mult = float(rr)
+                        break
+                    if hit_stop:
                         outcome = "LOSS"
                         r_mult = -1.0
                         break
                 else:
-                    if close <= target_price:
-                        outcome = "WIN"
-                        r_mult = RR
+                    max_fav_ticks = max(max_fav_ticks, (entry_price - low) / TICK_SIZE)
+                    max_adv_ticks = max(max_adv_ticks, (high - entry_price) / TICK_SIZE)
+
+                    hit_stop = high >= stop_price
+                    hit_target = low <= target_price
+                    if hit_stop and hit_target:
+                        outcome = "LOSS"
+                        r_mult = -1.0
                         break
-                    if close >= stop_price:
+                    if hit_target:
+                        outcome = "WIN"
+                        r_mult = float(rr)
+                        break
+                    if hit_stop:
                         outcome = "LOSS"
                         r_mult = -1.0
                         break
 
             entry_delay_min = entry_idx + 1  # minutes after ORB end until entry trigger
+            mae_r = (max_adv_ticks / stop_ticks) if stop_ticks and stop_ticks > 0 else None
+            mfe_r = (max_fav_ticks / stop_ticks) if stop_ticks and stop_ticks > 0 else None
 
             # Idempotent write: PRIMARY KEY + INSERT OR REPLACE prevents duplicates
             con.execute("""
                 INSERT OR REPLACE INTO orb_trades_1m_exec
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, [
                 d, orb, close_confirmations,
+                rr,
                 direction, entry_ts,
                 entry_price, stop_price, target_price,
                 stop_ticks,
-                outcome, r_mult, entry_delay_min
+                outcome, r_mult, entry_delay_min,
+                mae_r, mfe_r
             ])
 
             inserted += 1
@@ -240,4 +275,16 @@ def run_backtest(close_confirmations: int = 1, commit_every_days: int = 10):
 
 
 if __name__ == "__main__":
-    run_backtest(close_confirmations=1, commit_every_days=10)
+    p = argparse.ArgumentParser()
+    p.add_argument("--confirm", type=int, default=1)
+    p.add_argument("--rr", type=float, default=RR_DEFAULT)
+    p.add_argument("--rr-grid", type=str, default="")
+    p.add_argument("--commit-every", type=int, default=10)
+    args = p.parse_args()
+
+    if args.rr_grid.strip():
+        grid = [float(x.strip()) for x in args.rr_grid.split(",") if x.strip()]
+        for rr in grid:
+            run_backtest(close_confirmations=args.confirm, rr=rr, commit_every_days=args.commit_every)
+    else:
+        run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_every_days=args.commit_every)
