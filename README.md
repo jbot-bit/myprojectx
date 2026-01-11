@@ -54,6 +54,13 @@ python journal.py compare       # Compare vs historical
 6. **Visualizations**: Charts, equity curves, heatmaps
 7. **Alerts**: Daily high-probability setup recommendations
 
+### Zero-Lookahead (Current Objective)
+- **V2 is the trusted dataset**: `build_daily_features_v2.py` builds zero-lookahead features; `analyze_orb_v2.py` and `realtime_signals.py` consume them.
+- **Automation**: `daily_update.py` → `backfill_databento_continuous.py` now builds **both** `daily_features` (legacy) and `daily_features_v2` (preferred). Always favor V2 outputs for decisions.
+- **Legacy data caution**: V1 (`daily_features`, session types) is retained for comparison only and contains lookahead bias. Do not base live rules on V1 session labels.
+- **Execution backtest**: `backtest_orb_exec_1m.py` uses `daily_features_v2` levels and 1m closes for realistic entries/exits.
+- **Deterministic session codes**: `daily_features_v2` stores `asia_type_code`, `london_type_code`, and `pre_ny_type_code` (sweep/expansion/consolidation) computed strictly from each session’s own highs/lows and ATR — no subjective trend or lookahead.
+
 ### Data Coverage
 
 - **Date Range**: 2024-01-02 to 2026-01-10

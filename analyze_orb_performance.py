@@ -13,6 +13,84 @@ from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
 
+def create_features_view(con: duckdb.DuckDBPyConnection) -> str:
+    """Prefer daily_features_v2 and expose a compatibility view."""
+    has_v2 = con.execute("""
+        SELECT COUNT(*) > 0
+        FROM information_schema.tables
+        WHERE lower(table_name) = 'daily_features_v2'
+    """).fetchone()[0]
+
+    if has_v2:
+        con.execute("""
+            CREATE OR REPLACE TEMP VIEW daily_features_compat AS
+            SELECT
+                date_local,
+                instrument,
+                asia_high, asia_low, asia_range,
+                london_high, london_low, london_range,
+                ny_high, ny_low, ny_range,
+                atr_20,
+                COALESCE(
+                    CASE asia_type_code
+                        WHEN 'A1_TIGHT' THEN 'TIGHT'
+                        WHEN 'A2_EXPANDED' THEN 'EXPANDED'
+                        WHEN 'A0_NORMAL' THEN 'NORMAL'
+                        ELSE NULL
+                    END,
+                    CASE
+                        WHEN asia_range IS NULL OR atr_20 IS NULL OR atr_20 = 0 THEN 'NO_DATA'
+                        WHEN asia_range / atr_20 < 0.3 THEN 'TIGHT'
+                        WHEN asia_range / atr_20 > 0.8 THEN 'EXPANDED'
+                        ELSE 'NORMAL'
+                    END
+                ) AS asia_type,
+                COALESCE(
+                    CASE london_type_code
+                        WHEN 'L1_SWEEP_HIGH' THEN 'SWEEP_HIGH'
+                        WHEN 'L2_SWEEP_LOW' THEN 'SWEEP_LOW'
+                        WHEN 'L3_EXPANSION' THEN 'EXPANSION'
+                        WHEN 'L4_CONSOLIDATION' THEN 'CONSOLIDATION'
+                        ELSE NULL
+                    END,
+                    CASE
+                        WHEN london_high IS NULL OR london_low IS NULL OR asia_high IS NULL OR asia_low IS NULL THEN 'NO_DATA'
+                        WHEN london_high > asia_high AND london_low < asia_low THEN 'EXPANSION'
+                        WHEN london_high > asia_high THEN 'SWEEP_HIGH'
+                        WHEN london_low < asia_low THEN 'SWEEP_LOW'
+                        ELSE 'CONSOLIDATION'
+                    END
+                ) AS london_type,
+                COALESCE(
+                    CASE pre_ny_type_code
+                        WHEN 'N1_SWEEP_HIGH' THEN 'SWEEP_HIGH'
+                        WHEN 'N2_SWEEP_LOW' THEN 'SWEEP_LOW'
+                        WHEN 'N3_CONSOLIDATION' THEN 'CONSOLIDATION'
+                        WHEN 'N4_EXPANSION' THEN 'EXPANSION'
+                        WHEN 'N0_NORMAL' THEN 'NORMAL'
+                        ELSE NULL
+                    END,
+                    CASE
+                        WHEN ny_high IS NULL OR ny_low IS NULL OR london_high IS NULL OR london_low IS NULL THEN 'NO_DATA'
+                        WHEN ny_high > london_high AND ny_low < london_low THEN 'EXPANSION'
+                        WHEN ny_high > london_high THEN 'SWEEP_HIGH'
+                        WHEN ny_low < london_low THEN 'SWEEP_LOW'
+                        ELSE 'CONSOLIDATION'
+                    END
+                ) AS ny_type,
+                orb_0900_break_dir, orb_0900_outcome, orb_0900_r_multiple,
+                orb_1000_break_dir, orb_1000_outcome, orb_1000_r_multiple,
+                orb_1100_break_dir, orb_1100_outcome, orb_1100_r_multiple,
+                orb_1800_break_dir, orb_1800_outcome, orb_1800_r_multiple,
+                orb_2300_break_dir, orb_2300_outcome, orb_2300_r_multiple,
+                orb_0030_break_dir, orb_0030_outcome, orb_0030_r_multiple
+            FROM daily_features_v2
+        """)
+        return "daily_features_compat"
+
+    return "daily_features"
+
+
 @dataclass
 class ORBStats:
     """Statistics for an ORB setup"""
@@ -54,7 +132,7 @@ def calculate_stats(rows: List[Tuple]) -> ORBStats:
     return ORBStats(total_trades, wins, losses, no_trades, win_rate, total_r, avg_r)
 
 
-def analyze_orb_by_time(con: duckdb.DuckDBPyConnection):
+def analyze_orb_by_time(con: duckdb.DuckDBPyConnection, table_name: str):
     """Analyze each ORB time slot overall performance"""
     print("\n" + "="*80)
     print("ORB PERFORMANCE BY TIME")
@@ -73,7 +151,7 @@ def analyze_orb_by_time(con: duckdb.DuckDBPyConnection):
     for orb in orb_times:
         rows = con.execute(f"""
             SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-            FROM daily_features
+            FROM {table_name}
             WHERE orb_{orb}_outcome IS NOT NULL
         """).fetchall()
 
@@ -82,7 +160,7 @@ def analyze_orb_by_time(con: duckdb.DuckDBPyConnection):
         print(f"  {stats}")
 
 
-def analyze_orb_by_direction(con: duckdb.DuckDBPyConnection):
+def analyze_orb_by_direction(con: duckdb.DuckDBPyConnection, table_name: str):
     """Analyze ORB performance by break direction (UP/DOWN)"""
     print("\n" + "="*80)
     print("ORB PERFORMANCE BY BREAK DIRECTION")
@@ -104,7 +182,7 @@ def analyze_orb_by_direction(con: duckdb.DuckDBPyConnection):
         # UP breaks
         rows_up = con.execute(f"""
             SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-            FROM daily_features
+            FROM {table_name}
             WHERE orb_{orb}_break_dir = 'UP'
         """).fetchall()
 
@@ -114,7 +192,7 @@ def analyze_orb_by_direction(con: duckdb.DuckDBPyConnection):
         # DOWN breaks
         rows_down = con.execute(f"""
             SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-            FROM daily_features
+            FROM {table_name}
             WHERE orb_{orb}_break_dir = 'DOWN'
         """).fetchall()
 
@@ -122,7 +200,7 @@ def analyze_orb_by_direction(con: duckdb.DuckDBPyConnection):
         print(f"  DOWN: {stats_down}")
 
 
-def analyze_orb_by_asia_type(con: duckdb.DuckDBPyConnection):
+def analyze_orb_by_asia_type(con: duckdb.DuckDBPyConnection, table_name: str):
     """Analyze ORB performance by Asia session type"""
     print("\n" + "="*80)
     print("ORB PERFORMANCE BY ASIA TYPE")
@@ -136,7 +214,7 @@ def analyze_orb_by_asia_type(con: duckdb.DuckDBPyConnection):
         for orb in orb_times:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE asia_type = ?
                   AND orb_{orb}_outcome IS NOT NULL
             """, [asia_type]).fetchall()
@@ -146,7 +224,7 @@ def analyze_orb_by_asia_type(con: duckdb.DuckDBPyConnection):
                 print(f"  {orb}: {stats}")
 
 
-def analyze_orb_by_london_type(con: duckdb.DuckDBPyConnection):
+def analyze_orb_by_london_type(con: duckdb.DuckDBPyConnection, table_name: str):
     """Analyze ORB performance by London session type"""
     print("\n" + "="*80)
     print("ORB PERFORMANCE BY LONDON TYPE")
@@ -160,7 +238,7 @@ def analyze_orb_by_london_type(con: duckdb.DuckDBPyConnection):
         for orb in orb_times:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE london_type = ?
                   AND orb_{orb}_outcome IS NOT NULL
             """, [london_type]).fetchall()
@@ -170,7 +248,7 @@ def analyze_orb_by_london_type(con: duckdb.DuckDBPyConnection):
                 print(f"  {orb}: {stats}")
 
 
-def analyze_orb_by_ny_type(con: duckdb.DuckDBPyConnection):
+def analyze_orb_by_ny_type(con: duckdb.DuckDBPyConnection, table_name: str):
     """Analyze ORB performance by NY session type"""
     print("\n" + "="*80)
     print("ORB PERFORMANCE BY NY TYPE")
@@ -184,7 +262,7 @@ def analyze_orb_by_ny_type(con: duckdb.DuckDBPyConnection):
         for orb in orb_times:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE ny_type = ?
                   AND orb_{orb}_outcome IS NOT NULL
             """, [ny_type]).fetchall()
@@ -194,7 +272,7 @@ def analyze_orb_by_ny_type(con: duckdb.DuckDBPyConnection):
                 print(f"  {orb}: {stats}")
 
 
-def analyze_best_setups(con: duckdb.DuckDBPyConnection):
+def analyze_best_setups(con: duckdb.DuckDBPyConnection, table_name: str):
     """Find the best performing setups (combinations with >60% win rate and >5 trades)"""
     print("\n" + "="*80)
     print("BEST SETUPS (Win Rate > 60%, Min 5 Trades)")
@@ -217,7 +295,7 @@ def analyze_best_setups(con: duckdb.DuckDBPyConnection):
         for direction in ["UP", "DOWN"]:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE orb_{orb}_break_dir = ?
                   AND orb_{orb}_outcome IN ('WIN', 'LOSS')
             """, [direction]).fetchall()
@@ -231,7 +309,7 @@ def analyze_best_setups(con: duckdb.DuckDBPyConnection):
         for asia_type in ["TIGHT", "NORMAL", "EXPANDED"]:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE asia_type = ?
                   AND orb_{orb}_outcome IN ('WIN', 'LOSS')
             """, [asia_type]).fetchall()
@@ -251,7 +329,7 @@ def analyze_best_setups(con: duckdb.DuckDBPyConnection):
         print("\nNo setups found meeting criteria (try lowering thresholds)")
 
 
-def analyze_worst_setups(con: duckdb.DuckDBPyConnection):
+def analyze_worst_setups(con: duckdb.DuckDBPyConnection, table_name: str):
     """Find the worst performing setups (combinations with <40% win rate and >5 trades)"""
     print("\n" + "="*80)
     print("WORST SETUPS (Win Rate < 40%, Min 5 Trades) - AVOID THESE")
@@ -274,7 +352,7 @@ def analyze_worst_setups(con: duckdb.DuckDBPyConnection):
         for direction in ["UP", "DOWN"]:
             rows = con.execute(f"""
                 SELECT orb_{orb}_outcome, orb_{orb}_r_multiple
-                FROM daily_features
+                FROM {table_name}
                 WHERE orb_{orb}_break_dir = ?
                   AND orb_{orb}_outcome IN ('WIN', 'LOSS')
             """, [direction]).fetchall()
@@ -298,8 +376,9 @@ def main():
     con = duckdb.connect("gold.db")
 
     try:
+        table_name = create_features_view(con)
         # Check data availability
-        count = con.execute("SELECT COUNT(*) FROM daily_features").fetchone()[0]
+        count = con.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0]
         print(f"\nAnalyzing {count} days of data...")
 
         if count == 0:
@@ -307,13 +386,13 @@ def main():
             return
 
         # Run all analyses
-        analyze_orb_by_time(con)
-        analyze_orb_by_direction(con)
-        analyze_orb_by_asia_type(con)
-        analyze_orb_by_london_type(con)
-        analyze_orb_by_ny_type(con)
-        analyze_best_setups(con)
-        analyze_worst_setups(con)
+        analyze_orb_by_time(con, table_name)
+        analyze_orb_by_direction(con, table_name)
+        analyze_orb_by_asia_type(con, table_name)
+        analyze_orb_by_london_type(con, table_name)
+        analyze_orb_by_ny_type(con, table_name)
+        analyze_best_setups(con, table_name)
+        analyze_worst_setups(con, table_name)
 
         print("\n" + "="*80)
         print("ANALYSIS COMPLETE")

@@ -111,3 +111,123 @@ CREATE TABLE IF NOT EXISTS daily_features (
 
   PRIMARY KEY (date_local, instrument)
 );
+
+-- Zero-lookahead features (V2)
+CREATE TABLE IF NOT EXISTS daily_features_v2 (
+  date_local DATE NOT NULL,
+  instrument VARCHAR NOT NULL,
+
+  pre_asia_high DOUBLE,
+  pre_asia_low DOUBLE,
+  pre_asia_range DOUBLE,
+  pre_london_high DOUBLE,
+  pre_london_low DOUBLE,
+  pre_london_range DOUBLE,
+  pre_ny_high DOUBLE,
+  pre_ny_low DOUBLE,
+  pre_ny_range DOUBLE,
+
+  asia_high DOUBLE,
+  asia_low DOUBLE,
+  asia_range DOUBLE,
+  london_high DOUBLE,
+  london_low DOUBLE,
+  london_range DOUBLE,
+  ny_high DOUBLE,
+  ny_low DOUBLE,
+  ny_range DOUBLE,
+  asia_type_code VARCHAR,
+  london_type_code VARCHAR,
+  pre_ny_type_code VARCHAR,
+
+  orb_0900_high DOUBLE,
+  orb_0900_low DOUBLE,
+  orb_0900_size DOUBLE,
+  orb_0900_break_dir VARCHAR,
+  orb_0900_outcome VARCHAR,
+  orb_0900_r_multiple DOUBLE,
+
+  orb_1000_high DOUBLE,
+  orb_1000_low DOUBLE,
+  orb_1000_size DOUBLE,
+  orb_1000_break_dir VARCHAR,
+  orb_1000_outcome VARCHAR,
+  orb_1000_r_multiple DOUBLE,
+
+  orb_1100_high DOUBLE,
+  orb_1100_low DOUBLE,
+  orb_1100_size DOUBLE,
+  orb_1100_break_dir VARCHAR,
+  orb_1100_outcome VARCHAR,
+  orb_1100_r_multiple DOUBLE,
+
+  orb_1800_high DOUBLE,
+  orb_1800_low DOUBLE,
+  orb_1800_size DOUBLE,
+  orb_1800_break_dir VARCHAR,
+  orb_1800_outcome VARCHAR,
+  orb_1800_r_multiple DOUBLE,
+
+  orb_2300_high DOUBLE,
+  orb_2300_low DOUBLE,
+  orb_2300_size DOUBLE,
+  orb_2300_break_dir VARCHAR,
+  orb_2300_outcome VARCHAR,
+  orb_2300_r_multiple DOUBLE,
+
+  orb_0030_high DOUBLE,
+  orb_0030_low DOUBLE,
+  orb_0030_size DOUBLE,
+  orb_0030_break_dir VARCHAR,
+  orb_0030_outcome VARCHAR,
+  orb_0030_r_multiple DOUBLE,
+
+  rsi_at_0030 DOUBLE,
+  atr_20 DOUBLE,
+
+  PRIMARY KEY (date_local, instrument)
+);
+
+-- 1m execution backtest outputs
+CREATE TABLE IF NOT EXISTS orb_trades_1m_exec (
+  date_local DATE NOT NULL,
+  orb VARCHAR NOT NULL,
+  close_confirmations INTEGER NOT NULL,
+
+  direction VARCHAR,
+  entry_ts TIMESTAMP,
+  entry_price DOUBLE,
+  stop_price DOUBLE,
+  target_price DOUBLE,
+  stop_ticks DOUBLE,
+
+  outcome VARCHAR,
+  r_multiple DOUBLE,
+  entry_delay_min INTEGER,
+
+  PRIMARY KEY (date_local, orb, close_confirmations)
+);
+
+-- Manual/variant execution logs
+CREATE TABLE IF NOT EXISTS orb_exec_results (
+  date_local DATE NOT NULL,
+  instrument VARCHAR NOT NULL,
+  orb_time VARCHAR NOT NULL,        -- '0900','1000','1100','1800','2300','0030'
+  variant VARCHAR NOT NULL,         -- e.g. '1m_close_1', '1m_close_2', '1m_close_3'
+  dir VARCHAR,                      -- 'UP'/'DOWN' (NULL if no trade)
+
+  entry_ts TIMESTAMP WITH TIME ZONE,
+  entry_price DOUBLE,
+  stop_price DOUBLE,
+  target_price DOUBLE,
+
+  risk_ticks DOUBLE,
+  target_ticks DOUBLE,
+
+  outcome VARCHAR,                  -- 'WIN','LOSS','NO_TRADE','SKIP'
+  r_multiple DOUBLE,
+
+  notes VARCHAR,
+
+  PRIMARY KEY (date_local, instrument, orb_time, variant, dir)
+);

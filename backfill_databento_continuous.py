@@ -275,17 +275,27 @@ def main():
     finally:
         con.close()
 
-    # build daily_features after (will not crash if ORB missing if you used my updated builder)
+    # build daily_features (V1) and daily_features_v2 for parity
     for d in reversed(list(daterange_inclusive(start_day, end_day))):
-        cmd = [sys.executable, "build_daily_features.py", d.isoformat()]
-        r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode != 0:
+        cmd_v1 = [sys.executable, "build_daily_features.py", d.isoformat()]
+        r1 = subprocess.run(cmd_v1, capture_output=True, text=True)
+        if r1.returncode != 0:
             print(f"FAIL daily_features {d}:")
-            print(r.stdout)
-            print(r.stderr)
-            sys.exit(r.returncode)
+            print(r1.stdout)
+            print(r1.stderr)
+            sys.exit(r1.returncode)
         else:
             print(f"OK: daily_features built for {d}")
+
+        cmd_v2 = [sys.executable, "build_daily_features_v2.py", d.isoformat()]
+        r2 = subprocess.run(cmd_v2, capture_output=True, text=True)
+        if r2.returncode != 0:
+            print(f"FAIL daily_features_v2 {d}:")
+            print(r2.stdout)
+            print(r2.stderr)
+            sys.exit(r2.returncode)
+        else:
+            print(f"OK: daily_features_v2 built for {d}")
 
     print("DONE")
 

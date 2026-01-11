@@ -47,6 +47,88 @@ class DailyAlertSystem:
 
     def __init__(self, db_path: str = "gold.db"):
         self.con = duckdb.connect(db_path, read_only=True)
+        self.table_name = self._init_features_view()
+
+    def _init_features_view(self) -> str:
+        """
+        Prefer daily_features_v2 if present; create a compatibility view
+        that exposes legacy columns (session types, orb fields) so downstream
+        logic stays unchanged.
+        """
+        has_v2 = self.con.execute("""
+            SELECT COUNT(*) > 0
+            FROM information_schema.tables
+            WHERE lower(table_name) = 'daily_features_v2'
+        """).fetchone()[0]
+
+        if has_v2:
+            self.con.execute("""
+                CREATE OR REPLACE TEMP VIEW daily_features_compat AS
+                SELECT
+                    date_local,
+                    instrument,
+                    asia_high, asia_low, asia_range,
+                    london_high, london_low, london_range,
+                    ny_high, ny_low, ny_range,
+                    atr_20,
+                    COALESCE(
+                        CASE asia_type_code
+                            WHEN 'A1_TIGHT' THEN 'TIGHT'
+                            WHEN 'A2_EXPANDED' THEN 'EXPANDED'
+                            WHEN 'A0_NORMAL' THEN 'NORMAL'
+                            ELSE NULL
+                        END,
+                        CASE
+                            WHEN asia_range IS NULL OR atr_20 IS NULL OR atr_20 = 0 THEN 'NO_DATA'
+                            WHEN asia_range / atr_20 < 0.3 THEN 'TIGHT'
+                            WHEN asia_range / atr_20 > 0.8 THEN 'EXPANDED'
+                            ELSE 'NORMAL'
+                        END
+                    ) AS asia_type,
+                    COALESCE(
+                        CASE london_type_code
+                            WHEN 'L1_SWEEP_HIGH' THEN 'SWEEP_HIGH'
+                            WHEN 'L2_SWEEP_LOW' THEN 'SWEEP_LOW'
+                            WHEN 'L3_EXPANSION' THEN 'EXPANSION'
+                            WHEN 'L4_CONSOLIDATION' THEN 'CONSOLIDATION'
+                            ELSE NULL
+                        END,
+                        CASE
+                            WHEN london_high IS NULL OR london_low IS NULL OR asia_high IS NULL OR asia_low IS NULL THEN 'NO_DATA'
+                            WHEN london_high > asia_high AND london_low < asia_low THEN 'EXPANSION'
+                            WHEN london_high > asia_high THEN 'SWEEP_HIGH'
+                            WHEN london_low < asia_low THEN 'SWEEP_LOW'
+                            ELSE 'CONSOLIDATION'
+                        END
+                    ) AS london_type,
+                    COALESCE(
+                        CASE pre_ny_type_code
+                            WHEN 'N1_SWEEP_HIGH' THEN 'SWEEP_HIGH'
+                            WHEN 'N2_SWEEP_LOW' THEN 'SWEEP_LOW'
+                            WHEN 'N3_CONSOLIDATION' THEN 'CONSOLIDATION'
+                            WHEN 'N4_EXPANSION' THEN 'EXPANSION'
+                            WHEN 'N0_NORMAL' THEN 'NORMAL'
+                            ELSE NULL
+                        END,
+                        CASE
+                            WHEN ny_high IS NULL OR ny_low IS NULL OR london_high IS NULL OR london_low IS NULL THEN 'NO_DATA'
+                            WHEN ny_high > london_high AND ny_low < london_low THEN 'EXPANSION'
+                            WHEN ny_high > london_high THEN 'SWEEP_HIGH'
+                            WHEN ny_low < london_low THEN 'SWEEP_LOW'
+                            ELSE 'CONSOLIDATION'
+                        END
+                    ) AS ny_type,
+                    orb_0900_high, orb_0900_low, orb_0900_size, orb_0900_break_dir, orb_0900_outcome, orb_0900_r_multiple,
+                    orb_1000_high, orb_1000_low, orb_1000_size, orb_1000_break_dir, orb_1000_outcome, orb_1000_r_multiple,
+                    orb_1100_high, orb_1100_low, orb_1100_size, orb_1100_break_dir, orb_1100_outcome, orb_1100_r_multiple,
+                    orb_1800_high, orb_1800_low, orb_1800_size, orb_1800_break_dir, orb_1800_outcome, orb_1800_r_multiple,
+                    orb_2300_high, orb_2300_low, orb_2300_size, orb_2300_break_dir, orb_2300_outcome, orb_2300_r_multiple,
+                    orb_0030_high, orb_0030_low, orb_0030_size, orb_0030_break_dir, orb_0030_outcome, orb_0030_r_multiple
+                FROM daily_features_v2
+            """)
+            return "daily_features_compat"
+
+        return "daily_features"
 
     def get_today_features(self, target_date: date) -> Optional[Dict]:
         """Get features for target date"""
@@ -61,10 +143,10 @@ class DailyAlertSystem:
                 london_type,
                 ny_type,
                 atr_20
-            FROM daily_features
+            FROM {table_name}
             WHERE date_local = ?
         """
-        row = self.con.execute(query, [target_date]).fetchone()
+        row = self.con.execute(query.format(table_name=self.table_name), [target_date]).fetchone()
 
         if not row:
             return None
@@ -116,7 +198,7 @@ class DailyAlertSystem:
                 COUNT(*) AS total_trades,
                 SUM(CASE WHEN orb_{orb_time}_outcome = 'WIN' THEN 1 ELSE 0 END) AS wins,
                 AVG(orb_{orb_time}_r_multiple) AS avg_r
-            FROM daily_features
+            FROM {self.table_name}
             WHERE {where_clause}
         """
 
