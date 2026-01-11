@@ -1,0 +1,394 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, date, time, timedelta, timezone
+from zoneinfo import ZoneInfo
+from pathlib import Path
+from typing import Optional, Dict, List, Tuple
+
+import duckdb
+
+# ─────────────────────────────────────────────────────────────
+# CONFIG
+# ─────────────────────────────────────────────────────────────
+DB_PATH = Path("gold.db")
+INSTRUMENT = "MGC"  # Micro Gold Futures
+TZ_LOCAL = ZoneInfo("Australia/Brisbane")  # UTC+10 (no DST)
+
+# Session blocks (UTC+10)
+ASIA_START = time(9, 0)
+ASIA_END = time(17, 0)
+
+LONDON_START = time(18, 0)
+LONDON_END = time(23, 0)
+
+NY_START = time(23, 0)
+NY_END = time(2, 0)  # crosses midnight
+
+# Travel windows (UTC+10)
+PRE_NY_START = time(18, 0)
+PRE_NY_END = time(23, 0)
+
+PRE_ORB_START = time(23, 0)
+PRE_ORB_END = time(0, 30)
+
+# NYSE ORB (UTC+10)
+ORB_START = time(0, 30)
+ORB_END = time(0, 35)
+ORB_BREAK_LOOKAHEAD_END = time(2, 0)
+
+RSI_LEN = 14
+
+
+# ─────────────────────────────────────────────────────────────
+# TYPES
+# ─────────────────────────────────────────────────────────────
+@dataclass
+class Bar1m:
+    ts_utc: datetime
+    o: float
+    h: float
+    l: float
+    c: float
+    v: int
+
+
+@dataclass
+class Bar5m:
+    ts_utc: datetime  # bucket start (UTC)
+    o: float
+    h: float
+    l: float
+    c: float
+    v: int
+
+
+# ─────────────────────────────────────────────────────────────
+# TIME HELPERS
+# ─────────────────────────────────────────────────────────────
+def local_window_to_utc(
+    for_local_date: date, start_local: time, end_local: time
+) -> Tuple[datetime, datetime]:
+    start_dt_local = datetime.combine(for_local_date, start_local, tzinfo=TZ_LOCAL)
+    end_dt_local = datetime.combine(for_local_date, end_local, tzinfo=TZ_LOCAL)
+    if end_dt_local <= start_dt_local:
+        end_dt_local += timedelta(days=1)
+    return start_dt_local.astimezone(timezone.utc), end_dt_local.astimezone(timezone.utc)
+
+
+# ─────────────────────────────────────────────────────────────
+# DATA FETCH
+# Assumes you have bars_1m(ts_utc, symbol, open, high, low, close, volume)
+# ─────────────────────────────────────────────────────────────
+def fetch_bars_1m(
+    con: duckdb.DuckDBPyConnection, start_utc: datetime, end_utc: datetime
+) -> List[Bar1m]:
+    rows = con.execute(
+        """
+        SELECT ts_utc, open, high, low, close, volume
+        FROM bars_1m
+        WHERE symbol = ?
+          AND ts_utc >= ?
+          AND ts_utc < ?
+        ORDER BY ts_utc ASC
+        """,
+        [INSTRUMENT, start_utc, end_utc],
+    ).fetchall()
+
+    out: List[Bar1m] = []
+    for ts_utc, o, h, l, c, v in rows:
+        if ts_utc.tzinfo is None:
+            ts_utc = ts_utc.replace(tzinfo=timezone.utc)
+        out.append(Bar1m(ts_utc=ts_utc, o=float(o), h=float(h), l=float(l), c=float(c), v=int(v)))
+    return out
+
+
+def fetch_bars_5m(
+    con: duckdb.DuckDBPyConnection, start_utc: datetime, end_utc: datetime
+) -> List[Bar5m]:
+    # Aggregate 1m -> 5m buckets in SQL.
+    # bucket_start = epoch_seconds - (epoch_seconds % 300)
+    rows = con.execute(
+        """
+        WITH base AS (
+          SELECT
+            to_timestamp(floor(extract(epoch from ts_utc)/300)*300) AS bucket_utc,
+            ts_utc,
+            open, high, low, close, volume
+          FROM bars_1m
+          WHERE symbol = ?
+            AND ts_utc >= ?
+            AND ts_utc < ?
+        ),
+        agg AS (
+          SELECT
+            bucket_utc AS ts_utc,
+            -- open = first open in bucket
+            arg_min(open, ts_utc) AS open,
+            max(high) AS high,
+            min(low) AS low,
+            -- close = last close in bucket
+            arg_max(close, ts_utc) AS close,
+            sum(volume) AS volume
+          FROM base
+          GROUP BY bucket_utc
+        )
+        SELECT ts_utc, open, high, low, close, volume
+        FROM agg
+        ORDER BY ts_utc ASC
+        """,
+        [INSTRUMENT, start_utc, end_utc],
+    ).fetchall()
+
+    out: List[Bar5m] = []
+    for ts_utc, o, h, l, c, v in rows:
+        if ts_utc.tzinfo is None:
+            ts_utc = ts_utc.replace(tzinfo=timezone.utc)
+        out.append(Bar5m(ts_utc=ts_utc, o=float(o), h=float(h), l=float(l), c=float(c), v=int(v)))
+    return out
+
+
+# ─────────────────────────────────────────────────────────────
+# METRICS
+# ─────────────────────────────────────────────────────────────
+def high_low_1m(bars: List[Bar1m]) -> Tuple[Optional[float], Optional[float]]:
+    if not bars:
+        return None, None
+    return max(b.h for b in bars), min(b.l for b in bars)
+
+
+def travel_range_1m(bars: List[Bar1m]) -> Optional[float]:
+    hi, lo = high_low_1m(bars)
+    if hi is None or lo is None:
+        return None
+    return float(hi - lo)
+
+
+def orb_break_dir_from_5m_closes(orb_hi: float, orb_lo: float, bars_5m_after: List[Bar5m]) -> str:
+    # Rule: first FULL 5m CLOSE outside the box
+    for b in bars_5m_after:
+        if b.c > orb_hi:
+            return "UP"
+        if b.c < orb_lo:
+            return "DOWN"
+    return "NONE"
+
+
+def rsi_wilder(closes: List[float], length: int = 14) -> List[Optional[float]]:
+    """
+    Returns RSI values aligned to closes (same length), using Wilder's smoothing.
+    RSI is None until enough history exists.
+    """
+    n = len(closes)
+    if n == 0:
+        return []
+    out: List[Optional[float]] = [None] * n
+    if n < length + 1:
+        return out
+
+    gains = []
+    losses = []
+    for i in range(1, length + 1):
+        ch = closes[i] - closes[i - 1]
+        gains.append(max(ch, 0.0))
+        losses.append(max(-ch, 0.0))
+
+    avg_gain = sum(gains) / length
+    avg_loss = sum(losses) / length
+
+    def calc_rsi(ag: float, al: float) -> float:
+        if al == 0.0:
+            return 100.0
+        rs = ag / al
+        return 100.0 - (100.0 / (1.0 + rs))
+
+    out[length] = calc_rsi(avg_gain, avg_loss)
+
+    for i in range(length + 1, n):
+        ch = closes[i] - closes[i - 1]
+        gain = max(ch, 0.0)
+        loss = max(-ch, 0.0)
+        avg_gain = (avg_gain * (length - 1) + gain) / length
+        avg_loss = (avg_loss * (length - 1) + loss) / length
+        out[i] = calc_rsi(avg_gain, avg_loss)
+
+    return out
+
+
+def compute_orb_0030(
+    con: duckdb.DuckDBPyConnection,
+    d_local: date,
+) -> Dict[str, Optional[object]]:
+    orb_start_utc, orb_end_utc = local_window_to_utc(d_local, ORB_START, ORB_END)
+    _, break_end_utc = local_window_to_utc(d_local, ORB_END, ORB_BREAK_LOOKAHEAD_END)
+
+    # ORB box from 1m data inside 00:30–00:35
+    orb_1m = fetch_bars_1m(con, orb_start_utc, orb_end_utc)
+    if not orb_1m:
+        return {"orb_high": None, "orb_low": None, "orb_first5m": None, "orb_break_dir": None, "rsi_at_orb": None}
+
+    orb_hi, orb_lo = high_low_1m(orb_1m)
+    if orb_hi is None or orb_lo is None:
+        return {"orb_high": None, "orb_low": None, "orb_first5m": None, "orb_break_dir": None, "rsi_at_orb": None}
+
+    # Break direction: first 5m CLOSE outside box after 00:35 until 02:00
+    after_5m = fetch_bars_5m(con, orb_end_utc, break_end_utc)
+    break_dir = orb_break_dir_from_5m_closes(float(orb_hi), float(orb_lo), after_5m)
+
+    # RSI at ORB: RSI(14) on 5m closes at the 00:30 5m bar close (i.e., the 00:30 bucket)
+    # Fetch enough 5m bars ending at break_end_utc (or at least through orb bucket)
+    # We only need up to orb_end_utc, but grab a wider window for safety.
+    rsi_lookback_start = orb_start_utc - timedelta(hours=24)
+    bars_5m = fetch_bars_5m(con, rsi_lookback_start, orb_end_utc)
+    rsi_val: Optional[float] = None
+    if bars_5m:
+        closes = [b.c for b in bars_5m]
+        rsis = rsi_wilder(closes, RSI_LEN)
+        # Find the 5m bucket that starts exactly at orb_start_utc
+        idx = None
+        for i, b in enumerate(bars_5m):
+            if b.ts_utc == orb_start_utc:
+                idx = i
+                break
+        if idx is not None:
+            rsi_val = rsis[idx]
+
+    return {
+        "orb_high": float(orb_hi),
+        "orb_low": float(orb_lo),
+        "orb_first5m": float(orb_hi - orb_lo),
+        "orb_break_dir": break_dir,
+        "rsi_at_orb": (float(rsi_val) if rsi_val is not None else None),
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# STORAGE
+# ─────────────────────────────────────────────────────────────
+def ensure_daily_features_table(con: duckdb.DuckDBPyConnection) -> None:
+    con.execute(
+        """
+        CREATE TABLE IF NOT EXISTS daily_features (
+          date_local DATE,
+          instrument TEXT,
+
+          asia_high DOUBLE,
+          asia_low DOUBLE,
+          asia_range DOUBLE,
+
+          london_high DOUBLE,
+          london_low DOUBLE,
+
+          ny_high DOUBLE,
+          ny_low DOUBLE,
+
+          pre_ny_travel DOUBLE,
+          pre_orb_travel DOUBLE,
+
+          orb_high DOUBLE,
+          orb_low DOUBLE,
+          orb_first5m DOUBLE,
+          orb_break_dir TEXT,
+
+          rsi_at_orb DOUBLE,
+
+          PRIMARY KEY (date_local, instrument)
+        )
+        """
+    )
+
+
+# ─────────────────────────────────────────────────────────────
+# MAIN
+# ─────────────────────────────────────────────────────────────
+def main(date_local_str: str) -> None:
+    d = date.fromisoformat(date_local_str)
+
+    con = duckdb.connect(str(DB_PATH))
+    try:
+        ensure_daily_features_table(con)
+
+        # Session windows (UTC+10 local -> UTC)
+        asia_start_utc, asia_end_utc = local_window_to_utc(d, ASIA_START, ASIA_END)
+        london_start_utc, london_end_utc = local_window_to_utc(d, LONDON_START, LONDON_END)
+        ny_start_utc, ny_end_utc = local_window_to_utc(d, NY_START, NY_END)
+
+        pre_ny_start_utc, pre_ny_end_utc = local_window_to_utc(d, PRE_NY_START, PRE_NY_END)
+        pre_orb_start_utc, pre_orb_end_utc = local_window_to_utc(d, PRE_ORB_START, PRE_ORB_END)
+
+        # Fetch 1m for high/low + travel
+        asia_1m = fetch_bars_1m(con, asia_start_utc, asia_end_utc)
+        london_1m = fetch_bars_1m(con, london_start_utc, london_end_utc)
+        ny_1m = fetch_bars_1m(con, ny_start_utc, ny_end_utc)
+
+        asia_hi, asia_lo = high_low_1m(asia_1m)
+        lon_hi, lon_lo = high_low_1m(london_1m)
+        ny_hi, ny_lo = high_low_1m(ny_1m)
+
+        asia_range = (float(asia_hi - asia_lo) if (asia_hi is not None and asia_lo is not None) else None)
+
+        pre_ny_travel = travel_range_1m(fetch_bars_1m(con, pre_ny_start_utc, pre_ny_end_utc))
+        pre_orb_travel = travel_range_1m(fetch_bars_1m(con, pre_orb_start_utc, pre_orb_end_utc))
+
+        orb = compute_orb_0030(con, d)
+
+        if orb["orb_high"] is None or orb["orb_low"] is None:
+            print(f"SKIP_ORB: {d.isoformat()} missing 00:30 ORB 1m bars (writing NULL orb fields).")
+
+        # Upsert
+        con.execute(
+            """
+            INSERT INTO daily_features AS t
+            (date_local, instrument,
+             asia_high, asia_low, asia_range,
+             london_high, london_low,
+             ny_high, ny_low,
+             pre_ny_travel, pre_orb_travel,
+             orb_high, orb_low, orb_first5m, orb_break_dir,
+             rsi_at_orb)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (date_local, instrument) DO UPDATE SET
+              asia_high=excluded.asia_high,
+              asia_low=excluded.asia_low,
+              asia_range=excluded.asia_range,
+              london_high=excluded.london_high,
+              london_low=excluded.london_low,
+              ny_high=excluded.ny_high,
+              ny_low=excluded.ny_low,
+              pre_ny_travel=excluded.pre_ny_travel,
+              pre_orb_travel=excluded.pre_orb_travel,
+              orb_high=excluded.orb_high,
+              orb_low=excluded.orb_low,
+              orb_first5m=excluded.orb_first5m,
+              orb_break_dir=excluded.orb_break_dir,
+              rsi_at_orb=excluded.rsi_at_orb
+            """,
+            [
+                d,
+                INSTRUMENT,
+                asia_hi, asia_lo, asia_range,
+                lon_hi, lon_lo,
+                ny_hi, ny_lo,
+                pre_ny_travel, pre_orb_travel,
+                orb["orb_high"], orb["orb_low"], orb["orb_first5m"], orb["orb_break_dir"],
+                orb["rsi_at_orb"],
+            ],
+        )
+
+        print("OK: daily_features upserted for", d.isoformat(), INSTRUMENT)
+        print("  Asia H/L:", asia_hi, asia_lo, "range:", asia_range)
+        print("  London H/L:", lon_hi, lon_lo)
+        print("  NY H/L:", ny_hi, ny_lo)
+        print("  Pre-NY travel:", pre_ny_travel, "Pre-ORB travel:", pre_orb_travel)
+        print("  ORB 00:30 H/L:", orb["orb_high"], orb["orb_low"], "size:", orb["orb_first5m"], "dir:", orb["orb_break_dir"])
+        print("  RSI@ORB:", orb["rsi_at_orb"])
+
+    finally:
+        con.close()
+
+
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 2:
+        raise SystemExit("Usage: python build_daily_features.py YYYY-MM-DD  (local Brisbane date, UTC+10)")
+    main(sys.argv[1])

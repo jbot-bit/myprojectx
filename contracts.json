@@ -1,0 +1,16 @@
+{
+  "contracts": [
+    {
+      "id": "CON.F.US.MGC.G26",
+      "name": "MGCG6",
+      "description": "Micro Gold: February 2026",
+      "tickSize": 0.1,
+      "tickValue": 1,
+      "activeContract": true,
+      "symbolId": "F.US.MGC"
+    }
+  ],
+  "success": true,
+  "errorCode": 0,
+  "errorMessage": null
+}

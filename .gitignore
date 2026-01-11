@@ -1,0 +1,7 @@
+
+# Local databases
+gold.db
+*.db
+*.sqlite
+*.sqlite3
+

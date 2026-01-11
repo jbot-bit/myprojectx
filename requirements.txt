@@ -1,0 +1,35 @@
+# Gold (MGC) Data Pipeline Requirements
+# Core data processing and storage
+duckdb==1.4.3
+pandas==2.3.3
+numpy==2.4.0
+pyarrow==22.0.0
+
+# Market data providers
+databento==0.68.2
+databento-dbn==0.45.0
+
+# HTTP requests (for ProjectX API)
+requests==2.32.5
+httpx==0.28.1
+
+# Environment and configuration
+python-dotenv==1.2.1
+pytz==2025.2
+
+# Date/time utilities
+python-dateutil==2.9.0.post0
+
+# Optional: Web API framework (if you build dashboards)
+fastapi==0.128.0
+uvicorn==0.40.0
+
+# Optional: Data compression
+zstandard==0.25.0
+
+# Optional: Better SSL handling on Windows
+pip-system-certs==5.3
+
+# Optional: Visualization (for charts and graphs)
+# Uncomment to install:
+# matplotlib>=3.7.0
