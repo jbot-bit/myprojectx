@@ -62,7 +62,7 @@ def ensure_schema(con: duckdb.DuckDBPyConnection):
             mae_r DOUBLE,
             mfe_r DOUBLE,
 
-            PRIMARY KEY (date_local, orb, close_confirmations)
+            PRIMARY KEY (date_local, orb, close_confirmations, rr)
         )
     """)
     # Backward-compatible column adds (non-destructive)

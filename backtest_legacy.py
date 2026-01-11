@@ -1,6 +1,18 @@
 """
-ORB Backtesting Engine
-======================
+⚠️ DEPRECATED - Legacy Backtest Engine (V1)
+============================================
+
+**WARNING:** This backtest engine uses daily_features (V1) which may contain
+lookahead bias from session type filters.
+
+**Use instead:** backtest_orb_exec_1m.py (V2 - 1-minute precision, zero lookahead)
+
+This file is kept for reference only.
+
+---
+
+ORB Backtesting Engine (LEGACY)
+================================
 Systematically test ORB strategies with customizable filters.
 
 Features:
