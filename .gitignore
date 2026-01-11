@@ -4,4 +4,18 @@ gold.db
 *.db
 *.sqlite
 *.sqlite3
+# Secrets / local config
+.env
+.claude/settings.local.json
+
+# Virtual environments
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS junk
+nul
 

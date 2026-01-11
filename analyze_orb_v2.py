@@ -19,7 +19,7 @@ Outputs:
 """
 
 import duckdb
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 
 
@@ -64,8 +64,19 @@ def calculate_stats(rows: List[Tuple]) -> ORBStats:
 class ORBAnalyzerV2:
     """Analyze ORBs with zero lookahead guarantee"""
 
-    def __init__(self, db_path: str = "gold.db"):
-        self.con = duckdb.connect(db_path, read_only=True)
+    def __init__(self, db_path: str = "gold.db", connection: Optional[duckdb.DuckDBPyConnection] = None):
+        """Initialize with either a db_path or an existing connection.
+        
+        Args:
+            db_path: Path to database file (used if connection is None)
+            connection: Existing DuckDB connection to reuse (avoids connection conflicts)
+        """
+        if connection is not None:
+            self.con = connection
+            self._owns_connection = False
+        else:
+            self.con = duckdb.connect(db_path, read_only=True)
+            self._owns_connection = True
 
     def analyze_overall_performance(self):
         """Overall ORB performance by time"""
@@ -280,8 +291,260 @@ class ORBAnalyzerV2:
             print("\nNo edges found meeting criteria")
             print("(Try lowering thresholds or testing more combinations)")
 
+    def analyze_overall(self) -> Dict[str, Dict[str, Dict[str, Any]]]:
+        """Return overall ORB performance by time as a dict structure for app use"""
+        result = {}
+        
+        orbs = {
+            "0900": "09:00 (Asia Open)",
+            "1000": "10:00 (Asia Mid)",
+            "1100": "11:00 (Asia Late)",
+            "1800": "18:00 (London Open)",
+            "2300": "23:00 (NY Futures)",
+            "0030": "00:30 (NYSE Cash)",
+        }
+        
+        for orb_time, label in orbs.items():
+            # Get UP direction
+            rows_up = self.con.execute(f"""
+                SELECT orb_{orb_time}_outcome, orb_{orb_time}_r_multiple
+                FROM daily_features_v2
+                WHERE orb_{orb_time}_outcome IN ('WIN', 'LOSS')
+                  AND orb_{orb_time}_break_dir = 'UP'
+            """).fetchall()
+            stats_up = calculate_stats(rows_up)
+            
+            # Get DOWN direction
+            rows_down = self.con.execute(f"""
+                SELECT orb_{orb_time}_outcome, orb_{orb_time}_r_multiple
+                FROM daily_features_v2
+                WHERE orb_{orb_time}_outcome IN ('WIN', 'LOSS')
+                  AND orb_{orb_time}_break_dir = 'DOWN'
+            """).fetchall()
+            stats_down = calculate_stats(rows_down)
+            
+            result[orb_time] = {
+                'UP': {
+                    'win_rate': stats_up.win_rate,
+                    'avg_r': stats_up.avg_r,
+                    'total_r': stats_up.total_r,
+                    'total_trades': stats_up.total_trades,
+                    'wins': stats_up.wins,
+                    'losses': stats_up.losses
+                },
+                'DOWN': {
+                    'win_rate': stats_down.win_rate,
+                    'avg_r': stats_down.avg_r,
+                    'total_r': stats_down.total_r,
+                    'total_trades': stats_down.total_trades,
+                    'wins': stats_down.wins,
+                    'losses': stats_down.losses
+                }
+            }
+        
+        return result
+    
+    def analyze_pre_asia(self) -> List[Dict[str, Any]]:
+        """Return PRE block filtered edges as a list of dicts for app use"""
+        edges = []
+        
+        # 09:00 ORB with PRE_ASIA filters
+        # Large PRE_ASIA (>50 ticks)
+        rows = self.con.execute("""
+            SELECT orb_0900_outcome, orb_0900_r_multiple
+            FROM daily_features_v2
+            WHERE orb_0900_outcome IN ('WIN', 'LOSS')
+              AND (pre_asia_range / 0.1) > 50
+        """).fetchall()
+        stats = calculate_stats(rows)
+        if stats.total_trades >= 10:
+            edges.append({
+                'setup': "09:00 | PRE_ASIA > 50 ticks",
+                'win_rate': stats.win_rate,
+                'avg_r': stats.avg_r,
+                'total_r': stats.total_r,
+                'total_trades': stats.total_trades,
+                'wins': stats.wins,
+                'losses': stats.losses
+            })
+        
+        # Small PRE_ASIA (<30 ticks)
+        rows = self.con.execute("""
+            SELECT orb_0900_outcome, orb_0900_r_multiple
+            FROM daily_features_v2
+            WHERE orb_0900_outcome IN ('WIN', 'LOSS')
+              AND (pre_asia_range / 0.1) < 30
+        """).fetchall()
+        stats = calculate_stats(rows)
+        if stats.total_trades >= 10:
+            edges.append({
+                'setup': "09:00 | PRE_ASIA < 30 ticks",
+                'win_rate': stats.win_rate,
+                'avg_r': stats.avg_r,
+                'total_r': stats.total_r,
+                'total_trades': stats.total_trades,
+                'wins': stats.wins,
+                'losses': stats.losses
+            })
+        
+        # 11:00 ORB with PRE_ASIA filters
+        for direction in ["UP", "DOWN"]:
+            rows = self.con.execute(f"""
+                SELECT orb_1100_outcome, orb_1100_r_multiple
+                FROM daily_features_v2
+                WHERE orb_1100_outcome IN ('WIN', 'LOSS')
+                  AND orb_1100_break_dir = ?
+                  AND (pre_asia_range / 0.1) > 50
+            """, [direction]).fetchall()
+            stats = calculate_stats(rows)
+            if stats.total_trades >= 10:
+                edges.append({
+                    'setup': f"11:00 {direction} | PRE_ASIA > 50 ticks",
+                    'win_rate': stats.win_rate,
+                    'avg_r': stats.avg_r,
+                    'total_r': stats.total_r,
+                    'total_trades': stats.total_trades,
+                    'wins': stats.wins,
+                    'losses': stats.losses
+                })
+        
+        # 18:00 ORB with PRE_LONDON filters
+        for direction in ["UP", "DOWN"]:
+            # Small PRE_LONDON + Large ASIA
+            rows = self.con.execute(f"""
+                SELECT orb_1800_outcome, orb_1800_r_multiple
+                FROM daily_features_v2
+                WHERE orb_1800_outcome IN ('WIN', 'LOSS')
+                  AND orb_1800_break_dir = ?
+                  AND (pre_london_range / 0.1) < 20
+                  AND (asia_range / 0.1) > 300
+            """, [direction]).fetchall()
+            stats = calculate_stats(rows)
+            if stats.total_trades >= 5:
+                edges.append({
+                    'setup': f"18:00 {direction} | PRE_LONDON < 20 + ASIA > 300",
+                    'win_rate': stats.win_rate,
+                    'avg_r': stats.avg_r,
+                    'total_r': stats.total_r,
+                    'total_trades': stats.total_trades,
+                    'wins': stats.wins,
+                    'losses': stats.losses
+                })
+            
+            # Large PRE_LONDON
+            rows = self.con.execute(f"""
+                SELECT orb_1800_outcome, orb_1800_r_multiple
+                FROM daily_features_v2
+                WHERE orb_1800_outcome IN ('WIN', 'LOSS')
+                  AND orb_1800_break_dir = ?
+                  AND (pre_london_range / 0.1) > 40
+            """, [direction]).fetchall()
+            stats = calculate_stats(rows)
+            if stats.total_trades >= 10:
+                edges.append({
+                    'setup': f"18:00 {direction} | PRE_LONDON > 40 ticks",
+                    'win_rate': stats.win_rate,
+                    'avg_r': stats.avg_r,
+                    'total_r': stats.total_r,
+                    'total_trades': stats.total_trades,
+                    'wins': stats.wins,
+                    'losses': stats.losses
+                })
+        
+        # 00:30 ORB with PRE_NY filters
+        for direction in ["UP", "DOWN"]:
+            rows = self.con.execute(f"""
+                SELECT orb_0030_outcome, orb_0030_r_multiple
+                FROM daily_features_v2
+                WHERE orb_0030_outcome IN ('WIN', 'LOSS')
+                  AND orb_0030_break_dir = ?
+                  AND (pre_ny_range / 0.1) > 40
+            """, [direction]).fetchall()
+            stats = calculate_stats(rows)
+            if stats.total_trades >= 10:
+                edges.append({
+                    'setup': f"00:30 {direction} | PRE_NY > 40 ticks",
+                    'win_rate': stats.win_rate,
+                    'avg_r': stats.avg_r,
+                    'total_r': stats.total_r,
+                    'total_trades': stats.total_trades,
+                    'wins': stats.wins,
+                    'losses': stats.losses
+                })
+        
+        return edges
+    
+    def analyze_orb_correlations(self) -> List[Dict[str, Any]]:
+        """Return ORB correlation edges as a list of dicts for app use
+        
+        ⚠️ ZERO-LOOKAHEAD NOTE: These correlations assume the previous ORB trade
+        is CLOSED (WIN/LOSS decided) before the next ORB decision time.
+        
+        In practice: Most ORB trades close quickly (within minutes), so this is
+        usually valid. But in live trading, you must verify:
+        - 09:00 trade state = CLOSED before using at 10:00
+        - 10:00 trade state = CLOSED before using at 11:00
+        
+        If a previous trade is still OPEN, you cannot use its outcome and should
+        fall back to baseline stats or simpler filters.
+        """
+        edges = []
+        
+        # 10:00 after 09:00 outcomes
+        # NOTE: Assumes 09:00 trade is CLOSED before 10:00 decision
+        for prev_outcome in ["WIN", "LOSS", "NO_TRADE"]:
+            for direction in ["UP", "DOWN"]:
+                rows = self.con.execute(f"""
+                    SELECT orb_1000_outcome, orb_1000_r_multiple
+                    FROM daily_features_v2
+                    WHERE orb_1000_outcome IN ('WIN', 'LOSS')
+                      AND orb_1000_break_dir = ?
+                      AND orb_0900_outcome = ?
+                """, [direction, prev_outcome]).fetchall()
+                
+                stats = calculate_stats(rows)
+                if stats.total_trades >= 10:
+                    edges.append({
+                        'setup': f"10:00 {direction} after 09:00 {prev_outcome}",
+                        'win_rate': stats.win_rate,
+                        'avg_r': stats.avg_r,
+                        'total_r': stats.total_r,
+                        'total_trades': stats.total_trades,
+                        'wins': stats.wins,
+                        'losses': stats.losses
+                    })
+        
+        # 11:00 after both 09:00 and 10:00
+        for prev_pattern in [("LOSS", "LOSS"), ("WIN", "WIN"), ("LOSS", "WIN")]:
+            orb_09, orb_10 = prev_pattern
+            for direction in ["UP", "DOWN"]:
+                rows = self.con.execute(f"""
+                    SELECT orb_1100_outcome, orb_1100_r_multiple
+                    FROM daily_features_v2
+                    WHERE orb_1100_outcome IN ('WIN', 'LOSS')
+                      AND orb_1100_break_dir = ?
+                      AND orb_0900_outcome = ?
+                      AND orb_1000_outcome = ?
+                """, [direction, orb_09, orb_10]).fetchall()
+                
+                stats = calculate_stats(rows)
+                if stats.total_trades >= 5:
+                    edges.append({
+                        'setup': f"11:00 {direction} after 09:00 {orb_09} + 10:00 {orb_10}",
+                        'win_rate': stats.win_rate,
+                        'avg_r': stats.avg_r,
+                        'total_r': stats.total_r,
+                        'total_trades': stats.total_trades,
+                        'wins': stats.wins,
+                        'losses': stats.losses
+                    })
+        
+        return edges
+
     def close(self):
-        self.con.close()
+        """Close the connection only if we own it"""
+        if self._owns_connection:
+            self.con.close()
 
 
 def main():

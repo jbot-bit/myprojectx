@@ -7,6 +7,22 @@ import duckdb
 import numpy as np
 import pandas as pd
 
+# UI helper for Streamlit dashboards
+# Keys are the internal IDs used in app_trading_hub.py dropdowns.
+ENTRY_MODELS = {
+    "1m_close_break": {
+        "label": "1m close break",
+        "desc": "Enter on 1m close beyond ORB high/low",
+    },
+    "5m_close_break": {
+        "label": "5m close break",
+        "desc": "Enter on 5m close beyond ORB high/low",
+    },
+    "retest_reject": {
+        "label": "Retest + reject",
+        "desc": "Break -> retest -> rejection confirmation",
+    },
+}
 
 ORB_TIMES: Tuple[str, ...] = ("0900", "1000", "1100", "1800", "2300", "0030")
 OUTCOME_OPTIONS: Tuple[str, ...] = ("WIN", "LOSS", "NO_TRADE")
