@@ -101,20 +101,19 @@ with st.sidebar:
                 # Initialize data loader
                 loader = LiveDataLoader(symbol)
 
-                # Backfill data (cloud-aware)
+                # Fetch data (cloud-aware)
                 if is_cloud_deployment():
-                    # In cloud: try to backfill from Databento if API key exists
-                    if os.getenv("DATABENTO_API_KEY"):
-                        st.info("Cloud mode: Would backfill from Databento here (not implemented yet)")
-                        st.warning("For now, use AI Chat tab - data tabs coming soon!")
+                    # In cloud: fetch live data from ProjectX API
+                    if os.getenv("PROJECTX_API_KEY"):
+                        loader.refresh()  # Fetches from ProjectX API automatically
+                        st.success("Fetched live data from ProjectX API")
                     else:
-                        st.warning("No DATABENTO_API_KEY found. Add it in Streamlit Cloud secrets.")
-                        st.info("AI Chat tab works without data!")
+                        st.error("No PROJECTX_API_KEY found. Add it in Streamlit Cloud secrets.")
+                        st.stop()
                 else:
-                    # Local: backfill from gold.db
+                    # Local: backfill from gold.db then refresh
                     loader.backfill_from_gold_db("../gold.db", days=7)
-
-                loader.refresh()
+                    loader.refresh()
 
                 st.session_state.data_loader = loader
                 st.session_state.strategy_engine = StrategyEngine(loader)
@@ -212,16 +211,15 @@ with tab_live:
             st.markdown("""
             ### Welcome to your Trading Hub!
 
-            Your app is running in the cloud, but doesn't have data yet.
+            Your app is running in the cloud!
 
             **What works right now:**
             - 🤖 **AI CHAT tab** - Ask strategy questions, get trade calculations
-            - 📋 **TRADE PLAN tab** - Position sizing calculator
 
             **To enable live data & strategies:**
-            1. Make sure `DATABENTO_API_KEY` is in your Streamlit Cloud secrets
+            1. Make sure `PROJECTX_API_KEY` is in your Streamlit Cloud secrets
             2. Click "Initialize/Refresh Data" in the sidebar
-            3. We'll backfill data from Databento
+            3. App will fetch live data from ProjectX API
 
             **For now, try the AI CHAT tab!** →
             """)

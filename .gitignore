@@ -65,3 +65,5 @@ dist/
 
 # Streamlit secrets (use Streamlit Cloud secrets instead)
 .streamlit/secrets.toml
+STREAMLIT_SECRETS.txt
+DEPLOY_NOW_CHECKLIST.txt
