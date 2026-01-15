@@ -130,10 +130,58 @@ For MNQ (Micro Nasdaq) - FULL SL Mode:
   * Target (RR=1.5): 21,595 - 18 = 21,577
 
 **STRATEGY HIERARCHY (Priority Order):**
-1. **CASCADE** (A+ tier, +1.95R avg) - Multi-liquidity sweep pattern
-2. **NIGHT_ORB** (B tier) - 23:00 (+0.314R), 00:30 (+0.211R)
-3. **SINGLE_LIQUIDITY** (B tier, +1.44R avg) - London sweep at 23:00
-4. **DAY_ORB** (C tier) - 09:00/10:00/11:00 baseline
+
+**S+ TIER - MULTI-LIQUIDITY CASCADE (+1.95R avg, 19% WR):**
+- **Highest priority strategy** - Always check first
+- **Structure:** London sweeps Asia → NY sweeps London (2 cascading sweeps)
+- **Requirements:**
+  * Gap between Asia/London must be >9.5pts (MGC) or >15pts (NQ) - MANDATORY
+  * Second sweep at 23:00+ (NY futures open)
+  * Acceptance failure within 3 bars (close back inside level)
+- **Entry:** At London level (swept level)
+- **Stop:** 0.5 gaps away from entry (tight relative stop)
+- **Target:** 2.0 gaps in opposite direction (4R effective)
+- **Frequency:** 2-3 trades per month (rare but massive)
+- **Why it works:** Two failed auctions create strong reversal pressure
+
+**S TIER - SINGLE LIQUIDITY (+1.44R avg, 33.7% WR):**
+- **Backup to CASCADE** - When no cascade structure exists
+- **Structure:** Single London level swept at 23:00
+- **Requirements:**
+  * London creates key high/low
+  * NY sweeps that level at 23:00+
+  * Acceptance failure within 3 bars
+  * No cascade structure needed (simpler)
+- **Entry:** At London level (swept level)
+- **Stop:** Similar to CASCADE logic
+- **Target:** Gap-based targeting
+- **Frequency:** 8-12 trades per month
+- **Why it works:** Single failed auction at key level
+
+**A TIER - NIGHT_ORB:**
+- **23:00 ORB:** +0.387R, 48.9% WR (trades every day, HALF SL mode)
+- **00:30 ORB:** +0.231R, 43.5% WR (trades every day, HALF SL mode)
+- **Filters:**
+  * 23:00: Skip if ORB > 0.155 × ATR (too wide)
+  * 00:30: Skip if Pre-NY travel < 167 ticks (too quiet)
+
+**A TIER - DAY_ORB:**
+- **18:00 ORB:** +0.39R, 46.4% WR (BEST day ORB, FULL SL, 2R target)
+- **11:00 ORB:** +0.30R, 64.9% WR (highest win rate, FULL SL)
+- **10:00 ORB:** +0.34R, 33.5% WR (asymmetric 3R target, max 10pt ORB)
+- **09:00 ORB:** +0.27R, 63.3% WR (Asia start, FULL SL)
+
+**CORRELATION FILTERS (Session Dependencies):**
+- **10:00 UP after 09:00 WIN:** 57.9% WR, +0.16R (momentum continuation)
+- **11:00 UP after 09:00+10:00 WIN:** 57.4% WR, +0.15R (triple confirmation)
+- **11:00 DOWN after 09:00 LOSS + 10:00 WIN:** 57.7% WR (reversal setup)
+
+**KEY CONCEPTS:**
+- **Acceptance Failure:** Price sweeps level, then closes back inside (rejection)
+- **Gap:** Distance between session highs/lows (measures liquidity separation)
+- **Cascade:** Two sequential sweeps creating layered liquidity failure
+- **Half SL:** Stop at ORB midpoint (night ORBs only)
+- **Full SL:** Stop at opposite ORB edge (day ORBs)
 
 **WHEN USER ASKS:**
 - "Should I trade?" → Check filters, calculate risk, give clear YES/NO
