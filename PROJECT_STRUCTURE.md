@@ -6,7 +6,7 @@ This document describes the current production-ready file structure after compre
 
 ---
 
-## Root Directory - Core Files Only (29 Python files, 11 Markdown docs)
+## Root Directory - Core Files Only (28 Python files, 11 Markdown docs)
 
 ### Data Pipeline (Core Production)
 
@@ -55,13 +55,12 @@ This document describes the current production-ready file structure after compre
 - `journal.py` - Trading journal (log trades, stats, compare to historical)
 - `realtime_signals.py` - Live signal generation
 
-### Backtest Execution (Production)
+### Strategy Library (Production)
 
-**Current Execution Models:**
-- `backtest_orb_exec_1m.py` - 1-minute close break execution
-- `backtest_orb_exec_5m.py` - 5-minute close break execution
-- `backtest_orb_exec_5mhalfsl.py` - 5-minute execution with half stop-loss
-- `execution_engine.py` - Shared backtest execution engine
+**Validated Strategies:**
+- `validated_strategies.py` - V2 zero-lookahead validated strategy definitions
+
+**Note:** Legacy backtest execution models (1m/5m/5mhalfsl) archived on Jan 15, 2026. Strategy logic preserved in validated_strategies.py and build_daily_features_v2.py.
 
 ---
 
@@ -143,7 +142,14 @@ _archive/
 
 ## Key Changes from Previous Structure
 
-**Removed from Root (200+ files → 29 files):**
+**January 15, 2026 Audit Cleanup:**
+- Archived 3 deprecated backtest files → `_archive/backtest_old/`
+- Archived execution_engine.py → `_archive/legacy/` (logic duplicated in V2)
+- Archived _unused_migrate_orbs.sql → `_archive/scripts/`
+- Result: 28 Python files in root (down from 32)
+- All imports verified, no breaking changes
+
+**Removed from Root (200+ files → 28 files):**
 - 90+ test files → `_archive/tests/`
 - 50+ analysis experiments → `_archive/experiments/`
 - 60+ one-off scripts → `_archive/scripts/`
@@ -202,17 +208,17 @@ python check_db.py
 python export_csv.py
 ```
 
-### Backtest & Analysis
+### Analysis & Research
 
 ```bash
-# Run backtest
-python backtest_orb_exec_1m.py
-
 # Analyze ORBs (V2 zero-lookahead)
 python analyze_orb_v2.py
 
 # Query features
 python query_features.py
+
+# Launch research dashboard
+streamlit run app_edge_research.py
 ```
 
 ### Finding Archived Files
@@ -259,15 +265,22 @@ ls _archive/results/*.csv
 
 ## Status
 
-**Cleanup Completed:** January 15, 2026
+**Latest Update:** January 15, 2026 - Audit Cleanup Completed
 
 **Files Reduced:**
-- Python files: 200+ → 29 (85% reduction)
+- Python files: 200+ → 28 (86% reduction)
 - Markdown files: 130+ → 11 (92% reduction)
+- SQL files: 4 → 3 (1 archived)
 - CSV files: 80+ → ~5 in root (94% reduction)
 - Temp directories: 300+ → 0 (100% removed)
 
 **Total Archived:** 400+ files moved to systematic archive structure
 **Total Deleted:** 300+ temporary directories
+
+**Recent Cleanup (Jan 15, 2026):**
+- 5 files archived (3 deprecated backtests, 1 orphaned engine, 1 unused SQL)
+- All imports verified and working
+- No breaking changes
+- Git history preserved for rollback if needed
 
 **System Status:** Production-ready, clean, maintainable
