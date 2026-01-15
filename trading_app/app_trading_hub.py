@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import time
 import logging
 import uuid
+import os
 
 from config import *
 from data_loader import LiveDataLoader
@@ -17,6 +18,7 @@ from strategy_engine import StrategyEngine, ActionType, StrategyState
 from utils import calculate_position_size, format_price, log_to_journal
 from ai_memory import AIMemoryManager
 from ai_assistant import TradingAIAssistant
+from cloud_mode import is_cloud_deployment, show_cloud_setup_instructions
 
 # Configure logging
 logging.basicConfig(
@@ -99,8 +101,19 @@ with st.sidebar:
                 # Initialize data loader
                 loader = LiveDataLoader(symbol)
 
-                # Backfill from gold.db for testing
-                loader.backfill_from_gold_db("../gold.db", days=7)
+                # Backfill data (cloud-aware)
+                if is_cloud_deployment():
+                    # In cloud: try to backfill from Databento if API key exists
+                    if os.getenv("DATABENTO_API_KEY"):
+                        st.info("Cloud mode: Would backfill from Databento here (not implemented yet)")
+                        st.warning("For now, use AI Chat tab - data tabs coming soon!")
+                    else:
+                        st.warning("No DATABENTO_API_KEY found. Add it in Streamlit Cloud secrets.")
+                        st.info("AI Chat tab works without data!")
+                else:
+                    # Local: backfill from gold.db
+                    loader.backfill_from_gold_db("../gold.db", days=7)
+
                 loader.refresh()
 
                 st.session_state.data_loader = loader
@@ -194,7 +207,26 @@ with tab_live:
     st.title(f"🔴 LIVE - {symbol}")
 
     if not st.session_state.data_loader or not st.session_state.strategy_engine:
-        st.warning("⚠️ Click 'Initialize/Refresh Data' in sidebar to start")
+        if is_cloud_deployment():
+            st.info("☁️ **Cloud Mode Detected**")
+            st.markdown("""
+            ### Welcome to your Trading Hub!
+
+            Your app is running in the cloud, but doesn't have data yet.
+
+            **What works right now:**
+            - 🤖 **AI CHAT tab** - Ask strategy questions, get trade calculations
+            - 📋 **TRADE PLAN tab** - Position sizing calculator
+
+            **To enable live data & strategies:**
+            1. Make sure `DATABENTO_API_KEY` is in your Streamlit Cloud secrets
+            2. Click "Initialize/Refresh Data" in the sidebar
+            3. We'll backfill data from Databento
+
+            **For now, try the AI CHAT tab!** →
+            """)
+        else:
+            st.warning("⚠️ Click 'Initialize/Refresh Data' in sidebar to start")
         st.stop()
 
     # ========================================================================
@@ -672,7 +704,11 @@ with tab_levels:
     st.title("📊 Session Levels")
 
     if not st.session_state.data_loader:
-        st.warning("Initialize data first")
+        if is_cloud_deployment():
+            st.info("☁️ **Cloud Mode** - No data loaded yet")
+            st.markdown("**Try the AI CHAT tab** to ask about strategies, levels, and trade setups!")
+        else:
+            st.warning("Initialize data first")
         st.stop()
 
     now = datetime.now(TZ_LOCAL)
@@ -739,7 +775,18 @@ with tab_trade_plan:
     st.title("📋 Trade Plan Calculator")
 
     if not st.session_state.last_evaluation:
-        st.warning("No active evaluation")
+        if is_cloud_deployment():
+            st.info("☁️ **Cloud Mode** - No active trade setup yet")
+            st.markdown("""
+            **This calculator works once you have data loaded.**
+
+            For now, try the **AI CHAT tab** to:
+            - Calculate position sizes manually
+            - Ask about risk management
+            - Get trade setup explanations
+            """)
+        else:
+            st.warning("No active evaluation")
         st.stop()
 
     eval = st.session_state.last_evaluation
