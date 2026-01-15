@@ -1,21 +1,67 @@
-
-# Local databases
-gold.db
+# DuckDB databases (local only - never commit!)
 *.db
+*.duckdb
 *.sqlite
 *.sqlite3
-# Secrets / local config
+gold.db
+trading_app.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment variables (contains API keys - CRITICAL!)
 .env
+.env.local
+.env.*.local
 .claude/settings.local.json
 
 # Virtual environments
 .venv/
 venv/
+env/
 
-# Python cache
-__pycache__/
-*.pyc
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# OS junk
+# OS
+.DS_Store
+Thumbs.db
 nul
 
+# Logs (can be large)
+*.log
+logs/
+trading_app.log
+
+# Data files (can be very large)
+*.csv
+*.zst
+dbn/
+exports/*.csv
+
+# Backup files
+*.backup
+*.bak
+
+# Temporary Claude files
+tmpclaude-*
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Streamlit secrets (use Streamlit Cloud secrets instead)
+.streamlit/secrets.toml

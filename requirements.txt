@@ -33,3 +33,9 @@ zstandard==0.25.0
 
 # Optional: Better SSL handling on Windows
 pip-system-certs==5.3
+
+# AI Assistant
+anthropic>=0.40.0
+
+# Visualization
+plotly>=5.17.0
