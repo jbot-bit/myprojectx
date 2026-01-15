@@ -1,0 +1,7 @@
+orb,approach,total_r,win_rate,trades,config
+0900,1m midstop,8.0,0.2448559670781893,468,"RR=3.0, Confirm=2"
+1000,5m exec,71.0,0.2771855010660981,449,"RR=3.0, Confirm=2"
+1100,5m half-SL,13.0,0.241869918699187,463,"SL=half, Buf=0, RR=3.0, Confirm=1"
+1800,5m half-SL,60.0,0.3700787401574803,504,"SL=half, Buf=0, RR=2.0, Confirm=1"
+2300,5m exec,3.0,0.24633431085043989,207,"RR=1.5, Confirm=3"
+0030,5m half-SL,13.0,0.2953020134228188,317,"SL=half, Buf=0, RR=1.5, Confirm=2"

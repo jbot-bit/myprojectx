@@ -1,0 +1,298 @@
+
+================================================================================
+ANOMALY ANALYSIS: 0900 ORB
+================================================================================
+
+0900 ORB - Bad Trade Identification:
+  Total trades: 520
+  Bad trades: 520 (100.0%)
+  R threshold (30th pct): 1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+No conditions with lift >= 1.3 found
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_ny_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_orb_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.430769    0.430769          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.059476 orb_size_norm_gt_0.06    0.430769    0.425287    -0.005482             346    66.538462
+  0.089213 orb_size_norm_gt_0.09    0.430769    0.438596     0.007827             235    45.192308
+  0.118951 orb_size_norm_gt_0.12    0.430769    0.408219    -0.022550             155    29.807692
+  0.148689 orb_size_norm_gt_0.15    0.430769    0.405797    -0.024972             106    20.384615
+  0.178427 orb_size_norm_gt_0.18    0.430769    0.430493    -0.000276              74    14.230769
+  [FAIL] FRAGILE: Only positive at 1/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS: 1000 ORB
+================================================================================
+
+1000 ORB - Bad Trade Identification:
+  Total trades: 523
+  Bad trades: 172 (32.9%)
+  R threshold (30th pct): -1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+No conditions with lift >= 1.3 found
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_ny_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_orb_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.342256    0.342256          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.058736 orb_size_norm_gt_0.06    0.342256    0.346154     0.003898             419    80.114723
+  0.088104 orb_size_norm_gt_0.09    0.342256    0.410788     0.068532             282    53.919694
+  0.117472 orb_size_norm_gt_0.12    0.342256    0.365994     0.023738             176    33.652008
+  0.146840 orb_size_norm_gt_0.15    0.342256    0.352941     0.010685             115    21.988528
+  0.176208 orb_size_norm_gt_0.18    0.342256    0.333333    -0.008923              73    13.957935
+  [OK] ROBUST: Positive improvement at 4/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS: 1100 ORB
+================================================================================
+
+1100 ORB - Bad Trade Identification:
+  Total trades: 523
+  Bad trades: 523 (100.0%)
+  R threshold (30th pct): 1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+No conditions with lift >= 1.3 found
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_ny_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_orb_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+       0.0 pre_orb_travel_norm_gt_0.00    0.449331    0.449331          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.094804 orb_size_norm_gt_0.09    0.449331    0.721519     0.272188             444    84.894837
+  0.142206 orb_size_norm_gt_0.14    0.449331    0.506726     0.057396             300    57.361377
+  0.189609 orb_size_norm_gt_0.19    0.449331    0.482353     0.033022             183    34.990440
+  0.237011 orb_size_norm_gt_0.24    0.449331    0.450980     0.001650             115    21.988528
+  0.284413 orb_size_norm_gt_0.28    0.449331    0.454945     0.005614              68    13.001912
+  [OK] ROBUST: Positive improvement at 5/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS: 1800 ORB
+================================================================================
+
+1800 ORB - Bad Trade Identification:
+  Total trades: 522
+  Bad trades: 522 (100.0%)
+  R threshold (30th pct): 1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+No conditions with lift >= 1.3 found
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+       0.0 pre_ny_travel_norm_gt_0.00    0.425287    0.425287          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.425287    0.425287          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.425287    0.425287          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.425287    0.425287          0.0               0          0.0
+       0.0 pre_ny_travel_norm_gt_0.00    0.425287    0.425287          0.0               0          0.0
+  [FAIL] FRAGILE: Only positive at 0/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.533756 pre_orb_travel_norm_gt_0.53    0.425287    0.703704     0.278416             468    89.655172
+  0.800634 pre_orb_travel_norm_gt_0.80    0.425287    0.468750     0.043463             330    63.218391
+  1.067513 pre_orb_travel_norm_gt_1.07    0.425287    0.428571     0.003284             193    36.973180
+  1.334391 pre_orb_travel_norm_gt_1.33    0.425287    0.411765    -0.013523              97    18.582375
+  1.601269 pre_orb_travel_norm_gt_1.60    0.425287    0.425486     0.000199              59    11.302682
+  [OK] ROBUST: Positive improvement at 4/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.067263 orb_size_norm_gt_0.07    0.425287    0.421053    -0.004235             446    85.440613
+  0.100894 orb_size_norm_gt_0.10    0.425287    0.346535    -0.078753             320    61.302682
+  0.134526 orb_size_norm_gt_0.13    0.425287    0.373860    -0.051427             193    36.973180
+  0.168157 orb_size_norm_gt_0.17    0.425287    0.409756    -0.015531             112    21.455939
+  0.201789 orb_size_norm_gt_0.20    0.425287    0.429204     0.003916              70    13.409962
+  [FAIL] FRAGILE: Only positive at 1/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS: 2300 ORB
+================================================================================
+
+2300 ORB - Bad Trade Identification:
+  Total trades: 522
+  Bad trades: 160 (30.7%)
+  R threshold (30th pct): -1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+                     condition  bad_freq  all_freq     lift  bad_count  all_count
+swept_london_high_before_entry   0.18125    0.1341 1.351607         29         70
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+Condition: swept_london_high_before_entry
+  IN-SAMPLE:
+    Baseline:  0 trades, 0.000R avg
+    Filtered:  0 trades, 0.000R avg
+    Improvement: +0.000R
+  OUT-OF-SAMPLE:
+    Baseline:  522 trades, 0.387R avg
+    Filtered:  452 trades, 0.420R avg
+    Improvement: +0.033R
+    ? INCONCLUSIVE
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.482569 pre_ny_travel_norm_gt_0.48    0.386973    0.397590     0.010617             439    84.099617
+  0.723853 pre_ny_travel_norm_gt_0.72    0.386973    0.445545     0.058571             320    61.302682
+  0.965137 pre_ny_travel_norm_gt_0.97    0.386973    0.390244     0.003271             194    37.164751
+  1.206422 pre_ny_travel_norm_gt_1.21    0.386973    0.390476     0.003503             102    19.540230
+  1.447706 pre_ny_travel_norm_gt_1.45    0.386973    0.388286     0.001313              61    11.685824
+  [OK] ROBUST: Positive improvement at 5/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.482569 pre_orb_travel_norm_gt_0.48    0.386973    0.397590     0.010617             439    84.099617
+  0.723853 pre_orb_travel_norm_gt_0.72    0.386973    0.445545     0.058571             320    61.302682
+  0.965137 pre_orb_travel_norm_gt_0.97    0.386973    0.390244     0.003271             194    37.164751
+  1.206422 pre_orb_travel_norm_gt_1.21    0.386973    0.390476     0.003503             102    19.540230
+  1.447706 pre_orb_travel_norm_gt_1.45    0.386973    0.388286     0.001313              61    11.685824
+  [OK] ROBUST: Positive improvement at 5/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.103298 orb_size_norm_gt_0.10    0.386973    0.507692     0.120719             457    87.547893
+  0.154947 orb_size_norm_gt_0.15    0.386973    0.471154     0.084181             314    60.153257
+  0.206596 orb_size_norm_gt_0.21    0.386973    0.384146    -0.002827             194    37.164751
+  0.258245 orb_size_norm_gt_0.26    0.386973    0.412935     0.025962             120    22.988506
+  0.309894 orb_size_norm_gt_0.31    0.386973    0.419355     0.032382              57    10.919540
+  [OK] ROBUST: Positive improvement at 4/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS: 0030 ORB
+================================================================================
+
+0030 ORB - Bad Trade Identification:
+  Total trades: 523
+  Bad trades: 201 (38.4%)
+  R threshold (30th pct): -1.000R
+
+--- Overrepresented Conditions in Bad Trades ---
+
+Top conditions with lift >= 1.3:
+        condition  bad_freq  all_freq    lift  bad_count  all_count
+london_compressed   0.00995  0.005736 1.73466          2          3
+
+--- Time-Split OOS Validation (split: 2024-01-01) ---
+
+Condition: london_compressed
+  IN-SAMPLE:
+    Baseline:  0 trades, 0.000R avg
+    Filtered:  0 trades, 0.000R avg
+    Improvement: +0.000R
+  OUT-OF-SAMPLE:
+    Baseline:  523 trades, 0.231R avg
+    Filtered:  520 trades, 0.235R avg
+    Improvement: +0.003R
+    ? INCONCLUSIVE
+
+--- Robustness Testing ---
+
+Feature: pre_ny_travel_norm
+ threshold                  condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.482569 pre_ny_travel_norm_gt_0.48    0.231358    0.095238    -0.136119             439    83.938815
+  0.723853 pre_ny_travel_norm_gt_0.72    0.231358    0.251232     0.019874             320    61.185468
+  0.965137 pre_ny_travel_norm_gt_0.97    0.231358    0.240122     0.008764             194    37.093690
+  1.206422 pre_ny_travel_norm_gt_1.21    0.231358    0.254157     0.022799             102    19.502868
+  1.447706 pre_ny_travel_norm_gt_1.45    0.231358    0.246753     0.015396              61    11.663480
+  [OK] ROBUST: Positive improvement at 4/5 thresholds
+
+Feature: pre_orb_travel_norm
+ threshold                   condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.482569 pre_orb_travel_norm_gt_0.48    0.231358    0.095238    -0.136119             439    83.938815
+  0.723853 pre_orb_travel_norm_gt_0.72    0.231358    0.251232     0.019874             320    61.185468
+  0.965137 pre_orb_travel_norm_gt_0.97    0.231358    0.240122     0.008764             194    37.093690
+  1.206422 pre_orb_travel_norm_gt_1.21    0.231358    0.254157     0.022799             102    19.502868
+  1.447706 pre_orb_travel_norm_gt_1.45    0.231358    0.246753     0.015396              61    11.663480
+  [OK] ROBUST: Positive improvement at 4/5 thresholds
+
+Feature: orb_size_norm
+ threshold             condition  baseline_r  filtered_r  improvement  trades_removed  pct_removed
+  0.112283 orb_size_norm_gt_0.11    0.231358    0.356322     0.124964             436    83.365201
+  0.168424 orb_size_norm_gt_0.17    0.231358    0.282828     0.051471             325    62.141491
+  0.224566 orb_size_norm_gt_0.22    0.231358    0.250755     0.019398             192    36.711281
+  0.280707 orb_size_norm_gt_0.28    0.231358    0.295567     0.064209             117    22.370937
+  0.336849 orb_size_norm_gt_0.34    0.231358    0.272727     0.041370              72    13.766730
+  [OK] ROBUST: Positive improvement at 5/5 thresholds
+
+================================================================================
+ANOMALY ANALYSIS COMPLETE
+================================================================================

@@ -1,0 +1,274 @@
+SESSION-SPECIFIC EDGE DISCOVERY — 0030 NYSE ORB (UTC+10)
+
+Non-negotiable contracts:
+- Use ONLY existing tables/fields exactly as they exist: daily_features_v2, bars_1m, bars_5m.
+- State filters MUST use ONLY info available BEFORE 00:30.
+- Execution MUST be 1m; TP+SL same bar => LOSS; timeouts counted (0R or -0.25R, choose one and keep fixed).
+- No parameter optimisation, no per-state tuning, no silent iteration.
+- Report ALL failures.
+
+Goal:
+Find (or disprove) LOW-frequency, HIGH-quality liquidity-reaction edges at 0030, using session-specific behavior.
+
+PHASE 1 — Map 0030 behavior
+1) Summarize baseline breakout results at 0030 (trades, avg R, ORB size distribution).
+2) Identify likely 0030 liquidity magnets:
+   - prior day high/low
+   - Asia high/low
+   - London high/low
+   - 23:00 session high/low
+3) Propose 5–8 hypotheses for 0030 only (not generic templates).
+
+PHASE 2 — Build only THESE 5 candidate pattern families (session-specific)
+For each pattern family, create 2–4 STATES (pre-0030 only) and test.
+
+Pattern Family A — Opening Drive Exhaustion (ODX)
+- Liquidity event: first post-00:30 impulse expands hard then stalls.
+- Failure confirmation: 5m “no new extreme” + 1m reclaim trigger.
+- Entry: opposite on first 1m close back through key level (ORB mid or break level).
+- Stop: impulse extreme.
+- Target: fixed 1.0R.
+- Timeout: 20m.
+
+Pattern Family B — Sweep + Acceptance Filter (SAF)
+- Liquidity event: sweep of prior session/day level in first 10–20m.
+- Acceptance test: require 5m CLOSE back inside the swept level (rejection), OR 5m CLOSE beyond it (acceptance) to AVOID fading.
+- Trade only rejection cases.
+- Entry: 1m reclaim.
+- Stop: sweep extreme.
+- Target: 1.0R.
+- Timeout: 15–20m.
+
+Pattern Family C — No-Side-Chosen (5m commitment, then trap)
+- Regime condition: minutes 00:35–00:50 have NO 5m close outside ORB.
+- Liquidity event: first sweep outside ORB, then 1m reclaim inside within 3m.
+- Entry: reclaim.
+- Stop: sweep extreme.
+- Target: 1.0R.
+- Timeout: 20m.
+
+Pattern Family D — Two-Step Fake Expansion (TSF)
+- Liquidity event: first breakout attempt fails (reclaim), second attempt fails quickly (double-failure).
+- Entry: after second failure confirmed (1m close back inside).
+- Stop: second failure extreme.
+- Target: 1.0R.
+- Timeout: 20m.   ___________________UPDATED 
+
+DATA & INTEGRITY RULES (MANDATORY)
+
+Use existing tables only (e.g. daily_features_v2, bars_1m, bars_5m)
+
+No lookahead
+
+No parameter optimization
+
+Worst-case 1m execution (TP+SL in same bar = LOSS)
+
+Pre-ORB state filters only
+
+All failures must be reported honestly
+
+Enforce temporal stability (early/mid/late chunks must all be positive)
+
+Enforce selectivity < 50%
+
+TASK STRUCTURE (FOLLOW EXACTLY)
+
+You will perform SESSION-SPECIFIC DISCOVERY, one session at a time.
+
+Phase 1 — Behaviour Mapping (NO TRADING YET)
+
+For the chosen Asia session:
+
+Map what price actually does after the ORB
+
+Classify behaviours:
+
+Opening drive continuation
+
+Opening drive exhaustion
+
+Balanced open → expansion
+
+Balanced open → chop
+
+Immediate failure
+
+Determine:
+
+Whether balance is strength or weakness
+
+Whether continuation or failure dominates
+
+Output: descriptive statistics + behavioural conclusions only
+
+DO NOT propose entries yet.
+
+Phase 2 — Pattern Family Testing
+
+Based ONLY on Phase 1 behaviour, test session-appropriate pattern families, e.g.:
+
+Opening Drive Continuation
+
+Opening Drive Exhaustion
+
+Balance Acceptance
+
+Balance Failure
+
+Rules:
+
+One pattern family at a time
+
+No tuning
+
+Fixed, reasonable parameters
+
+Test all relevant state buckets (e.g. Asia range, pre-session distance)
+
+VALIDATION CRITERIA (NON-NEGOTIABLE)
+
+A pattern is VALIDATED only if:
+
+≥ 50 trades
+
+Delta ≥ +0.10R vs baseline
+
+3/3 temporal chunks positive
+
+Stable expectancy (no regime dependency)
+
+Anything else = FAILED.
+
+REPORTING REQUIREMENTS
+
+At the end, produce:
+
+A professional final report (like an institutional research memo)
+
+Clear table of:
+
+Patterns tested
+
+Trades
+
+Avg R
+
+Delta
+
+Temporal stability
+
+UPODSATE PART 3
+
+SEND THIS TO CLAUDE:
+
+Decision: Start with 09:00 Asia session.
+
+STRICT PROTOCOL REMINDER
+
+Apply new validation criteria:
+
+≥50 trades
+
+Delta ≥ +0.10R vs baseline
+
+3/3 temporal chunks positive
+
+Stable expectancy (no regime dependency)
+
+PHASE 1 — BEHAVIOR MAPPING ONLY
+
+NO trading logic
+
+NO impulses, reversals, ORB mid, or pattern assumptions
+
+Simply classify what price DOES after the 09:00 ORB:
+
+Drive continuation
+
+Drive failure
+
+Balance → expansion
+
+Balance → chop
+
+Immediate rejection
+
+Determine:
+
+Is balance strength or weakness?
+
+Is continuation or failure dominant?
+
+Do NOT propose entries yet.
+
+After Phase 1, wait for my approval before Phase 2.
+
+One last important note (don’t skip this)
+
+You caught something very important yourself:
+
+Under the new ≥50 trade rule,
+0030 is no longer “validated” — it’s a behavioral insight only.
+
+That’s not a failure.
+That’s research integrity improving.
+
+Verdict (VALIDATED / FAILED)
+
+Explicit DO NOT TRADE conclusions for failed patterns
+
+No hype. No discretion. No “maybe”.
+
+IMPORTANT REMINDERS
+
+Do NOT reuse logic from other sessions unless behaviour matches
+
+Do NOT assume ORBs work the same across sessions
+
+The goal is truth, not finding trades
+
+FIRST ACTION
+
+Ask me:
+
+“Which Asia session should I analyse first: 09:00, 10:00, or 11:00?”
+
+Then begin Phase 1.
+FV
+
+
+
+
+
+
+
+
+
+
+
+
+Pattern Family E — Trend-Continuation with Reclaim (do NOT fade)
+- Hypothesis: 0030 often accepts direction after a sweep; edge may be continuation after reclaim, not fade.
+- Liquidity event: early sweep opposite side then strong reclaim + 5m acceptance in direction.
+- Entry: in direction of acceptance on pullback/reclaim.
+- Stop: below/above reclaim pivot.
+- Target: 1.0R.
+- Timeout: 20m.
+
+PHASE 3 — Validation rules (must)
+For every state/pattern:
+- Selectivity: trades < 50% of eligible state days.
+- Date-matched baseline on SAME dates (baseline defined once, fixed).
+- Temporal stability: 3 chronological chunks; reject degrading edges.
+- Minimum trades to validate: 20+. If <20 => INCONCLUSIVE unless effect is huge and stable.
+
+Output required:
+- For each pattern family: states tested, trades, avg R, baseline avg R, delta, pass/fail.
+- Explicit “NO EDGE FOUND” if none validate.
+
+
+
+At 0030, do NOT pre-assume the reaction direction.
+Test both rejection-based and acceptance-based reaction hypotheses.
+If neither validates under strict rules, conclude NO EDGE.

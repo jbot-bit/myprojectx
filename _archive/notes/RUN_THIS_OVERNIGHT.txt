@@ -1,0 +1,84 @@
+================================================================================
+RUN THIS OVERNIGHT - MASSIVE GRID SEARCH (6-12 HOURS)
+================================================================================
+
+You'll be away for hours, so run the FULLEST job:
+
+OPEN CMD AND RUN:
+
+cd C:\Users\sydne\OneDrive\myprojectx
+OVERNIGHT_MASSIVE_GRID_SEARCH.bat
+
+================================================================================
+
+WHAT THIS DOES (6-12 hours):
+
+1. Tests 324 DIFFERENT execution configurations:
+   - 3 ORB sizes (5min, 10min, 15min)
+   - 3 entry methods (close, next-open, 2-bar-confirm)
+   - 2 buffer options (0, 0.5 ticks)
+   - 3 stop modes (full-SL, half-SL, 75pct-SL)
+   - 2 confirmation requirements (1-bar, 2-bar)
+   - 3 R:R ratios (1.0, 1.5, 2.0)
+
+2. Tests ALL 324 configs on ALL 6 sessions (0900, 1000, 1100, 1800, 2300, 0030)
+
+3. Total: 239,760 backtest runs
+
+4. Finds BEST execution config for each session
+
+5. Combines best configs with state filtering
+
+6. Generates comprehensive final report
+
+================================================================================
+
+FEATURES:
+
+- AUTO-RESUMES if interrupted (checkpoints every 10 days)
+- Safe even if PC hibernates
+- Progress logged in results_grid_build.txt
+- Retry logic on errors
+
+================================================================================
+
+WHEN COMPLETE, READ THIS FILE:
+
+FINAL_GRID_SEARCH_REPORT.txt
+
+This tells you:
+- Best execution config for each session
+- Which parameters matter (ORB size, entry method, stop placement)
+- Validated edges (if any)
+- System-level performance
+- Deployment recommendations
+
+================================================================================
+
+EXPECTED RUNTIME:
+
+Phase 1: Building grid (4-8 hours) - 239,760 backtest runs
+Phase 2: Analyzing grid (30-60 min) - Finding best configs
+Phase 3: State filtering (30-60 min) - Testing best + states
+Phase 4: Final report (10 min) - Comprehensive summary
+
+TOTAL: 6-12 hours (depends on CPU)
+
+================================================================================
+
+COPY/PASTE THIS INTO CMD:
+
+cd C:\Users\sydne\OneDrive\myprojectx
+OVERNIGHT_MASSIVE_GRID_SEARCH.bat
+
+Then press ENTER at the prompt to start.
+
+================================================================================
+
+Leave it running. Come back in 6-12 hours and read FINAL_GRID_SEARCH_REPORT.txt
+
+This is the DEFINITIVE test of ORB breakouts on MGC.
+
+If no edges found here, ORB breakouts don't work (period).
+
+================================================================================

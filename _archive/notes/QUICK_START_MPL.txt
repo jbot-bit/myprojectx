@@ -1,0 +1,45 @@
+=================================
+PLATINUM QUICK START - READ THIS
+=================================
+
+STATUS: Infrastructure complete, need data
+
+PROBLEM: Databento API authentication failed
+         (Either expired key or no platinum access)
+
+SOLUTIONS (Pick one):
+
+1. FIX DATABENTO API
+   - Check .env file has valid DATABENTO_API_KEY
+   - Test key: python -c "import databento as db; client = db.Historical('YOUR_KEY'); print('OK')"
+   - Re-run: python backfill_databento_continuous_mpl.py 2024-01-01 2026-01-10
+
+2. USE LOCAL DBN FILES (if you have platinum .dbn files)
+   - Put DBN files in MPL/ folder
+   - Run: python scripts/ingest_databento_dbn_mpl.py MPL
+
+3. IMPORT CSV DATA (if you have platinum CSV)
+   - Tell me the format and I'll create import script
+
+4. SKIP PLATINUM
+   - Trade MGC/NQ (already profitable)
+   - Come back to platinum later
+
+ONCE DATA IS LOADED:
+   python CHECK_AND_ANALYZE_MPL.py
+
+This will:
+- Verify data integrity
+- Run baseline backtest
+- Test filters
+- Generate final trading decision (GO/NO-GO)
+
+EXPECTED RESULTS:
+- 2-4 profitable ORBs (vs 6 for MGC, 5 for NQ)
+- Lower liquidity than MGC/NQ
+- Honest assessment (no curve fitting)
+
+READ FULL DETAILS:
+   PLATINUM_MORNING_BRIEFING.md
+
+ALL CODE IS READY - JUST NEED DATA

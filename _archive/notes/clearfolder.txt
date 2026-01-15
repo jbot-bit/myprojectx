@@ -1,0 +1,224 @@
+Situation
+You are working on an application codebase that has accumulated technical debt over time. The codebase contains multiple implementations of similar functionality (such as sorting and filtering strategies), making it difficult to identify which implementations are currently in use, which are deprecated, and which represent the best practices to maintain going forward.
+
+Task
+Analyze the provided codebase to identify and categorize all strategy implementations (sorting, filtering, and similar patterns). Create a clear report that distinguishes between:
+
+Active strategies currently being used in production
+Deprecated or legacy strategies that should be removed
+Duplicate or redundant implementations
+Best practice implementations that should be standardized across the codebase
+Objective
+Enable informed decision-making about code cleanup and refactoring by providing a clear map of the current state of strategy implementations, allowing you to safely remove obsolete code and consolidate around the most effective patterns.
+
+Knowledge
+When analyzing the codebase, the assistant should:
+
+Trace usage patterns by examining import statements, function calls, and class instantiations
+Check for recent commit history or modification dates to identify actively maintained code
+Look for test coverage as an indicator of which implementations are considered production-ready
+Identify naming patterns that suggest versioning (e.g., "SortStrategyV2", "LegacyFilter")
+Examine configuration files or dependency injection setups that might indicate which strategies are actively configured
+Flag any strategies that have similar functionality but different implementations
+Note any TODO comments, deprecation warnings, or documentation that provides context about intended usage
+The assistant should provide recommendations for:
+
+Which files can be safely deleted
+Which implementations should become the standard
+Any migration steps needed if active code depends on deprecated strategies
+
+
+Understood.
+No assumptions.
+This is **exact wording** to give Claude.
+
+---
+
+### **Message to Claude (copy-paste exactly)**
+
+> **Task: Full Audit of All Plays – No Deletions**
+>
+> You are to perform a **non-destructive audit** of *all* historically generated plays.
+>
+> **Rules (mandatory):**
+>
+> * ❌ Do **not** delete, overwrite, or regenerate any trades or tables.
+> * ❌ Do **not** change execution logic, stop logic, timeframes, filters, or parameters.
+> * ❌ Do **not** re-label sessions or modify date ranges.
+> * ✅ Treat all existing trade tables as **read-only**.
+>
+> **Objective:**
+>
+> 1. Enumerate **every unique strategy / configuration / play** that exists in the data.
+> 2. For each play, compute:
+>
+>    * total trades
+>    * win rate
+>    * average R
+>    * total R
+>    * max drawdown (R)
+>    * expectancy
+> 3. Preserve results even if negative.
+>
+> **Classification (do NOT filter yet):**
+>
+> * Tier A: positive expectancy, acceptable drawdown
+> * Tier B: marginal / context-dependent
+> * Tier C: negative expectancy
+>
+> **Removal logic (analysis only):**
+>
+> * For Tier C, explain *why* it fails (sample size, execution sensitivity, regime dependence, noise).
+> * For Tier B, list **exact conditions** under which performance improves (session context, prior session behaviour, volatility state).
+>
+> **Output required:**
+>
+> * A table listing **all plays**, sorted by expectancy (highest → lowest).
+> * A second table listing **only plays with positive expectancy**.
+> * A third table listing **plays that appear profitable only under specific conditions** (no deletions).
+>
+> **Integrity checks (must report explicitly):**
+>
+> * Confirm whether any plays were previously removed or overwritten.
+> * Confirm whether any tables were dropped or rebuilt during prior runs.
+> * Confirm that execution logic used to generate each play is unchanged.
+>
+> **Final section:**
+>
+> * “Plays safe to remove” (analysis only, no deletion)
+> * “Plays to keep unfiltered”
+> * “Plays that require conditional filters”
+>
+> If any information is missing, stop and report what is missing. Do not infer.
+
+---
+
+### Step check
+
+* This will **force Claude into audit mode**, not optimization mode.
+* It prevents silent pruning or re-generation.
+* It makes Claude justify removals instead of doing them.
+
+Reply **“sent”** once you’ve given this to Claude.
+Then we’ll sanity-check its output line-by-line.
+
+
+update 2
+
+
+Below is a **single, clean meta-prompt**.
+This teaches Claude **how the original strategies were discovered**, then forces it to **reuse that same discovery logic** on new assets.
+No assumptions. No optimisation first. No deletion.
+
+---
+
+## **Claude Meta-Prompt — Strategy Discovery Transfer**
+
+> **Role**
+> You are a **Strategy Discovery Auditor & Replicator**.
+>
+> Your task is to **reverse-engineer how existing profitable strategies were originally discovered**, extract the *decision logic*, and then **apply the same logic to discover new strategies** on the same or different assets.
+>
+> ---
+>
+> ### **Phase 1 — Learn How Existing Strategies Were Found (Read-Only)**
+>
+> **Rules**
+>
+> * ❌ Do not modify, delete, regenerate, or re-optimise any existing strategies.
+> * ❌ Do not introduce new filters or parameters.
+> * ✅ Treat all historical strategies and trades as ground truth.
+>
+> **Steps**
+>
+> 1. Enumerate all historically profitable strategies.
+> 2. For each, reconstruct:
+>
+>    * What *market condition* was identified first
+>    * What *constraint* turned randomness into edge
+>    * What *assumption* was implicitly tested
+>    * What *variable was held constant*
+>    * What *dimension was allowed to vary*
+> 3. Identify:
+>
+>    * What was **measured** before the trade existed
+>    * What was **not measured** but implicitly assumed
+>    * What signals were *ignored* but didn’t matter
+>
+> **Deliverable**
+>
+> * A written breakdown of the **discovery logic**, not the strategy rules.
+> * One section per strategy: *“How this edge was discovered”*.
+>
+> ---
+>
+> ### **Phase 2 — Abstract the Discovery Pattern**
+>
+> From Phase 1, extract the **general discovery framework**, including:
+>
+> * Entry point (what observation started the search)
+> * Dimensional reduction (what was frozen vs explored)
+> * Validation method (how false positives were rejected)
+> * Survivorship filters (what killed most candidates)
+>
+> **Deliverable**
+>
+> * A reusable **Edge Discovery Playbook** written as steps or pseudocode.
+>
+> ---
+>
+> ### **Phase 3 — Apply the Same Logic to New Discovery**
+>
+> Using the **same discovery playbook**:
+>
+> * Search for new strategies on:
+>
+>   * the same asset, different sessions, or
+>   * different but structurally similar assets.
+>
+> **Constraints**
+>
+> * Do NOT copy parameters from old strategies.
+> * Do NOT optimise early.
+> * Only test conditions that would have been knowable **at trade time**.
+>
+> **Deliverable**
+>
+> * List of candidate strategies with:
+>
+>   * Why they exist
+>   * What condition creates the edge
+>   * Why this mirrors past discovery logic
+>
+> ---
+>
+> ### **Phase 4 — Failure & Transfer Test**
+>
+> For each new candidate:
+>
+> * Explain how it could fail
+> * Explain what market regime would kill it
+> * Explain whether it is:
+>
+>   * asset-specific
+>   * session-specific
+>   * structurally transferable
+>
+> ---
+>
+> ### **Integrity Rules**
+>
+> * If discovery logic cannot be reconstructed, say so.
+> * If prior strategies relied on accidental artefacts, identify them.
+> * Never assume intent — infer only from evidence.
+>
+> ---
+>
+> **Final Output Structure**
+>
+> 1. How past strategies were discovered
+> 2. The generalized discovery framework
+> 3. New strategy candidates using the same logic
+> 4. Transferability & failure analysis
+
+---

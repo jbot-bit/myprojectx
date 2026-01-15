@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-01-12T09:21:02.863610",
+  "completed": [
+    "1m_nofilters_rr1.5_c1",
+    "1m_nofilters_rr1.5_c2",
+    "1m_nofilters_rr1.5_c3",
+    "1m_nofilters_rr2.0_c1",
+    "1m_nofilters_rr2.0_c2",
+    "1m_nofilters_rr2.0_c3",
+    "1m_nofilters_rr2.5_c1",
+    "1m_nofilters_rr2.5_c2",
+    "1m_nofilters_rr2.5_c3",
+    "1m_nofilters_rr3.0_c1",
+    "1m_nofilters_rr3.0_c2",
+    "1m_nofilters_rr3.0_c3",
+    "5m_nofilters_rr1.5_c1",
+    "5m_nofilters_rr1.5_c2"
+  ],
+  "failed": [],
+  "current": "5m_nofilters_rr1.5_c3",
+  "total_variants": 104
+}

@@ -1,0 +1,8 @@
+MGC_ORB_CONFIGS = {
+    "0900": {"rr": 1.0, "sl_mode": "FULL", "avg_r": 0.431, "win_rate": 71.5, "filter_fn": None, "reason": "High WR baseline (70% days, ~+111R/yr)", "tier": "A"},
+    "1000": {"rr": 3.0, "sl_mode": "FULL", "avg_r": 0.342, "win_rate": 67.1, "filter_fn": "check_max_stop", "max_ticks": 100, "reason": "Best Asia ORB (~+88R/yr)", "tier": "A"},
+    "1100": {"rr": 1.0, "sl_mode": "FULL", "avg_r": 0.449, "win_rate": 72.5, "filter_fn": None, "reason": "SAFEST - 72.5% WR (~+116R/yr)", "tier": "A"},
+    "1800": {"rr": 1.0, "sl_mode": "HALF", "avg_r": 0.425, "win_rate": 71.3, "filter_fn": None, "reason": "London Open - 71.3% WR (~+110R/yr)", "tier": "A", "warning": "PAPER TRADE FIRST"},
+    "2300": {"rr": 1.0, "sl_mode": "HALF", "avg_r": 0.387, "win_rate": 69.3, "filter_fn": None, "reason": "Night session (71% days, ~+100R/yr)", "tier": "A"},
+    "0030": {"rr": 1.0, "sl_mode": "HALF", "avg_r": 0.231, "win_rate": 61.6, "filter_fn": None, "reason": "Late night (71% days, ~+60R/yr)", "tier": "A"},
+}

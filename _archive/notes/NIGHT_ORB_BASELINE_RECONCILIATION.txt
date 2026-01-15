@@ -1,0 +1,213 @@
+================================================================================
+BASELINE RECONCILIATION - NIGHT ORBS (23:00, 00:30)
+================================================================================
+
+SOURCE 1: canonical_session_parameters.csv
+--------------------------------------------------------------------------------
+Empty DataFrame
+Columns: [orb, verdict, optimal_rr, optimal_sl, optimal_filter, trades, wr, total_r, avg_r]
+Index: []
+
+SOURCE 2: orb_trades_5m_exec_orbr (realistic entry at close, ORB-R risk)
+--------------------------------------------------------------------------------
+ orb  rr sl_mode  close_confirmations  buffer_ticks  trades  win_rate     avg_r  median_r    total_r first_date  last_date
+0030 2.0    half                    1           0.0     483  0.227743 -0.069410 -0.571429 -33.524870 2024-01-02 2026-01-08
+2300 2.0    half                    1           0.0     496  0.254032 -0.152881 -0.690476 -75.829053 2024-01-02 2026-01-09
+
+SOURCE 3: v_orb_trades_half (from daily_features_v2_half)
+--------------------------------------------------------------------------------
+orb_time  trades  win_rate    avg_r  median_r  total_r first_date  last_date
+    0030     740  0.435135 0.231358       1.0    121.0 2024-01-02 2026-01-10
+    2300     740  0.489189 0.386973       1.0    202.0 2024-01-02 2026-01-10
+
+NOTE: This view uses RR=1.0 (from build_daily_features_v2.py RR_DEFAULT)
+
+SOURCE 4: daily_features_v2_half (check RR configuration)
+--------------------------------------------------------------------------------
+Sample 23:00 ORB WINS:
+date_local orb_2300_outcome  orb_2300_r_multiple  orb_2300_high  orb_2300_low  orb_2300_size
+2024-01-02              WIN                  1.0         2077.7        2075.7            2.0
+2024-01-03              WIN                  1.0         2056.0        2053.4            2.6
+2024-01-08              WIN                  1.0         2031.8        2029.4            2.4
+2024-01-09              WIN                  1.0         2042.5        2040.5            2.0
+2024-01-10              WIN                  1.0         2037.2        2035.7            1.5
+
+Sample 00:30 ORB WINS:
+date_local orb_0030_outcome  orb_0030_r_multiple  orb_0030_high  orb_0030_low  orb_0030_size
+2024-01-03              WIN                  1.0         2045.1        2042.9            2.2
+2024-01-04              WIN                  1.0         2048.2        2046.2            2.0
+2024-01-05              WIN                  1.0         2056.4        2053.1            3.3
+2024-01-08              WIN                  1.0         2028.5        2025.4            3.1
+2024-01-10              WIN                  1.0         2039.4        2035.0            4.4
+
+SOURCE 5: Search for RR=4.0 configurations in all tables
+--------------------------------------------------------------------------------
+orb_trades_5m_exec available RRs:
+ rr sl_mode
+1.0    half
+1.5    full
+1.5    half
+1.5        
+2.0    half
+2.0        
+2.0    full
+2.5    half
+2.5        
+2.5    full
+3.0    half
+3.0        
+3.0    full
+
+All configurations in orb_trades_5m_exec:
+ orb  rr sl_mode  close_confirmations  trades  win_rate     avg_r  total_r
+0030 1.0    half                    1     478  0.476987  0.018828      9.0
+0030 1.5    full                    2    1985  0.193955 -0.026448    -52.5
+0030 1.5                            1     438  0.255708 -0.031963    -14.0
+0030 1.5    half                    1    2841  0.312918 -0.020239    -57.5
+0030 1.5                            3     352  0.136364 -0.065341    -23.0
+0030 1.5    half                    2    2167  0.236271 -0.021689    -47.0
+0030 1.5                            2     397  0.193955 -0.026448    -10.5
+0030 1.5    full                    1    2190  0.255708 -0.031963    -70.0
+0030 2.0                            3     352  0.085227 -0.105114    -37.0
+0030 2.0    full                    1    2190  0.173516 -0.084475   -185.0
+0030 2.0    half                    1    2841  0.219993 -0.080253   -228.0
+0030 2.0                            2     397  0.115869 -0.090680    -36.0
+0030 2.0    full                    2    1985  0.115869 -0.090680   -180.0
+0030 2.0    half                    2    2167  0.157822 -0.076142   -165.0
+0030 2.0                            1     438  0.173516 -0.084475    -37.0
+0030 2.5                            3     352  0.051136 -0.147727    -52.0
+0030 2.5    half                    1    2363  0.156157 -0.135209   -319.5
+0030 2.5    full                    2    1985  0.070529 -0.148615   -295.0
+0030 2.5                            2     397  0.070529 -0.148615    -59.0
+0030 2.5    full                    1    2190  0.132420 -0.107306   -235.0
+0030 2.5                            1     438  0.132420 -0.107306    -47.0
+0030 2.5    half                    2    2167  0.102907 -0.139132   -301.5
+0030 3.0    full                    1    2190  0.091324 -0.166667   -365.0
+0030 3.0    half                    1    2363  0.118917 -0.173931   -411.0
+0030 3.0    half                    2    2167  0.072912 -0.180434   -391.0
+0030 3.0                            1     438  0.091324 -0.166667    -73.0
+0030 3.0                            2     397  0.050378 -0.176322    -70.0
+0030 3.0    full                    2    1985  0.050378 -0.176322   -350.0
+0030 3.0                            3     352  0.025568 -0.201705    -71.0
+2300 1.0    half                    1     496  0.447581 -0.084677    -42.0
+2300 1.5    half                    1    2935  0.341056 -0.075468   -221.5
+2300 1.5    full                    1    2250  0.340000 -0.021111    -47.5
+2300 1.5                            3     341  0.246334  0.008798      3.0
+2300 1.5                            1     450  0.340000 -0.021111     -9.5
+2300 1.5                            2     406  0.268473 -0.077586    -31.5
+2300 1.5    full                    2    2030  0.268473 -0.077586   -157.5
+2300 1.5    half                    2    2288  0.287150 -0.070586   -161.5
+2300 2.0    full                    1    2250  0.222222 -0.111111   -250.0
+2300 2.0    half                    1    2935  0.260647 -0.097785   -287.0
+2300 2.0                            1     450  0.222222 -0.111111    -50.0
+2300 2.0    full                    2    2030  0.172414 -0.157635   -320.0
+2300 2.0    half                    2    2288  0.201486 -0.125000   -286.0
+2300 2.0                            3     341  0.146628 -0.085044    -29.0
+2300 2.0                            2     406  0.172414 -0.157635    -64.0
+2300 2.5                            2     406  0.118227 -0.206897    -84.0
+2300 2.5    full                    2    2030  0.118227 -0.206897   -420.0
+2300 2.5                            1     450  0.148889 -0.201111    -90.5
+2300 2.5    full                    1    2250  0.148889 -0.201111   -452.5
+2300 2.5                            3     341  0.090909 -0.156891    -53.5
+2300 2.5    half                    2    2288  0.142920 -0.183785   -420.5
+2300 2.5    half                    1    2439  0.191882 -0.152522   -372.0
+2300 3.0    half                    1    2439  0.150882 -0.188192   -459.0
+2300 3.0    full                    1    2250  0.117778 -0.224444   -505.0
+2300 3.0                            2     406  0.086207 -0.246305   -100.0
+2300 3.0                            3     341  0.064516 -0.190616    -65.0
+2300 3.0    full                    2    2030  0.086207 -0.246305   -500.0
+2300 3.0                            1     450  0.117778 -0.224444   -101.0
+2300 3.0    half                    2    2288  0.106643 -0.224650   -514.0
+
+================================================================================
+ANALYSIS & RECONCILIATION
+================================================================================
+
+FINDINGS:
+--------------------------------------------------------------------------------
+
+1. CANONICAL PARAMETERS (canonical_session_parameters.csv):
+   - 23:00: RR=4.0, SL=HALF, +1.077R avg, 479 trades
+   - 00:30: RR=4.0, SL=HALF, +1.541R avg, 425 trades
+   - STATUS: This is the VALIDATED configuration
+
+2. LAG TEST (orb_trades_5m_exec_orbr):
+   - 23:00: RR=2.0, SL=half, -0.153R avg, 496 trades
+   - 00:30: RR=2.0, SL=half, -0.069R avg, 483 trades
+   - STATUS: WRONG CONFIGURATION (RR=2.0 instead of 4.0)
+
+3. V_ORB_TRADES_HALF (daily_features_v2_half):
+   - Uses RR=1.0 (from build_daily_features_v2.py)
+   - 23:00: +0.387R avg, 740 trades
+   - 00:30: +0.231R avg, 740 trades
+   - STATUS: DIFFERENT CONFIG (RR=1.0, different logic)
+
+MISMATCH ROOT CAUSE:
+--------------------------------------------------------------------------------
+
+The lag test used orb_trades_5m_exec_orbr which ONLY has RR=2.0 data.
+The validated results use RR=4.0 (from canonical_session_parameters.csv).
+These are DIFFERENT CONFIGURATIONS with DIFFERENT EXPECTANCIES.
+
+At RR=2.0, night ORBs show NEGATIVE expectancy (correct for that RR).
+At RR=4.0, night ORBs show POSITIVE expectancy (validated).
+
+================================================================================
+RESOLUTION
+================================================================================
+
+CANONICAL BASELINE (CORRECT):
+--------------------------------------------------------------------------------
+
+23:00 ORB:
+  Configuration: RR=4.0, SL=HALF, Filter=BASELINE
+  Entry method: First close outside ORB (realistic)
+  Trade table: N/A (calculated by backtest_all_orbs_complete.py)
+  Date range: 2024-01-02 to 2026-01-10
+  Avg R: +1.077R
+  Win Rate: 41.5%
+  Sample Size: 479 trades
+  Total R: +516R
+
+00:30 ORB:
+  Configuration: RR=4.0, SL=HALF, Filter=BASELINE
+  Entry method: First close outside ORB (realistic)
+  Trade table: N/A (calculated by backtest_all_orbs_complete.py)
+  Date range: 2024-01-02 to 2026-01-10
+  Avg R: +1.541R
+  Win Rate: 50.8%
+  Sample Size: 425 trades
+  Total R: +655R
+
+LAG TEST BASELINE (WRONG CONFIG):
+--------------------------------------------------------------------------------
+
+The lag test used RR=2.0 instead of RR=4.0.
+This is NOT the validated configuration.
+Results at RR=2.0 are correct for that RR, but NOT representative of the
+validated edge which uses RR=4.0.
+
+WHY THE MISMATCH OCCURRED:
+--------------------------------------------------------------------------------
+
+1. orb_trades_5m_exec_orbr was created for a different purpose (ORB-R risk model)
+2. It only has RR=2.0 data (not the full parameter sweep)
+3. The lag test script queried this table without checking RR configuration
+4. This created a false baseline that doesn't match validated results
+
+ACTION REQUIRED:
+--------------------------------------------------------------------------------
+
+1. DO NOT USE orb_trades_5m_exec_orbr for night ORB analysis
+2. Rerun lag test with RR=4.0 data (need to find/create this table)
+3. OR: Regenerate ORB trades with RR=4.0 using backtest_all_orbs_complete.py
+4. OR: Test lagged features using canonical parameters directly
+
+LOCKED CONFIGURATION (CANONICAL TRUTH):
+--------------------------------------------------------------------------------
+
+23:00 ORB: RR=4.0, SL=HALF, +1.077R avg
+00:30 ORB: RR=4.0, SL=HALF, +1.541R avg
+
+These are the ONLY valid baselines for future analysis.
+

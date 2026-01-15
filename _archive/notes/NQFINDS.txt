@@ -1,0 +1,63 @@
+You are Claude Code inside my repo. I want you to find “massive NQ trades” that are REPEATABLE, not just mean-reversion scalps.
+
+DEFINITION OF MASSIVE
+- A “massive trade” is: [CHOOSE ONE: A) >=3R same-day runner, B) >=5R EOD capture, C) >=4R multi-leg]
+- R must be defined from entry->stop (NOT from ORB boundary unless explicitly stated).
+- Must be tradable with known info at decision time (no lookahead).
+
+HARD HONESTY RULES
+- No lookahead in features/signals.
+- Conservative execution:
+  - entry on next bar after signal
+  - same-bar TP+SL => LOSS
+  - slippage sensitivity: 0/1/2 ticks
+- Outlier dependence test:
+  - remove top 1% best days and re-evaluate expectancy
+- Must pass time-split robustness:
+  - IS: first 70% of dates, OOS: last 30%
+  - Candidate must be profitable in BOTH (or reject).
+- Must be stable in a small parameter neighborhood (not a single lucky threshold).
+
+SEARCH SCOPE (DO NOT START WITH STRICT FILTERS)
+- Search window: 16:00–21:00 and 23:00–02:00 (UTC+10) for big-move days.
+- Use existing bars_1m_nq and daily_features_v2_nq.
+- Generate candidate families broadly, then narrow only after evidence.
+
+CANDIDATE FAMILIES TO TEST (FOR BIG MOVES)
+1) “Trend day detector → hold runner”
+   - early impulse + no deep pullback structure
+2) “Breakout + retest continuation”
+   - break a key level (prior day H/L, Asia H/L, pre-open range, ORB high/low) then retest then go
+3) “Opening drive continuation”
+   - first 15–30 min directional efficiency / range expansion
+4) “Compression → expansion”
+   - low range into a time window, then expansion with follow-through
+5) “Sweep → continuation” (not sweep → fade)
+   - sweep a reference level then continue in sweep direction
+
+FEATURES ALLOWED (ONLY IF KNOWN BY DECISION TIME)
+- rolling ATR/volatility up to t
+- pre-window travel and compression metrics
+- distance to prior day levels
+- session highs/lows computed only up to current time
+- simple momentum measures (consecutive closes, ROC)
+
+DELIVERABLES
+- Create: scripts/research_nq_massive_moves.py
+- Outputs:
+  - outputs/NQ_MASSIVE_CANDIDATES.csv (ranked)
+  - outputs/NQ_MASSIVE_REPORT.md (definitions + robustness results)
+- For each candidate include:
+  - exact signal definition
+  - entry/stop/target/timeout
+  - trades, winrate, avgR, medianR, 75th percentile R
+  - IS/OOS stats
+  - slippage sensitivity
+  - outlier-removed stats
+  - “PASS/FAIL” decision
+
+START NOW
+1) Inspect schema to confirm tables.
+2) Implement script.
+3) Run it and write outputs.
+If nothing passes, say so and report the best “almost passes” + why they fail.

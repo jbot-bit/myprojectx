@@ -1,0 +1,105 @@
+# MPL (Micro Platinum) Market Configuration
+# Generated: 2026-01-15
+# Awaiting baseline backtest results (similar to MGC/NQ framework)
+
+instrument:
+  symbol: MPL
+  name: "Micro Platinum"
+  exchange: NYMEX
+  contract_months: [F, J, N, V]  # Jan, Apr, Jul, Oct
+
+pricing:
+  tick_size: 0.1
+  tick_value: 0.50  # $0.50 per 0.1 point
+  currency: USD
+  point_value: 5.00  # $5 per point
+
+database:
+  bars_1m: bars_1m_mpl
+  bars_5m: bars_5m_mpl
+  features: daily_features_v2_mpl
+
+sessions:  # Brisbane UTC+10 (matching MGC/NQ for consistency)
+  asia:
+    start: "09:00"
+    end: "17:00"
+    description: "Asian trading hours"
+  london:
+    start: "18:00"
+    end: "23:00"
+    description: "London overlap"
+  ny_futures:
+    start: "23:00"
+    end_next_day: "00:30"
+    description: "NY futures session"
+  ny_cash:
+    start_next_day: "00:30"
+    end_next_day: "02:00"
+    description: "NYSE cash market hours"
+
+orbs:
+  times: [0900, 1000, 1100, 1800, 2300, 0030]
+  window_minutes: 5
+
+  # Baseline performance (FULL SL, RR=1.0) - TO BE DETERMINED
+  baseline_results:
+    0900:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+    1000:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+    1100:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+    1800:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+    2300:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+    0030:
+      trades: null
+      win_rate: null
+      avg_r: null
+      total_r: null
+      rank: null
+
+  # Recommended ORBs (TBD after backtest)
+  recommended: []
+
+execution:
+  default_sl_mode: full  # 'full' = opposite ORB edge, 'half' = ORB midpoint
+  default_rr: 1.0
+  default_slippage_ticks: 1
+  commission_per_side: 2.50
+  entry_method: "first_close_outside_orb"
+
+backtesting:
+  data_start: null
+  data_end: null
+  trading_days: null
+  total_trades_baseline: null
+  profitable_orbs: null
+
+notes:
+  - "MPL optimal time: TBD (platinum correlates with industrial metals)"
+  - "Platinum is both precious metal (jewelry) and industrial metal (automotive catalysts)"
+  - "Session windows match MGC/NQ framework for direct comparison"
+  - "Zero lookahead enforcement: all features computable at entry time"
+  - "Databento parent symbol: MPL.FUT (Micro Platinum futures)"

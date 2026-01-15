@@ -1,0 +1,714 @@
+[2026-01-12 00:13:20] Created analyze_all_variants.py
+[2026-01-12 00:14:01] Created analyze_all_variants.py
+[2026-01-12 00:14:01] ================================================================================
+[2026-01-12 00:14:01] ORB VARIANTS OVERNIGHT RUNNER - STARTED
+[2026-01-12 00:14:01] ================================================================================
+[2026-01-12 00:14:01] Total variants to test: 104
+[2026-01-12 00:14:01]   - 1m midstop: 12
+[2026-01-12 00:14:01]   - 5m exec: 12
+[2026-01-12 00:14:01]   - 5m half-SL: 80
+[2026-01-12 00:14:01] Starting fresh run
+[2026-01-12 00:14:01] Running 104 variants...
+[2026-01-12 00:14:01] 
+[2026-01-12 00:14:01] [1/104] Running: 1m_rr1.5_c1
+[2026-01-12 00:14:01] Starting: 1m_rr1.5_c1
+[2026-01-12 00:14:01] Command: python backtest_orb_exec_1m.py --rr 1.5 --confirm 1
+[2026-01-12 00:15:35] >> SUCCESS: 1m_rr1.5_c1 (94s)
+[2026-01-12 00:17:22] [2/104] Running: 1m_rr1.5_c2
+[2026-01-12 00:17:23] Starting: 1m_rr1.5_c2
+[2026-01-12 00:17:23] Command: python backtest_orb_exec_1m.py --rr 1.5 --confirm 2
+[2026-01-12 00:19:06] >> SUCCESS: 1m_rr1.5_c2 (104s)
+[2026-01-12 00:19:08] [3/104] Running: 1m_rr1.5_c3
+[2026-01-12 00:19:08] Starting: 1m_rr1.5_c3
+[2026-01-12 00:19:08] Command: python backtest_orb_exec_1m.py --rr 1.5 --confirm 3
+[2026-01-12 00:20:54] >> SUCCESS: 1m_rr1.5_c3 (106s)
+[2026-01-12 00:20:56] [4/104] Running: 1m_rr2.0_c1
+[2026-01-12 00:20:56] Starting: 1m_rr2.0_c1
+[2026-01-12 00:20:56] Command: python backtest_orb_exec_1m.py --rr 2.0 --confirm 1
+[2026-01-12 00:22:33] >> SUCCESS: 1m_rr2.0_c1 (97s)
+[2026-01-12 00:22:35] [5/104] Running: 1m_rr2.0_c2
+[2026-01-12 00:22:35] Starting: 1m_rr2.0_c2
+[2026-01-12 00:22:35] Command: python backtest_orb_exec_1m.py --rr 2.0 --confirm 2
+[2026-01-12 00:24:17] >> SUCCESS: 1m_rr2.0_c2 (102s)
+[2026-01-12 00:24:19] [6/104] Running: 1m_rr2.0_c3
+[2026-01-12 00:24:19] Starting: 1m_rr2.0_c3
+[2026-01-12 00:24:19] Command: python backtest_orb_exec_1m.py --rr 2.0 --confirm 3
+[2026-01-12 00:26:00] >> SUCCESS: 1m_rr2.0_c3 (101s)
+[2026-01-12 00:26:02] [7/104] Running: 1m_rr2.5_c1
+[2026-01-12 00:26:02] Starting: 1m_rr2.5_c1
+[2026-01-12 00:26:02] Command: python backtest_orb_exec_1m.py --rr 2.5 --confirm 1
+[2026-01-12 00:27:37] >> SUCCESS: 1m_rr2.5_c1 (95s)
+[2026-01-12 00:27:39] [8/104] Running: 1m_rr2.5_c2
+[2026-01-12 00:27:39] Starting: 1m_rr2.5_c2
+[2026-01-12 00:27:39] Command: python backtest_orb_exec_1m.py --rr 2.5 --confirm 2
+[2026-01-12 00:29:21] >> SUCCESS: 1m_rr2.5_c2 (102s)
+[2026-01-12 00:29:23] [9/104] Running: 1m_rr2.5_c3
+[2026-01-12 00:29:23] Starting: 1m_rr2.5_c3
+[2026-01-12 00:29:23] Command: python backtest_orb_exec_1m.py --rr 2.5 --confirm 3
+[2026-01-12 00:31:04] >> SUCCESS: 1m_rr2.5_c3 (101s)
+[2026-01-12 00:31:06] [10/104] Running: 1m_rr3.0_c1
+[2026-01-12 00:31:06] Starting: 1m_rr3.0_c1
+[2026-01-12 00:31:06] Command: python backtest_orb_exec_1m.py --rr 3.0 --confirm 1
+[2026-01-12 00:32:42] >> SUCCESS: 1m_rr3.0_c1 (95s)
+[2026-01-12 00:32:44] [11/104] Running: 1m_rr3.0_c2
+[2026-01-12 00:32:44] Starting: 1m_rr3.0_c2
+[2026-01-12 00:32:44] Command: python backtest_orb_exec_1m.py --rr 3.0 --confirm 2
+[2026-01-12 00:34:24] >> SUCCESS: 1m_rr3.0_c2 (100s)
+[2026-01-12 00:34:26] [12/104] Running: 1m_rr3.0_c3
+[2026-01-12 00:34:26] Starting: 1m_rr3.0_c3
+[2026-01-12 00:34:26] Command: python backtest_orb_exec_1m.py --rr 3.0 --confirm 3
+[2026-01-12 00:36:06] >> SUCCESS: 1m_rr3.0_c3 (100s)
+[2026-01-12 00:36:08] [13/104] Running: 5m_rr1.5_c1
+[2026-01-12 00:36:08] Starting: 5m_rr1.5_c1
+[2026-01-12 00:36:08] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 1
+[2026-01-12 00:36:10] ✗ FAILED: 5m_rr1.5_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:12] [14/104] Running: 5m_rr1.5_c2
+[2026-01-12 00:36:12] Starting: 5m_rr1.5_c2
+[2026-01-12 00:36:12] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 2
+[2026-01-12 00:36:13] ✗ FAILED: 5m_rr1.5_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:15] [15/104] Running: 5m_rr1.5_c3
+[2026-01-12 00:36:15] Starting: 5m_rr1.5_c3
+[2026-01-12 00:36:15] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 3
+[2026-01-12 00:36:16] ✗ FAILED: 5m_rr1.5_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:18] [16/104] Running: 5m_rr2.0_c1
+[2026-01-12 00:36:18] Starting: 5m_rr2.0_c1
+[2026-01-12 00:36:18] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 1
+[2026-01-12 00:36:19] ✗ FAILED: 5m_rr2.0_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:21] [17/104] Running: 5m_rr2.0_c2
+[2026-01-12 00:36:21] Starting: 5m_rr2.0_c2
+[2026-01-12 00:36:21] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 2
+[2026-01-12 00:36:22] ✗ FAILED: 5m_rr2.0_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:24] [18/104] Running: 5m_rr2.0_c3
+[2026-01-12 00:36:24] Starting: 5m_rr2.0_c3
+[2026-01-12 00:36:24] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 3
+[2026-01-12 00:36:25] ✗ FAILED: 5m_rr2.0_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:27] [19/104] Running: 5m_rr2.5_c1
+[2026-01-12 00:36:27] Starting: 5m_rr2.5_c1
+[2026-01-12 00:36:27] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 1
+[2026-01-12 00:36:28] ✗ FAILED: 5m_rr2.5_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:30] [20/104] Running: 5m_rr2.5_c2
+[2026-01-12 00:36:30] Starting: 5m_rr2.5_c2
+[2026-01-12 00:36:30] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 2
+[2026-01-12 00:36:31] ✗ FAILED: 5m_rr2.5_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:33] [21/104] Running: 5m_rr2.5_c3
+[2026-01-12 00:36:33] Starting: 5m_rr2.5_c3
+[2026-01-12 00:36:33] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 3
+[2026-01-12 00:36:35] ✗ FAILED: 5m_rr2.5_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:37] [22/104] Running: 5m_rr3.0_c1
+[2026-01-12 00:36:37] Starting: 5m_rr3.0_c1
+[2026-01-12 00:36:37] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 1
+[2026-01-12 00:36:38] ✗ FAILED: 5m_rr3.0_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:40] [23/104] Running: 5m_rr3.0_c2
+[2026-01-12 00:36:40] Starting: 5m_rr3.0_c2
+[2026-01-12 00:36:40] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 2
+[2026-01-12 00:36:41] ✗ FAILED: 5m_rr3.0_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:43] [24/104] Running: 5m_rr3.0_c3
+[2026-01-12 00:36:43] Starting: 5m_rr3.0_c3
+[2026-01-12 00:36:43] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 3
+[2026-01-12 00:36:44] ✗ FAILED: 5m_rr3.0_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 00:36:46] [25/104] Running: 5m_full_rr1.5_c1_b0
+[2026-01-12 00:36:46] Starting: 5m_full_rr1.5_c1_b0
+[2026-01-12 00:36:46] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl full --buffer-ticks 0
+[2026-01-12 00:38:06] >> SUCCESS: 5m_full_rr1.5_c1_b0 (80s)
+[2026-01-12 00:38:08] [26/104] Running: 5m_full_rr1.5_c1_b5
+[2026-01-12 00:38:08] Starting: 5m_full_rr1.5_c1_b5
+[2026-01-12 00:38:08] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl full --buffer-ticks 5
+[2026-01-12 00:39:24] >> SUCCESS: 5m_full_rr1.5_c1_b5 (76s)
+[2026-01-12 00:39:26] [27/104] Running: 5m_full_rr1.5_c1_b10
+[2026-01-12 00:39:26] Starting: 5m_full_rr1.5_c1_b10
+[2026-01-12 00:39:26] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl full --buffer-ticks 10
+[2026-01-12 00:40:43] >> SUCCESS: 5m_full_rr1.5_c1_b10 (76s)
+[2026-01-12 00:40:45] [28/104] Running: 5m_full_rr1.5_c1_b15
+[2026-01-12 00:40:45] Starting: 5m_full_rr1.5_c1_b15
+[2026-01-12 00:40:45] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl full --buffer-ticks 15
+[2026-01-12 00:42:02] >> SUCCESS: 5m_full_rr1.5_c1_b15 (77s)
+[2026-01-12 00:42:04] [29/104] Running: 5m_full_rr1.5_c1_b20
+[2026-01-12 00:42:04] Starting: 5m_full_rr1.5_c1_b20
+[2026-01-12 00:42:04] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl full --buffer-ticks 20
+[2026-01-12 00:43:21] >> SUCCESS: 5m_full_rr1.5_c1_b20 (77s)
+[2026-01-12 00:43:23] [30/104] Running: 5m_full_rr1.5_c2_b0
+[2026-01-12 00:43:23] Starting: 5m_full_rr1.5_c2_b0
+[2026-01-12 00:43:23] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl full --buffer-ticks 0
+[2026-01-12 00:44:38] >> SUCCESS: 5m_full_rr1.5_c2_b0 (76s)
+[2026-01-12 00:44:40] [31/104] Running: 5m_full_rr1.5_c2_b5
+[2026-01-12 00:44:40] Starting: 5m_full_rr1.5_c2_b5
+[2026-01-12 00:44:40] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl full --buffer-ticks 5
+[2026-01-12 00:45:56] >> SUCCESS: 5m_full_rr1.5_c2_b5 (76s)
+[2026-01-12 00:45:58] [32/104] Running: 5m_full_rr1.5_c2_b10
+[2026-01-12 00:45:58] Starting: 5m_full_rr1.5_c2_b10
+[2026-01-12 00:45:58] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl full --buffer-ticks 10
+[2026-01-12 00:47:14] >> SUCCESS: 5m_full_rr1.5_c2_b10 (76s)
+[2026-01-12 00:47:16] [33/104] Running: 5m_full_rr1.5_c2_b15
+[2026-01-12 00:47:16] Starting: 5m_full_rr1.5_c2_b15
+[2026-01-12 00:47:16] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl full --buffer-ticks 15
+[2026-01-12 00:48:30] >> SUCCESS: 5m_full_rr1.5_c2_b15 (75s)
+[2026-01-12 00:48:32] [34/104] Running: 5m_full_rr1.5_c2_b20
+[2026-01-12 00:48:32] Starting: 5m_full_rr1.5_c2_b20
+[2026-01-12 00:48:32] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl full --buffer-ticks 20
+[2026-01-12 00:49:48] >> SUCCESS: 5m_full_rr1.5_c2_b20 (75s)
+[2026-01-12 00:49:50] [35/104] Running: 5m_full_rr2.0_c1_b0
+[2026-01-12 00:49:50] Starting: 5m_full_rr2.0_c1_b0
+[2026-01-12 00:49:50] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl full --buffer-ticks 0
+[2026-01-12 00:51:07] >> SUCCESS: 5m_full_rr2.0_c1_b0 (77s)
+[2026-01-12 00:51:09] [36/104] Running: 5m_full_rr2.0_c1_b5
+[2026-01-12 00:51:09] Starting: 5m_full_rr2.0_c1_b5
+[2026-01-12 00:51:09] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl full --buffer-ticks 5
+[2026-01-12 00:52:25] >> SUCCESS: 5m_full_rr2.0_c1_b5 (76s)
+[2026-01-12 00:52:27] [37/104] Running: 5m_full_rr2.0_c1_b10
+[2026-01-12 00:52:27] Starting: 5m_full_rr2.0_c1_b10
+[2026-01-12 00:52:27] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl full --buffer-ticks 10
+[2026-01-12 00:53:43] >> SUCCESS: 5m_full_rr2.0_c1_b10 (76s)
+[2026-01-12 00:53:45] [38/104] Running: 5m_full_rr2.0_c1_b15
+[2026-01-12 00:53:45] Starting: 5m_full_rr2.0_c1_b15
+[2026-01-12 00:53:45] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl full --buffer-ticks 15
+[2026-01-12 00:55:01] >> SUCCESS: 5m_full_rr2.0_c1_b15 (76s)
+[2026-01-12 00:55:03] [39/104] Running: 5m_full_rr2.0_c1_b20
+[2026-01-12 00:55:03] Starting: 5m_full_rr2.0_c1_b20
+[2026-01-12 00:55:03] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl full --buffer-ticks 20
+[2026-01-12 00:56:19] >> SUCCESS: 5m_full_rr2.0_c1_b20 (76s)
+[2026-01-12 00:56:21] [40/104] Running: 5m_full_rr2.0_c2_b0
+[2026-01-12 00:56:21] Starting: 5m_full_rr2.0_c2_b0
+[2026-01-12 00:56:21] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl full --buffer-ticks 0
+[2026-01-12 00:57:36] >> SUCCESS: 5m_full_rr2.0_c2_b0 (75s)
+[2026-01-12 00:57:38] [41/104] Running: 5m_full_rr2.0_c2_b5
+[2026-01-12 00:57:38] Starting: 5m_full_rr2.0_c2_b5
+[2026-01-12 00:57:38] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl full --buffer-ticks 5
+[2026-01-12 00:58:54] >> SUCCESS: 5m_full_rr2.0_c2_b5 (75s)
+[2026-01-12 00:58:56] [42/104] Running: 5m_full_rr2.0_c2_b10
+[2026-01-12 00:58:56] Starting: 5m_full_rr2.0_c2_b10
+[2026-01-12 00:58:56] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl full --buffer-ticks 10
+[2026-01-12 01:00:11] >> SUCCESS: 5m_full_rr2.0_c2_b10 (75s)
+[2026-01-12 01:00:13] [43/104] Running: 5m_full_rr2.0_c2_b15
+[2026-01-12 01:00:13] Starting: 5m_full_rr2.0_c2_b15
+[2026-01-12 01:00:13] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl full --buffer-ticks 15
+[2026-01-12 01:01:28] >> SUCCESS: 5m_full_rr2.0_c2_b15 (75s)
+[2026-01-12 01:01:30] [44/104] Running: 5m_full_rr2.0_c2_b20
+[2026-01-12 01:01:30] Starting: 5m_full_rr2.0_c2_b20
+[2026-01-12 01:01:30] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl full --buffer-ticks 20
+[2026-01-12 01:02:45] >> SUCCESS: 5m_full_rr2.0_c2_b20 (75s)
+[2026-01-12 01:02:47] [45/104] Running: 5m_full_rr2.5_c1_b0
+[2026-01-12 01:02:47] Starting: 5m_full_rr2.5_c1_b0
+[2026-01-12 01:02:47] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl full --buffer-ticks 0
+[2026-01-12 01:04:03] >> SUCCESS: 5m_full_rr2.5_c1_b0 (76s)
+[2026-01-12 01:04:05] [46/104] Running: 5m_full_rr2.5_c1_b5
+[2026-01-12 01:04:05] Starting: 5m_full_rr2.5_c1_b5
+[2026-01-12 01:04:05] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl full --buffer-ticks 5
+[2026-01-12 01:05:21] >> SUCCESS: 5m_full_rr2.5_c1_b5 (76s)
+[2026-01-12 01:05:23] [47/104] Running: 5m_full_rr2.5_c1_b10
+[2026-01-12 01:05:23] Starting: 5m_full_rr2.5_c1_b10
+[2026-01-12 01:05:23] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl full --buffer-ticks 10
+[2026-01-12 01:06:39] >> SUCCESS: 5m_full_rr2.5_c1_b10 (76s)
+[2026-01-12 01:06:41] [48/104] Running: 5m_full_rr2.5_c1_b15
+[2026-01-12 01:06:41] Starting: 5m_full_rr2.5_c1_b15
+[2026-01-12 01:06:41] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl full --buffer-ticks 15
+[2026-01-12 01:07:58] >> SUCCESS: 5m_full_rr2.5_c1_b15 (77s)
+[2026-01-12 01:08:00] [49/104] Running: 5m_full_rr2.5_c1_b20
+[2026-01-12 01:08:00] Starting: 5m_full_rr2.5_c1_b20
+[2026-01-12 01:08:00] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl full --buffer-ticks 20
+[2026-01-12 01:09:22] >> SUCCESS: 5m_full_rr2.5_c1_b20 (82s)
+[2026-01-12 01:09:24] [50/104] Running: 5m_full_rr2.5_c2_b0
+[2026-01-12 01:09:24] Starting: 5m_full_rr2.5_c2_b0
+[2026-01-12 01:09:24] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl full --buffer-ticks 0
+[2026-01-12 01:10:44] >> SUCCESS: 5m_full_rr2.5_c2_b0 (80s)
+[2026-01-12 01:10:46] [51/104] Running: 5m_full_rr2.5_c2_b5
+[2026-01-12 01:10:46] Starting: 5m_full_rr2.5_c2_b5
+[2026-01-12 01:10:46] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl full --buffer-ticks 5
+[2026-01-12 01:12:06] >> SUCCESS: 5m_full_rr2.5_c2_b5 (80s)
+[2026-01-12 01:12:08] [52/104] Running: 5m_full_rr2.5_c2_b10
+[2026-01-12 01:12:08] Starting: 5m_full_rr2.5_c2_b10
+[2026-01-12 01:12:08] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl full --buffer-ticks 10
+[2026-01-12 01:13:29] >> SUCCESS: 5m_full_rr2.5_c2_b10 (80s)
+[2026-01-12 01:13:31] [53/104] Running: 5m_full_rr2.5_c2_b15
+[2026-01-12 01:13:31] Starting: 5m_full_rr2.5_c2_b15
+[2026-01-12 01:13:31] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl full --buffer-ticks 15
+[2026-01-12 01:14:51] >> SUCCESS: 5m_full_rr2.5_c2_b15 (81s)
+[2026-01-12 01:14:53] [54/104] Running: 5m_full_rr2.5_c2_b20
+[2026-01-12 01:14:53] Starting: 5m_full_rr2.5_c2_b20
+[2026-01-12 01:14:53] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl full --buffer-ticks 20
+[2026-01-12 01:16:14] >> SUCCESS: 5m_full_rr2.5_c2_b20 (80s)
+[2026-01-12 01:16:16] [55/104] Running: 5m_full_rr3.0_c1_b0
+[2026-01-12 01:16:16] Starting: 5m_full_rr3.0_c1_b0
+[2026-01-12 01:16:16] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl full --buffer-ticks 0
+[2026-01-12 01:17:40] >> SUCCESS: 5m_full_rr3.0_c1_b0 (84s)
+[2026-01-12 01:17:42] [56/104] Running: 5m_full_rr3.0_c1_b5
+[2026-01-12 01:17:42] Starting: 5m_full_rr3.0_c1_b5
+[2026-01-12 01:17:42] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl full --buffer-ticks 5
+[2026-01-12 01:19:04] >> SUCCESS: 5m_full_rr3.0_c1_b5 (82s)
+[2026-01-12 01:19:06] [57/104] Running: 5m_full_rr3.0_c1_b10
+[2026-01-12 01:19:06] Starting: 5m_full_rr3.0_c1_b10
+[2026-01-12 01:19:06] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl full --buffer-ticks 10
+[2026-01-12 01:20:28] >> SUCCESS: 5m_full_rr3.0_c1_b10 (82s)
+[2026-01-12 01:20:30] [58/104] Running: 5m_full_rr3.0_c1_b15
+[2026-01-12 01:20:30] Starting: 5m_full_rr3.0_c1_b15
+[2026-01-12 01:20:30] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl full --buffer-ticks 15
+[2026-01-12 01:21:52] >> SUCCESS: 5m_full_rr3.0_c1_b15 (82s)
+[2026-01-12 01:21:54] [59/104] Running: 5m_full_rr3.0_c1_b20
+[2026-01-12 01:21:54] Starting: 5m_full_rr3.0_c1_b20
+[2026-01-12 01:21:54] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl full --buffer-ticks 20
+[2026-01-12 01:23:15] >> SUCCESS: 5m_full_rr3.0_c1_b20 (82s)
+[2026-01-12 01:23:17] [60/104] Running: 5m_full_rr3.0_c2_b0
+[2026-01-12 01:23:17] Starting: 5m_full_rr3.0_c2_b0
+[2026-01-12 01:23:17] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl full --buffer-ticks 0
+[2026-01-12 01:24:37] >> SUCCESS: 5m_full_rr3.0_c2_b0 (80s)
+[2026-01-12 01:24:39] [61/104] Running: 5m_full_rr3.0_c2_b5
+[2026-01-12 01:24:39] Starting: 5m_full_rr3.0_c2_b5
+[2026-01-12 01:24:39] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl full --buffer-ticks 5
+[2026-01-12 01:26:00] >> SUCCESS: 5m_full_rr3.0_c2_b5 (81s)
+[2026-01-12 01:26:02] [62/104] Running: 5m_full_rr3.0_c2_b10
+[2026-01-12 01:26:02] Starting: 5m_full_rr3.0_c2_b10
+[2026-01-12 01:26:02] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl full --buffer-ticks 10
+[2026-01-12 01:27:24] >> SUCCESS: 5m_full_rr3.0_c2_b10 (82s)
+[2026-01-12 01:27:26] [63/104] Running: 5m_full_rr3.0_c2_b15
+[2026-01-12 01:27:26] Starting: 5m_full_rr3.0_c2_b15
+[2026-01-12 01:27:26] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl full --buffer-ticks 15
+[2026-01-12 01:28:46] >> SUCCESS: 5m_full_rr3.0_c2_b15 (80s)
+[2026-01-12 01:28:48] [64/104] Running: 5m_full_rr3.0_c2_b20
+[2026-01-12 01:28:48] Starting: 5m_full_rr3.0_c2_b20
+[2026-01-12 01:28:48] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl full --buffer-ticks 20
+[2026-01-12 01:30:08] >> SUCCESS: 5m_full_rr3.0_c2_b20 (81s)
+[2026-01-12 01:30:10] [65/104] Running: 5m_half_rr1.5_c1_b0
+[2026-01-12 01:30:10] Starting: 5m_half_rr1.5_c1_b0
+[2026-01-12 01:30:10] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl half --buffer-ticks 0
+[2026-01-12 01:31:34] >> SUCCESS: 5m_half_rr1.5_c1_b0 (84s)
+[2026-01-12 01:31:36] [66/104] Running: 5m_half_rr1.5_c1_b5
+[2026-01-12 01:31:36] Starting: 5m_half_rr1.5_c1_b5
+[2026-01-12 01:31:36] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl half --buffer-ticks 5
+[2026-01-12 01:32:58] >> SUCCESS: 5m_half_rr1.5_c1_b5 (83s)
+[2026-01-12 01:33:00] [67/104] Running: 5m_half_rr1.5_c1_b10
+[2026-01-12 01:33:00] Starting: 5m_half_rr1.5_c1_b10
+[2026-01-12 01:33:00] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl half --buffer-ticks 10
+[2026-01-12 01:34:23] >> SUCCESS: 5m_half_rr1.5_c1_b10 (83s)
+[2026-01-12 01:34:25] [68/104] Running: 5m_half_rr1.5_c1_b15
+[2026-01-12 01:34:25] Starting: 5m_half_rr1.5_c1_b15
+[2026-01-12 01:34:25] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl half --buffer-ticks 15
+[2026-01-12 01:35:47] >> SUCCESS: 5m_half_rr1.5_c1_b15 (82s)
+[2026-01-12 01:35:49] [69/104] Running: 5m_half_rr1.5_c1_b20
+[2026-01-12 01:35:49] Starting: 5m_half_rr1.5_c1_b20
+[2026-01-12 01:35:49] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 1 --sl half --buffer-ticks 20
+[2026-01-12 01:37:13] >> SUCCESS: 5m_half_rr1.5_c1_b20 (84s)
+[2026-01-12 01:37:15] [70/104] Running: 5m_half_rr1.5_c2_b0
+[2026-01-12 01:37:15] Starting: 5m_half_rr1.5_c2_b0
+[2026-01-12 01:37:15] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl half --buffer-ticks 0
+[2026-01-12 01:38:38] >> SUCCESS: 5m_half_rr1.5_c2_b0 (83s)
+[2026-01-12 01:38:40] [71/104] Running: 5m_half_rr1.5_c2_b5
+[2026-01-12 01:38:40] Starting: 5m_half_rr1.5_c2_b5
+[2026-01-12 01:38:40] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl half --buffer-ticks 5
+[2026-01-12 01:40:04] >> SUCCESS: 5m_half_rr1.5_c2_b5 (84s)
+[2026-01-12 01:40:06] [72/104] Running: 5m_half_rr1.5_c2_b10
+[2026-01-12 01:40:06] Starting: 5m_half_rr1.5_c2_b10
+[2026-01-12 01:40:06] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl half --buffer-ticks 10
+[2026-01-12 01:41:29] >> SUCCESS: 5m_half_rr1.5_c2_b10 (83s)
+[2026-01-12 01:41:32] [73/104] Running: 5m_half_rr1.5_c2_b15
+[2026-01-12 01:41:32] Starting: 5m_half_rr1.5_c2_b15
+[2026-01-12 01:41:32] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl half --buffer-ticks 15
+[2026-01-12 01:42:54] >> SUCCESS: 5m_half_rr1.5_c2_b15 (83s)
+[2026-01-12 01:42:56] [74/104] Running: 5m_half_rr1.5_c2_b20
+[2026-01-12 01:42:56] Starting: 5m_half_rr1.5_c2_b20
+[2026-01-12 01:42:56] Command: python backtest_orb_exec_5mhalfsl.py --rr 1.5 --confirm 2 --sl half --buffer-ticks 20
+[2026-01-12 01:44:19] >> SUCCESS: 5m_half_rr1.5_c2_b20 (82s)
+[2026-01-12 01:44:21] [75/104] Running: 5m_half_rr2.0_c1_b0
+[2026-01-12 01:44:21] Starting: 5m_half_rr2.0_c1_b0
+[2026-01-12 01:44:21] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl half --buffer-ticks 0
+[2026-01-12 01:45:45] >> SUCCESS: 5m_half_rr2.0_c1_b0 (85s)
+[2026-01-12 01:45:47] [76/104] Running: 5m_half_rr2.0_c1_b5
+[2026-01-12 01:45:47] Starting: 5m_half_rr2.0_c1_b5
+[2026-01-12 01:45:47] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl half --buffer-ticks 5
+[2026-01-12 01:47:14] >> SUCCESS: 5m_half_rr2.0_c1_b5 (86s)
+[2026-01-12 01:47:16] [77/104] Running: 5m_half_rr2.0_c1_b10
+[2026-01-12 01:47:16] Starting: 5m_half_rr2.0_c1_b10
+[2026-01-12 01:47:16] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl half --buffer-ticks 10
+[2026-01-12 01:48:40] >> SUCCESS: 5m_half_rr2.0_c1_b10 (85s)
+[2026-01-12 01:48:42] [78/104] Running: 5m_half_rr2.0_c1_b15
+[2026-01-12 01:48:42] Starting: 5m_half_rr2.0_c1_b15
+[2026-01-12 01:48:42] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl half --buffer-ticks 15
+[2026-01-12 01:50:06] >> SUCCESS: 5m_half_rr2.0_c1_b15 (84s)
+[2026-01-12 01:50:08] [79/104] Running: 5m_half_rr2.0_c1_b20
+[2026-01-12 01:50:08] Starting: 5m_half_rr2.0_c1_b20
+[2026-01-12 01:50:08] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 1 --sl half --buffer-ticks 20
+[2026-01-12 01:51:32] >> SUCCESS: 5m_half_rr2.0_c1_b20 (84s)
+[2026-01-12 01:51:34] [80/104] Running: 5m_half_rr2.0_c2_b0
+[2026-01-12 01:51:34] Starting: 5m_half_rr2.0_c2_b0
+[2026-01-12 01:51:34] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl half --buffer-ticks 0
+[2026-01-12 01:52:58] >> SUCCESS: 5m_half_rr2.0_c2_b0 (84s)
+[2026-01-12 01:53:00] [81/104] Running: 5m_half_rr2.0_c2_b5
+[2026-01-12 01:53:00] Starting: 5m_half_rr2.0_c2_b5
+[2026-01-12 01:53:00] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl half --buffer-ticks 5
+[2026-01-12 01:54:23] >> SUCCESS: 5m_half_rr2.0_c2_b5 (83s)
+[2026-01-12 01:54:25] [82/104] Running: 5m_half_rr2.0_c2_b10
+[2026-01-12 01:54:25] Starting: 5m_half_rr2.0_c2_b10
+[2026-01-12 01:54:25] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl half --buffer-ticks 10
+[2026-01-12 01:55:48] >> SUCCESS: 5m_half_rr2.0_c2_b10 (83s)
+[2026-01-12 01:55:51] [83/104] Running: 5m_half_rr2.0_c2_b15
+[2026-01-12 01:55:51] Starting: 5m_half_rr2.0_c2_b15
+[2026-01-12 01:55:51] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl half --buffer-ticks 15
+[2026-01-12 01:57:14] >> SUCCESS: 5m_half_rr2.0_c2_b15 (83s)
+[2026-01-12 01:57:16] [84/104] Running: 5m_half_rr2.0_c2_b20
+[2026-01-12 01:57:16] Starting: 5m_half_rr2.0_c2_b20
+[2026-01-12 01:57:16] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.0 --confirm 2 --sl half --buffer-ticks 20
+[2026-01-12 01:58:39] >> SUCCESS: 5m_half_rr2.0_c2_b20 (83s)
+[2026-01-12 01:58:41] [85/104] Running: 5m_half_rr2.5_c1_b0
+[2026-01-12 01:58:41] Starting: 5m_half_rr2.5_c1_b0
+[2026-01-12 01:58:41] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl half --buffer-ticks 0
+[2026-01-12 02:00:05] >> SUCCESS: 5m_half_rr2.5_c1_b0 (84s)
+[2026-01-12 02:00:07] [86/104] Running: 5m_half_rr2.5_c1_b5
+[2026-01-12 02:00:07] Starting: 5m_half_rr2.5_c1_b5
+[2026-01-12 02:00:07] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl half --buffer-ticks 5
+[2026-01-12 02:01:31] >> SUCCESS: 5m_half_rr2.5_c1_b5 (84s)
+[2026-01-12 02:01:33] [87/104] Running: 5m_half_rr2.5_c1_b10
+[2026-01-12 02:01:33] Starting: 5m_half_rr2.5_c1_b10
+[2026-01-12 02:01:33] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl half --buffer-ticks 10
+[2026-01-12 02:02:57] >> SUCCESS: 5m_half_rr2.5_c1_b10 (84s)
+[2026-01-12 02:02:59] [88/104] Running: 5m_half_rr2.5_c1_b15
+[2026-01-12 02:02:59] Starting: 5m_half_rr2.5_c1_b15
+[2026-01-12 02:02:59] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl half --buffer-ticks 15
+[2026-01-12 02:04:25] >> SUCCESS: 5m_half_rr2.5_c1_b15 (86s)
+[2026-01-12 02:04:27] [89/104] Running: 5m_half_rr2.5_c1_b20
+[2026-01-12 02:04:27] Starting: 5m_half_rr2.5_c1_b20
+[2026-01-12 02:04:27] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 1 --sl half --buffer-ticks 20
+[2026-01-12 02:05:50] >> SUCCESS: 5m_half_rr2.5_c1_b20 (83s)
+[2026-01-12 02:05:52] [90/104] Running: 5m_half_rr2.5_c2_b0
+[2026-01-12 02:05:52] Starting: 5m_half_rr2.5_c2_b0
+[2026-01-12 02:05:52] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl half --buffer-ticks 0
+[2026-01-12 02:07:16] >> SUCCESS: 5m_half_rr2.5_c2_b0 (84s)
+[2026-01-12 02:07:18] [91/104] Running: 5m_half_rr2.5_c2_b5
+[2026-01-12 02:07:18] Starting: 5m_half_rr2.5_c2_b5
+[2026-01-12 02:07:18] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl half --buffer-ticks 5
+[2026-01-12 02:08:42] >> SUCCESS: 5m_half_rr2.5_c2_b5 (84s)
+[2026-01-12 02:08:44] [92/104] Running: 5m_half_rr2.5_c2_b10
+[2026-01-12 02:08:44] Starting: 5m_half_rr2.5_c2_b10
+[2026-01-12 02:08:44] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl half --buffer-ticks 10
+[2026-01-12 02:10:07] >> SUCCESS: 5m_half_rr2.5_c2_b10 (83s)
+[2026-01-12 02:10:09] [93/104] Running: 5m_half_rr2.5_c2_b15
+[2026-01-12 02:10:09] Starting: 5m_half_rr2.5_c2_b15
+[2026-01-12 02:10:09] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl half --buffer-ticks 15
+[2026-01-12 02:11:31] >> SUCCESS: 5m_half_rr2.5_c2_b15 (83s)
+[2026-01-12 02:11:33] [94/104] Running: 5m_half_rr2.5_c2_b20
+[2026-01-12 02:11:33] Starting: 5m_half_rr2.5_c2_b20
+[2026-01-12 02:11:33] Command: python backtest_orb_exec_5mhalfsl.py --rr 2.5 --confirm 2 --sl half --buffer-ticks 20
+[2026-01-12 02:12:56] >> SUCCESS: 5m_half_rr2.5_c2_b20 (83s)
+[2026-01-12 02:12:58] [95/104] Running: 5m_half_rr3.0_c1_b0
+[2026-01-12 02:12:58] Starting: 5m_half_rr3.0_c1_b0
+[2026-01-12 02:12:58] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl half --buffer-ticks 0
+[2026-01-12 02:14:23] >> SUCCESS: 5m_half_rr3.0_c1_b0 (85s)
+[2026-01-12 02:14:25] [96/104] Running: 5m_half_rr3.0_c1_b5
+[2026-01-12 02:14:25] Starting: 5m_half_rr3.0_c1_b5
+[2026-01-12 02:14:25] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl half --buffer-ticks 5
+[2026-01-12 02:15:50] >> SUCCESS: 5m_half_rr3.0_c1_b5 (85s)
+[2026-01-12 02:15:52] [97/104] Running: 5m_half_rr3.0_c1_b10
+[2026-01-12 02:15:52] Starting: 5m_half_rr3.0_c1_b10
+[2026-01-12 02:15:52] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl half --buffer-ticks 10
+[2026-01-12 02:17:17] >> SUCCESS: 5m_half_rr3.0_c1_b10 (85s)
+[2026-01-12 02:17:19] [98/104] Running: 5m_half_rr3.0_c1_b15
+[2026-01-12 02:17:19] Starting: 5m_half_rr3.0_c1_b15
+[2026-01-12 02:17:19] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl half --buffer-ticks 15
+[2026-01-12 02:18:44] >> SUCCESS: 5m_half_rr3.0_c1_b15 (85s)
+[2026-01-12 02:18:46] [99/104] Running: 5m_half_rr3.0_c1_b20
+[2026-01-12 02:18:46] Starting: 5m_half_rr3.0_c1_b20
+[2026-01-12 02:18:46] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 1 --sl half --buffer-ticks 20
+[2026-01-12 02:20:09] >> SUCCESS: 5m_half_rr3.0_c1_b20 (84s)
+[2026-01-12 02:20:11] [100/104] Running: 5m_half_rr3.0_c2_b0
+[2026-01-12 02:20:11] Starting: 5m_half_rr3.0_c2_b0
+[2026-01-12 02:20:11] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl half --buffer-ticks 0
+[2026-01-12 02:21:35] >> SUCCESS: 5m_half_rr3.0_c2_b0 (84s)
+[2026-01-12 02:21:37] [101/104] Running: 5m_half_rr3.0_c2_b5
+[2026-01-12 02:21:37] Starting: 5m_half_rr3.0_c2_b5
+[2026-01-12 02:21:37] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl half --buffer-ticks 5
+[2026-01-12 02:23:00] >> SUCCESS: 5m_half_rr3.0_c2_b5 (83s)
+[2026-01-12 02:23:02] [102/104] Running: 5m_half_rr3.0_c2_b10
+[2026-01-12 02:23:02] Starting: 5m_half_rr3.0_c2_b10
+[2026-01-12 02:23:02] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl half --buffer-ticks 10
+[2026-01-12 02:24:25] >> SUCCESS: 5m_half_rr3.0_c2_b10 (83s)
+[2026-01-12 02:24:27] [103/104] Running: 5m_half_rr3.0_c2_b15
+[2026-01-12 02:24:27] Starting: 5m_half_rr3.0_c2_b15
+[2026-01-12 02:24:27] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl half --buffer-ticks 15
+[2026-01-12 02:25:49] >> SUCCESS: 5m_half_rr3.0_c2_b15 (82s)
+[2026-01-12 02:25:51] [104/104] Running: 5m_half_rr3.0_c2_b20
+[2026-01-12 02:25:51] Starting: 5m_half_rr3.0_c2_b20
+[2026-01-12 02:25:51] Command: python backtest_orb_exec_5mhalfsl.py --rr 3.0 --confirm 2 --sl half --buffer-ticks 20
+[2026-01-12 02:27:14] >> SUCCESS: 5m_half_rr3.0_c2_b20 (82s)
+[2026-01-12 02:27:16] 
+[2026-01-12 02:27:16] ================================================================================
+[2026-01-12 02:27:16] OVERNIGHT RUNNER - COMPLETED
+[2026-01-12 02:27:16] ================================================================================
+[2026-01-12 02:27:16] Total variants: 104
+[2026-01-12 02:27:16] Completed: 92
+[2026-01-12 02:27:16] Failed: 12
+[2026-01-12 02:27:16] 
+[2026-01-12 02:27:16] Failed variants:
+[2026-01-12 02:27:16]   - 5m_rr1.5_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr1.5_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr1.5_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.0_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.0_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.0_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.5_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.5_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr2.5_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr3.0_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr3.0_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16]   - 5m_rr3.0_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 02:27:16] 
+[2026-01-12 02:27:16] To retry failed variants:
+[2026-01-12 02:27:16]   python orb_variants_overnight.py --retry-failed
+[2026-01-12 02:27:16] 
+[2026-01-12 02:27:16] Next steps:
+[2026-01-12 02:27:16]   1. Analyze results: python analyze_all_variants.py
+[2026-01-12 02:27:16]   2. View dashboard: streamlit run app_trading_hub.py
+[2026-01-12 02:27:16]   3. Compare variants: python compare_variants.py
+[2026-01-12 08:49:39] Created analyze_all_variants.py
+[2026-01-12 08:49:39] ================================================================================
+[2026-01-12 08:49:39] ORB VARIANTS OVERNIGHT RUNNER - STARTED
+[2026-01-12 08:49:39] ================================================================================
+[2026-01-12 08:49:39] Total variants to test: 104
+[2026-01-12 08:49:39]   - 1m midstop: 12
+[2026-01-12 08:49:39]   - 5m exec: 12
+[2026-01-12 08:49:39]   - 5m half-SL: 80
+[2026-01-12 08:49:39] Retrying 12 failed variants
+[2026-01-12 08:49:39] Running 12 variants...
+[2026-01-12 08:49:39] 
+[2026-01-12 08:49:39] [1/12] Running: 5m_rr1.5_c1
+[2026-01-12 08:49:39] Starting: 5m_rr1.5_c1
+[2026-01-12 08:49:39] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 1
+[2026-01-12 08:49:42] ✗ FAILED: 5m_rr1.5_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:49:44] [2/12] Running: 5m_rr1.5_c2
+[2026-01-12 08:49:44] Starting: 5m_rr1.5_c2
+[2026-01-12 08:49:44] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 2
+[2026-01-12 08:49:45] ✗ FAILED: 5m_rr1.5_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:49:47] [3/12] Running: 5m_rr1.5_c3
+[2026-01-12 08:49:47] Starting: 5m_rr1.5_c3
+[2026-01-12 08:49:47] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 3
+[2026-01-12 08:49:49] ✗ FAILED: 5m_rr1.5_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:49:51] [4/12] Running: 5m_rr2.0_c1
+[2026-01-12 08:49:51] Starting: 5m_rr2.0_c1
+[2026-01-12 08:49:51] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 1
+[2026-01-12 08:49:52] ✗ FAILED: 5m_rr2.0_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:49:54] [5/12] Running: 5m_rr2.0_c2
+[2026-01-12 08:49:54] Starting: 5m_rr2.0_c2
+[2026-01-12 08:49:54] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 2
+[2026-01-12 08:49:55] ✗ FAILED: 5m_rr2.0_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:49:57] [6/12] Running: 5m_rr2.0_c3
+[2026-01-12 08:49:57] Starting: 5m_rr2.0_c3
+[2026-01-12 08:49:57] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 3
+[2026-01-12 08:49:58] ✗ FAILED: 5m_rr2.0_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:00] [7/12] Running: 5m_rr2.5_c1
+[2026-01-12 08:50:00] Starting: 5m_rr2.5_c1
+[2026-01-12 08:50:00] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 1
+[2026-01-12 08:50:01] ✗ FAILED: 5m_rr2.5_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:03] [8/12] Running: 5m_rr2.5_c2
+[2026-01-12 08:50:03] Starting: 5m_rr2.5_c2
+[2026-01-12 08:50:03] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 2
+[2026-01-12 08:50:04] ✗ FAILED: 5m_rr2.5_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:06] [9/12] Running: 5m_rr2.5_c3
+[2026-01-12 08:50:06] Starting: 5m_rr2.5_c3
+[2026-01-12 08:50:06] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 3
+[2026-01-12 08:50:07] ✗ FAILED: 5m_rr2.5_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:09] [10/12] Running: 5m_rr3.0_c1
+[2026-01-12 08:50:09] Starting: 5m_rr3.0_c1
+[2026-01-12 08:50:09] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 1
+[2026-01-12 08:50:10] ✗ FAILED: 5m_rr3.0_c1 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:12] [11/12] Running: 5m_rr3.0_c2
+[2026-01-12 08:50:12] Starting: 5m_rr3.0_c2
+[2026-01-12 08:50:12] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 2
+[2026-01-12 08:50:13] ✗ FAILED: 5m_rr3.0_c2 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:15] [12/12] Running: 5m_rr3.0_c3
+[2026-01-12 08:50:15] Starting: 5m_rr3.0_c3
+[2026-01-12 08:50:15] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 3
+[2026-01-12 08:50:17] ✗ FAILED: 5m_rr3.0_c3 - Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19] 
+[2026-01-12 08:50:19] ================================================================================
+[2026-01-12 08:50:19] OVERNIGHT RUNNER - COMPLETED
+[2026-01-12 08:50:19] ================================================================================
+[2026-01-12 08:50:19] Total variants: 104
+[2026-01-12 08:50:19] Completed: 92
+[2026-01-12 08:50:19] Failed: 12
+[2026-01-12 08:50:19] 
+[2026-01-12 08:50:19] Failed variants:
+[2026-01-12 08:50:19]   - 5m_rr1.5_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr1.5_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr1.5_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.0_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.0_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.0_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.5_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.5_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr2.5_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr3.0_c1: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr3.0_c2: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19]   - 5m_rr3.0_c3: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backtest_orb_exec_5m.py", line 282, in <module>
+    run_backtest(close_confirmations=args.confirm, rr=args.rr, commit_ever
+[2026-01-12 08:50:19] 
+[2026-01-12 08:50:19] To retry failed variants:
+[2026-01-12 08:50:19]   python orb_variants_overnight.py --retry-failed
+[2026-01-12 08:50:19] 
+[2026-01-12 08:50:19] Next steps:
+[2026-01-12 08:50:19]   1. Analyze results: python analyze_all_variants.py
+[2026-01-12 08:50:19]   2. View dashboard: streamlit run app_trading_hub.py
+[2026-01-12 08:50:19]   3. Compare variants: python compare_variants.py
+[2026-01-12 08:58:59] Created analyze_all_variants.py
+[2026-01-12 08:58:59] ================================================================================
+[2026-01-12 08:58:59] ORB VARIANTS OVERNIGHT RUNNER - STARTED
+[2026-01-12 08:58:59] ================================================================================
+[2026-01-12 08:58:59] Total variants to test: 104
+[2026-01-12 08:58:59]   - 1m midstop: 12
+[2026-01-12 08:58:59]   - 5m exec: 12
+[2026-01-12 08:58:59]   - 5m half-SL: 80
+[2026-01-12 08:58:59] Retrying 12 failed variants
+[2026-01-12 08:58:59] Running 12 variants...
+[2026-01-12 08:58:59] 
+[2026-01-12 08:58:59] [1/12] Running: 5m_rr1.5_c1
+[2026-01-12 08:58:59] Starting: 5m_rr1.5_c1
+[2026-01-12 08:58:59] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 1
+[2026-01-12 09:00:08] >> SUCCESS: 5m_rr1.5_c1 (69s)
+[2026-01-12 09:00:10] [2/12] Running: 5m_rr1.5_c2
+[2026-01-12 09:00:10] Starting: 5m_rr1.5_c2
+[2026-01-12 09:00:10] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 2
+[2026-01-12 09:01:35] >> SUCCESS: 5m_rr1.5_c2 (85s)
+[2026-01-12 09:01:37] [3/12] Running: 5m_rr1.5_c3
+[2026-01-12 09:01:37] Starting: 5m_rr1.5_c3
+[2026-01-12 09:01:37] Command: python backtest_orb_exec_5m.py --rr 1.5 --confirm 3
+[2026-01-12 09:02:59] >> SUCCESS: 5m_rr1.5_c3 (83s)
+[2026-01-12 09:03:01] [4/12] Running: 5m_rr2.0_c1
+[2026-01-12 09:03:01] Starting: 5m_rr2.0_c1
+[2026-01-12 09:03:01] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 1
+[2026-01-12 09:04:24] >> SUCCESS: 5m_rr2.0_c1 (83s)
+[2026-01-12 09:04:26] [5/12] Running: 5m_rr2.0_c2
+[2026-01-12 09:04:26] Starting: 5m_rr2.0_c2
+[2026-01-12 09:04:26] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 2
+[2026-01-12 09:05:53] >> SUCCESS: 5m_rr2.0_c2 (87s)
+[2026-01-12 09:05:55] [6/12] Running: 5m_rr2.0_c3
+[2026-01-12 09:05:55] Starting: 5m_rr2.0_c3
+[2026-01-12 09:05:55] Command: python backtest_orb_exec_5m.py --rr 2.0 --confirm 3
+[2026-01-12 09:07:18] >> SUCCESS: 5m_rr2.0_c3 (84s)
+[2026-01-12 09:07:20] [7/12] Running: 5m_rr2.5_c1
+[2026-01-12 09:07:20] Starting: 5m_rr2.5_c1
+[2026-01-12 09:07:20] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 1
+[2026-01-12 09:08:45] >> SUCCESS: 5m_rr2.5_c1 (85s)
+[2026-01-12 09:08:47] [8/12] Running: 5m_rr2.5_c2
+[2026-01-12 09:08:47] Starting: 5m_rr2.5_c2
+[2026-01-12 09:08:47] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 2
+[2026-01-12 09:10:14] >> SUCCESS: 5m_rr2.5_c2 (87s)
+[2026-01-12 09:10:16] [9/12] Running: 5m_rr2.5_c3
+[2026-01-12 09:10:16] Starting: 5m_rr2.5_c3
+[2026-01-12 09:10:16] Command: python backtest_orb_exec_5m.py --rr 2.5 --confirm 3
+[2026-01-12 09:11:37] >> SUCCESS: 5m_rr2.5_c3 (81s)
+[2026-01-12 09:11:39] [10/12] Running: 5m_rr3.0_c1
+[2026-01-12 09:11:39] Starting: 5m_rr3.0_c1
+[2026-01-12 09:11:39] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 1
+[2026-01-12 09:13:00] >> SUCCESS: 5m_rr3.0_c1 (81s)
+[2026-01-12 09:13:02] [11/12] Running: 5m_rr3.0_c2
+[2026-01-12 09:13:02] Starting: 5m_rr3.0_c2
+[2026-01-12 09:13:02] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 2
+[2026-01-12 09:14:26] >> SUCCESS: 5m_rr3.0_c2 (83s)
+[2026-01-12 09:14:28] [12/12] Running: 5m_rr3.0_c3
+[2026-01-12 09:14:28] Starting: 5m_rr3.0_c3
+[2026-01-12 09:14:28] Command: python backtest_orb_exec_5m.py --rr 3.0 --confirm 3
+[2026-01-12 09:15:48] >> SUCCESS: 5m_rr3.0_c3 (81s)
+[2026-01-12 09:15:50] 
+[2026-01-12 09:15:50] ================================================================================
+[2026-01-12 09:15:50] OVERNIGHT RUNNER - COMPLETED
+[2026-01-12 09:15:50] ================================================================================
+[2026-01-12 09:15:50] Total variants: 104
+[2026-01-12 09:15:50] Completed: 104
+[2026-01-12 09:15:50] Failed: 0
+[2026-01-12 09:15:50] 
+[2026-01-12 09:15:50] >> ALL VARIANTS COMPLETED SUCCESSFULLY!
+[2026-01-12 09:15:50] 
+[2026-01-12 09:15:50] Next steps:
+[2026-01-12 09:15:50]   1. Analyze results: python analyze_all_variants.py
+[2026-01-12 09:15:50]   2. View dashboard: streamlit run app_trading_hub.py
+[2026-01-12 09:15:50]   3. Compare variants: python compare_variants.py

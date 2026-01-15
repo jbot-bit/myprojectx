@@ -1,0 +1,105 @@
+# MGC (Micro Gold) Market Configuration
+# Generated: 2026-01-13
+# Based on baseline backtest results from 740 trading days (Jan 2024-Jan 2026)
+
+instrument:
+  symbol: MGC
+  name: "Micro Gold"
+  exchange: COMEX
+  contract_months: [G, J, M, Q, V, Z]  # Feb, Apr, Jun, Aug, Oct, Dec
+
+pricing:
+  tick_size: 0.1
+  tick_value: 1.00  # $1 per 0.1 point
+  currency: USD
+  point_value: 10.00  # $10 per point
+
+database:
+  bars_1m: bars_1m
+  bars_5m: bars_5m
+  features: daily_features_v2
+
+sessions:  # Brisbane UTC+10
+  asia:
+    start: "09:00"
+    end: "17:00"
+    description: "Asian trading hours"
+  london:
+    start: "18:00"
+    end: "23:00"
+    description: "London overlap"
+  ny_futures:
+    start: "23:00"
+    end_next_day: "00:30"
+    description: "NY futures session"
+  ny_cash:
+    start_next_day: "00:30"
+    end_next_day: "02:00"
+    description: "NYSE cash market hours"
+
+orbs:
+  times: [0900, 1000, 1100, 1800, 2300, 0030]
+  window_minutes: 5
+
+  # Baseline performance (FULL SL, RR=1.0, 740 days)
+  baseline_results:
+    1800:  # London open - BEST for MGC
+      trades: 519
+      win_rate: 51.8
+      avg_r: 0.037
+      total_r: 19.0
+      rank: 1
+    1000:  # Asia early
+      trades: 522
+      win_rate: 51.1
+      avg_r: 0.023
+      total_r: 12.0
+      rank: 2
+    1100:  # Asia mid-day
+      trades: 515
+      win_rate: 49.9
+      avg_r: -0.002
+      total_r: -1.0
+      rank: 3
+    0900:  # Asia open
+      trades: 513
+      win_rate: 48.9
+      avg_r: -0.021
+      total_r: -11.0
+      rank: 4
+    2300:  # NY Futures
+      trades: 509
+      win_rate: 48.7
+      avg_r: -0.026
+      total_r: -13.0
+      rank: 5
+    0030:  # NYSE open - WORST for MGC
+      trades: 475
+      win_rate: 48.6
+      avg_r: -0.027
+      total_r: -13.0
+      rank: 6
+
+  # Recommended ORBs based on baseline
+  recommended: [1800, 1000]
+
+execution:
+  default_sl_mode: full  # 'full' = opposite ORB edge, 'half' = ORB midpoint
+  default_rr: 1.0
+  default_slippage_ticks: 1
+  commission_per_side: 2.50
+  entry_method: "first_close_outside_orb"
+
+backtesting:
+  data_start: "2024-01-02"
+  data_end: "2026-01-09"
+  trading_days: 740
+  total_trades_baseline: 3053  # All 6 ORBs
+  profitable_orbs: 2  # out of 6
+
+notes:
+  - "MGC optimal time: 1800 (London open) - global 24/5 market"
+  - "Opposite pattern vs NQ (equity index favors NYSE open)"
+  - "Lower volatility and win rates than NQ"
+  - "Session windows match NQ framework for direct comparison"
+  - "Zero lookahead enforcement: all features computable at entry time"

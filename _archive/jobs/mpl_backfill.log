@@ -1,0 +1,28 @@
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backfill_databento_continuous_mpl.py", line 146, in safe_get_range_with_retries
+    return client.timeseries.get_range(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\.venv\Lib\site-packages\databento\historical\api\timeseries.py", line 125, in get_range
+    return self._stream(
+           ^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\.venv\Lib\site-packages\databento\common\http.py", line 134, in _stream
+    check_http_error(response)
+  File "C:\Users\sydne\OneDrive\myprojectx\.venv\Lib\site-packages\databento\common\http.py", line 249, in check_http_error
+    raise BentoClientError(
+databento.common.error.BentoClientError: 401 auth_authentication_failed
+Authentication failed.
+documentation: https://databento.com/docs/portal/api-keys
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\backfill_databento_continuous_mpl.py", line 417, in <module>
+    main()
+  File "C:\Users\sydne\OneDrive\myprojectx\backfill_databento_continuous_mpl.py", line 337, in main
+    store = safe_get_range_with_retries(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\backfill_databento_continuous_mpl.py", line 160, in safe_get_range_with_retries
+    raise RuntimeError(f"Databento get_range failed after {max_retries} retries: {last_err}") from last_err
+RuntimeError: Databento get_range failed after 5 retries: 401 auth_authentication_failed
+Authentication failed.
+documentation: https://databento.com/docs/portal/api-keys

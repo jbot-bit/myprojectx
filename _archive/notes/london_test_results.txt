@@ -1,0 +1,129 @@
+================================================================================
+LONDON PRIOR INVENTORY TEST - Engine A Validation
+================================================================================
+
+Step 1: Building session labels...
+--------------------------------------------------------------------------------
+Total days with London ORB: 521
+
+Step 2: Classifying Asia state...
+--------------------------------------------------------------------------------
+Asia State Distribution:
+asia_state
+BOTH_NY    266
+NY_HIGH    152
+NY_LOW     103
+Name: count, dtype: int64
+
+Step 3: Loading London ORB outcomes...
+--------------------------------------------------------------------------------
+London trades with outcomes: 503
+
+Days with both labels and outcomes: 502
+
+================================================================================
+RESULTS: London ORB Performance by Asia Prior Inventory Resolution
+================================================================================
+
+BASELINE (All London ORBs):
+  Total: 502
+  Win Rate: 36.1%
+  Avg R: +0.109R
+  Total R: +54.9R
+
+--------------------------------------------------------------------------------
+
+DETAILED RESULTS:
+
+================================================================================
+Asia State: BOTH_NY
+================================================================================
+Overall Performance:
+  Total Trades: 257
+  Win Rate: 36.2% (Delta +0.1%)
+  Avg R: +0.107R (Delta -0.003R)
+  Total R: +27.4R
+
+UP Breakouts:
+  Count: 126
+  Win Rate: 38.9%
+  Avg R: +0.181R
+  Total R: +22.9R
+
+DOWN Breakouts:
+  Count: 131
+  Win Rate: 33.6%
+  Avg R: +0.035R
+  Total R: +4.6R
+
+================================================================================
+Asia State: NY_HIGH
+================================================================================
+Overall Performance:
+  Total Trades: 147
+  Win Rate: 38.1% (Delta +2.0%)
+  Avg R: +0.160R (Delta +0.051R)
+  Total R: +23.6R
+
+UP Breakouts:
+  Count: 90
+  Win Rate: 43.3%
+  Avg R: +0.281R
+  Total R: +25.3R
+
+DOWN Breakouts:
+  Count: 57
+  Win Rate: 29.8%
+  Avg R: -0.030R
+  Total R: -1.7R
+
+================================================================================
+Asia State: NY_LOW
+================================================================================
+Overall Performance:
+  Total Trades: 98
+  Win Rate: 32.7% (Delta -3.4%)
+  Avg R: +0.040R (Delta -0.070R)
+  Total R: +3.9R
+
+UP Breakouts:
+  Count: 46
+  Win Rate: 37.0%
+  Avg R: +0.150R
+  Total R: +6.9R
+
+DOWN Breakouts:
+  Count: 52
+  Win Rate: 28.8%
+  Avg R: -0.058R
+  Total R: -3.0R
+
+================================================================================
+CONTINUATION vs FADE ANALYSIS
+================================================================================
+
+Asia State: NY_HIGH
+  Continuation (UP): 90 trades, 43.3% WR, +0.281R avg, +25.3R total
+  Fade (DOWN):        57 trades, 29.8% WR, -0.030R avg, -1.7R total
+  Delta (Cont - Fade):    DeltaWR = +13.5%, DeltaAvgR = +0.310R
+  Verdict: [YES] CONTINUATION EDGE
+
+Asia State: NY_LOW
+  Continuation (DOWN): 52 trades, 28.8% WR, -0.058R avg, -3.0R total
+  Fade (UP):        46 trades, 37.0% WR, +0.150R avg, +6.9R total
+  Delta (Cont - Fade):    DeltaWR = -8.1%, DeltaAvgR = -0.208R
+  Verdict: [WARN] FADE EDGE (unexpected)
+
+================================================================================
+RESOLUTION DEPTH ANALYSIS
+================================================================================
+
+NY_HIGH:
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\test_london_prior_inventory.py", line 493, in <module>
+    main()
+  File "C:\Users\sydne\OneDrive\myprojectx\test_london_prior_inventory.py", line 448, in main
+    print(f"  Deep (\u226510 ticks):    {len(deep)} trades, {deep_wr:.1f}% WR, {deep_avg_r:+.3f}R avg")
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python310\lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 8: character maps to <undefined>

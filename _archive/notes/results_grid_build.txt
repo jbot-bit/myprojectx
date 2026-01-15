@@ -1,0 +1,111 @@
+Fatal Python error: PyEval_SaveThread: the function must be called with the GIL held, but the GIL is released (the current Python thread state is NULL)
+Python runtime state: initialized
+
+Thread 0x00007a78 (most recent call first):
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 41 in _fetch_1m_bars
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 69 in calculate_orb_variant
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 299 in build_execution_grid
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 477 in main
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 506 in <module>
+[Tue 13/01/2026  2:27:18.46] Starting build (attempt 1/5)... 
+[Tue 13/01/2026  2:30:44.42] Build attempt 1 failed with error level 1 
+[Tue 13/01/2026  2:33:03.18] Starting build (attempt 2/5)... 
+Fatal Python error: PyEval_SaveThread: the function must be called with the GIL held, but the GIL is released (the current Python thread state is NULL)
+Python runtime state: initialized
+
+Thread 0x000005e4 (most recent call first):
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 41 in _fetch_1m_bars
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 79 in calculate_orb_variant
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 307 in build_execution_grid
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 485 in main
+  File "C:\Users\sydne\OneDrive\myprojectx\build_execution_grid_features.py", line 514 in <module>
+[Tue 13/01/2026  2:34:29.72] Starting build (attempt 1/5)... 
+================================================================================
+EXECUTION GRID BUILDER
+================================================================================
+Date range: 2024-01-01 to 2026-01-10
+Total configs: 324
+Total days: 741
+Total backtest runs: 240084
+
+This will take HOURS. Progress will be shown every 10 days.
+
+[10 days processed] 2024-01-10
+[20 days processed] 2024-01-20
+[30 days processed] 2024-01-30
+[40 days processed] 2024-02-09
+[50 days processed] 2024-02-19
+[60 days processed] 2024-02-29
+[70 days processed] 2024-03-10
+[80 days processed] 2024-03-20
+[90 days processed] 2024-03-30
+[100 days processed] 2024-04-09
+[110 days processed] 2024-04-19
+[120 days processed] 2024-04-29
+[130 days processed] 2024-05-09
+[140 days processed] 2024-05-19
+[150 days processed] 2024-05-29
+[160 days processed] 2024-06-08
+[170 days processed] 2024-06-18
+[180 days processed] 2024-06-28
+[190 days processed] 2024-07-08
+[200 days processed] 2024-07-18
+[210 days processed] 2024-07-28
+[220 days processed] 2024-08-07
+[230 days processed] 2024-08-17
+[240 days processed] 2024-08-27
+[250 days processed] 2024-09-06
+[260 days processed] 2024-09-16
+[270 days processed] 2024-09-26
+[280 days processed] 2024-10-06
+[290 days processed] 2024-10-16
+[300 days processed] 2024-10-26
+[310 days processed] 2024-11-05
+[320 days processed] 2024-11-15
+[330 days processed] 2024-11-25
+[340 days processed] 2024-12-05
+[350 days processed] 2024-12-15
+[360 days processed] 2024-12-25
+[370 days processed] 2025-01-04
+[380 days processed] 2025-01-14
+[390 days processed] 2025-01-24
+[400 days processed] 2025-02-03
+[410 days processed] 2025-02-13
+[420 days processed] 2025-02-23
+[430 days processed] 2025-03-05
+[440 days processed] 2025-03-15
+[450 days processed] 2025-03-25
+[460 days processed] 2025-04-04
+[470 days processed] 2025-04-14
+[480 days processed] 2025-04-24
+[490 days processed] 2025-05-04
+[500 days processed] 2025-05-14
+[510 days processed] 2025-05-24
+[520 days processed] 2025-06-03
+[530 days processed] 2025-06-13
+[540 days processed] 2025-06-23
+[550 days processed] 2025-07-03
+[560 days processed] 2025-07-13
+[570 days processed] 2025-07-23
+[580 days processed] 2025-08-02
+[590 days processed] 2025-08-12
+[600 days processed] 2025-08-22
+[610 days processed] 2025-09-01
+[620 days processed] 2025-09-11
+[630 days processed] 2025-09-21
+[640 days processed] 2025-10-01
+[650 days processed] 2025-10-11
+[660 days processed] 2025-10-21
+[670 days processed] 2025-10-31
+[680 days processed] 2025-11-10
+ERROR on 2025-11-17: float() argument must be a string or a real number, not 'NoneType'
+Committing progress and continuing...
+[690 days processed] 2025-11-21
+[700 days processed] 2025-12-01
+[710 days processed] 2025-12-11
+[720 days processed] 2025-12-21
+[730 days processed] 2025-12-31
+[740 days processed] 2026-01-10
+
+COMPLETED: 324 configs x 740 days = 239760 backtest runs
+[Tue 13/01/2026  4:02:31.12] Build completed successfully 

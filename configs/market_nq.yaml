@@ -1,0 +1,105 @@
+# NQ (E-mini Nasdaq-100) Market Configuration
+# Generated: 2026-01-13
+# Based on baseline backtest results from 268 trading days (Jan-Nov 2025)
+
+instrument:
+  symbol: NQ
+  name: "E-mini Nasdaq-100"
+  exchange: CME
+  contract_months: [H, M, U, Z]  # Mar, Jun, Sep, Dec
+
+pricing:
+  tick_size: 0.25
+  tick_value: 5.00  # $5 per 0.25 point
+  currency: USD
+  point_value: 20.00  # $20 per point
+
+database:
+  bars_1m: bars_1m_nq
+  bars_5m: bars_5m_nq
+  features: daily_features_v2_nq
+
+sessions:  # Brisbane UTC+10 (matching MGC for comparison)
+  asia:
+    start: "09:00"
+    end: "17:00"
+    description: "Asian trading hours"
+  london:
+    start: "18:00"
+    end: "23:00"
+    description: "London overlap"
+  ny_futures:
+    start: "23:00"
+    end_next_day: "00:30"
+    description: "NY futures session"
+  ny_cash:
+    start_next_day: "00:30"
+    end_next_day: "02:00"
+    description: "NYSE cash market hours"
+
+orbs:
+  times: [0900, 1000, 1100, 1800, 2300, 0030]
+  window_minutes: 5
+
+  # Baseline performance (FULL SL, RR=1.0, 268 days)
+  baseline_results:
+    0030:  # NYSE open - BEST for NQ
+      trades: 208
+      win_rate: 63.9
+      avg_r: 0.279
+      total_r: 58.0
+      rank: 1
+    1800:  # London open
+      trades: 221
+      win_rate: 62.0
+      avg_r: 0.240
+      total_r: 53.0
+      rank: 2
+    1100:  # Asia mid-day
+      trades: 219
+      win_rate: 61.6
+      avg_r: 0.233
+      total_r: 51.0
+      rank: 3
+    1000:  # Asia early
+      trades: 221
+      win_rate: 57.9
+      avg_r: 0.158
+      total_r: 35.0
+      rank: 4
+    0900:  # Asia open
+      trades: 223
+      win_rate: 52.9
+      avg_r: 0.058
+      total_r: 13.0
+      rank: 5
+    2300:  # NY Futures
+      trades: 222
+      win_rate: 50.0
+      avg_r: 0.000
+      total_r: 0.0
+      rank: 6
+
+  # Recommended ORBs based on baseline
+  recommended: [0030, 1800, 1100]
+
+execution:
+  default_sl_mode: full  # 'full' = opposite ORB edge, 'half' = ORB midpoint
+  default_rr: 1.0
+  default_slippage_ticks: 1
+  commission_per_side: 2.50
+  entry_method: "first_close_outside_orb"
+
+backtesting:
+  data_start: "2025-01-13"
+  data_end: "2025-11-21"
+  trading_days: 268
+  total_trades_baseline: 1314  # All 6 ORBs
+  profitable_orbs: 5  # out of 6
+
+notes:
+  - "NQ optimal time: 0030 (NYSE open) - equity index driven by US market"
+  - "Opposite pattern vs MGC (gold favors London/Asia sessions)"
+  - "Higher volatility and win rates than MGC"
+  - "Session windows match MGC framework for direct comparison"
+  - "Zero lookahead enforcement: all features computable at entry time"

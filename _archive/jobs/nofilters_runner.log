@@ -1,0 +1,89 @@
+[2026-01-12 09:18:59] ================================================================================
+[2026-01-12 09:18:59] NO-FILTERS VARIANT RUNNER - STARTED
+[2026-01-12 09:18:59] ================================================================================
+[2026-01-12 09:18:59] Testing WITHOUT max_stop and asia_tp_cap filters
+[2026-01-12 09:18:59] 
+[2026-01-12 09:18:59] Total variants to test: 104
+[2026-01-12 09:18:59]   - 1m nofilters: 12
+[2026-01-12 09:18:59]   - 5m nofilters: 12
+[2026-01-12 09:18:59]   - 5m half-SL nofilters: 80
+[2026-01-12 09:18:59] Starting fresh run
+[2026-01-12 09:18:59] Running 104 variants...
+[2026-01-12 09:18:59] 
+[2026-01-12 09:18:59] [1/104] Running: 1m_nofilters_rr1.5_c1
+[2026-01-12 09:18:59] Starting: 1m_nofilters_rr1.5_c1
+[2026-01-12 09:18:59] Command: python backtest_orb_exec_1m_nofilters.py --rr 1.5 --confirm 1
+[2026-01-12 09:21:02] ================================================================================
+[2026-01-12 09:21:02] NO-FILTERS VARIANT RUNNER - STARTED
+[2026-01-12 09:21:02] ================================================================================
+[2026-01-12 09:21:02] Testing WITHOUT max_stop and asia_tp_cap filters
+[2026-01-12 09:21:02] 
+[2026-01-12 09:21:02] Total variants to test: 104
+[2026-01-12 09:21:02]   - 1m nofilters: 12
+[2026-01-12 09:21:02]   - 5m nofilters: 12
+[2026-01-12 09:21:02]   - 5m half-SL nofilters: 80
+[2026-01-12 09:21:02] Starting fresh run
+[2026-01-12 09:21:02] Running 104 variants...
+[2026-01-12 09:21:02] 
+[2026-01-12 09:21:02] [1/104] Running: 1m_nofilters_rr1.5_c1
+[2026-01-12 09:21:02] Starting: 1m_nofilters_rr1.5_c1
+[2026-01-12 09:21:02] Command: python backtest_orb_exec_1m_nofilters.py --rr 1.5 --confirm 1
+[2026-01-12 09:22:42] >> SUCCESS: 1m_nofilters_rr1.5_c1 (99s)
+[2026-01-12 09:55:08] [2/104] Running: 1m_nofilters_rr1.5_c2
+[2026-01-12 09:55:09] Starting: 1m_nofilters_rr1.5_c2
+[2026-01-12 09:55:09] Command: python backtest_orb_exec_1m_nofilters.py --rr 1.5 --confirm 2
+[2026-01-12 09:56:47] >> SUCCESS: 1m_nofilters_rr1.5_c2 (98s)
+[2026-01-12 09:56:52] [3/104] Running: 1m_nofilters_rr1.5_c3
+[2026-01-12 09:56:52] Starting: 1m_nofilters_rr1.5_c3
+[2026-01-12 09:56:52] Command: python backtest_orb_exec_1m_nofilters.py --rr 1.5 --confirm 3
+[2026-01-12 09:58:39] >> SUCCESS: 1m_nofilters_rr1.5_c3 (107s)
+[2026-01-12 09:58:41] [4/104] Running: 1m_nofilters_rr2.0_c1
+[2026-01-12 09:58:41] Starting: 1m_nofilters_rr2.0_c1
+[2026-01-12 09:58:41] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.0 --confirm 1
+[2026-01-12 10:00:28] >> SUCCESS: 1m_nofilters_rr2.0_c1 (107s)
+[2026-01-12 10:00:30] [5/104] Running: 1m_nofilters_rr2.0_c2
+[2026-01-12 10:00:30] Starting: 1m_nofilters_rr2.0_c2
+[2026-01-12 10:00:30] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.0 --confirm 2
+[2026-01-12 10:02:18] >> SUCCESS: 1m_nofilters_rr2.0_c2 (108s)
+[2026-01-12 10:03:09] [6/104] Running: 1m_nofilters_rr2.0_c3
+[2026-01-12 10:03:09] Starting: 1m_nofilters_rr2.0_c3
+[2026-01-12 10:03:09] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.0 --confirm 3
+[2026-01-12 10:04:58] >> SUCCESS: 1m_nofilters_rr2.0_c3 (109s)
+[2026-01-12 10:05:00] [7/104] Running: 1m_nofilters_rr2.5_c1
+[2026-01-12 10:05:00] Starting: 1m_nofilters_rr2.5_c1
+[2026-01-12 10:05:00] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.5 --confirm 1
+[2026-01-12 10:06:45] >> SUCCESS: 1m_nofilters_rr2.5_c1 (106s)
+[2026-01-12 10:06:47] [8/104] Running: 1m_nofilters_rr2.5_c2
+[2026-01-12 10:06:47] Starting: 1m_nofilters_rr2.5_c2
+[2026-01-12 10:06:47] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.5 --confirm 2
+[2026-01-12 10:08:35] >> SUCCESS: 1m_nofilters_rr2.5_c2 (108s)
+[2026-01-12 10:08:37] [9/104] Running: 1m_nofilters_rr2.5_c3
+[2026-01-12 10:08:37] Starting: 1m_nofilters_rr2.5_c3
+[2026-01-12 10:08:37] Command: python backtest_orb_exec_1m_nofilters.py --rr 2.5 --confirm 3
+[2026-01-12 10:10:22] >> SUCCESS: 1m_nofilters_rr2.5_c3 (105s)
+[2026-01-12 10:10:24] [10/104] Running: 1m_nofilters_rr3.0_c1
+[2026-01-12 10:10:24] Starting: 1m_nofilters_rr3.0_c1
+[2026-01-12 10:10:24] Command: python backtest_orb_exec_1m_nofilters.py --rr 3.0 --confirm 1
+[2026-01-12 10:12:08] >> SUCCESS: 1m_nofilters_rr3.0_c1 (104s)
+[2026-01-12 10:12:10] [11/104] Running: 1m_nofilters_rr3.0_c2
+[2026-01-12 10:12:10] Starting: 1m_nofilters_rr3.0_c2
+[2026-01-12 10:12:10] Command: python backtest_orb_exec_1m_nofilters.py --rr 3.0 --confirm 2
+[2026-01-12 10:13:58] >> SUCCESS: 1m_nofilters_rr3.0_c2 (107s)
+[2026-01-12 10:14:36] [12/104] Running: 1m_nofilters_rr3.0_c3
+[2026-01-12 10:14:36] Starting: 1m_nofilters_rr3.0_c3
+[2026-01-12 10:14:36] Command: python backtest_orb_exec_1m_nofilters.py --rr 3.0 --confirm 3
+[2026-01-12 10:16:21] >> SUCCESS: 1m_nofilters_rr3.0_c3 (106s)
+[2026-01-12 10:16:23] [13/104] Running: 5m_nofilters_rr1.5_c1
+[2026-01-12 10:16:23] Starting: 5m_nofilters_rr1.5_c1
+[2026-01-12 10:16:23] Command: python backtest_orb_exec_5m_nofilters.py --rr 1.5 --confirm 1
+[2026-01-12 10:17:49] >> SUCCESS: 5m_nofilters_rr1.5_c1 (86s)
+[2026-01-12 10:17:51] [14/104] Running: 5m_nofilters_rr1.5_c2
+[2026-01-12 10:17:51] Starting: 5m_nofilters_rr1.5_c2
+[2026-01-12 10:17:51] Command: python backtest_orb_exec_5m_nofilters.py --rr 1.5 --confirm 2
+[2026-01-12 10:19:17] >> SUCCESS: 5m_nofilters_rr1.5_c2 (86s)
+[2026-01-12 10:19:19] [15/104] Running: 5m_nofilters_rr1.5_c3
+[2026-01-12 10:19:19] Starting: 5m_nofilters_rr1.5_c3
+[2026-01-12 10:19:19] Command: python backtest_orb_exec_5m_nofilters.py --rr 1.5 --confirm 3
+[2026-01-12 10:20:03] 
+[2026-01-12 10:20:03] Interrupted by user. Progress saved.
+[2026-01-12 10:20:03] To resume: python run_nofilters_variants.py --resume

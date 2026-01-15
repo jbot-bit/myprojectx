@@ -174,13 +174,15 @@ def fetch_filter_metadata(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
     min_max_row = con.execute(
         """
         SELECT
-          MIN(date_local) AS min_date,
-          MAX(date_local) AS max_date,
-          MIN(atr_20) AS min_atr,
-          MAX(atr_20) AS max_atr,
-          MIN(asia_range) AS min_asia_range,
-          MAX(asia_range) AS max_asia_range
-        FROM v_orb_trades
+          MIN(v.date_local) AS min_date,
+          MAX(v.date_local) AS max_date,
+          MIN(df.atr_20) AS min_atr,
+          MAX(df.atr_20) AS max_atr,
+          MIN(df.asia_range) AS min_asia_range,
+          MAX(df.asia_range) AS max_asia_range
+        FROM v_orb_trades v
+        JOIN daily_features_v2 df
+          ON df.date_local = v.date_local AND df.instrument = v.instrument
         """
     ).fetchone()
 
@@ -190,11 +192,13 @@ def fetch_filter_metadata(con: duckdb.DuckDBPyConnection) -> Dict[str, Any]:
     )
 
     def _list_codes(column: str) -> List[str]:
+        # Query daily_features_v2_half directly for type codes
         rows = con.execute(
             f"""
             SELECT DISTINCT {column}
-            FROM v_orb_trades
+            FROM daily_features_v2_half
             WHERE {column} IS NOT NULL
+            AND instrument = 'MGC'
             ORDER BY {column}
             """
         ).fetchall()

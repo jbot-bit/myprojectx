@@ -66,17 +66,18 @@ python query_features.py
 
 ### Testing & Inspection
 
-**Test Databento API:**
-```bash
-python test_databento_mgc.py
-```
-
 **Inspect DBN files:**
 ```bash
 python inspect_dbn.py
 ```
 - Configured to read from `dbn/` folder
 - Shows schema, dataset, symbols, record counts
+
+**Validate data:**
+```bash
+python validate_data.py
+```
+- Validates data integrity and completeness
 
 ## Architecture
 
@@ -205,3 +206,5 @@ Required environment variables:
    ```
 
 9. **Trading day change**: All backfill scripts now use 09:00→09:00 trading days (previously 00:00→00:00). This aligns with ORB strategy and session analysis. Old data will be incorrect.
+
+10. **Project structure**: The codebase was comprehensively cleaned on Jan 15, 2026. See `PROJECT_STRUCTURE.md` for current file organization. All test/experiment files are in `_archive/` - the root directory contains only production-ready code (29 Python files, 11 markdown docs).

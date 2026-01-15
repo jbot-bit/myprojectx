@@ -1,0 +1,152 @@
+================================================================================
+CHOOSE YOUR OVERNIGHT JOB
+================================================================================
+
+You have TWO options for overnight testing:
+
+================================================================================
+OPTION 1: COMPLETE MODEL B TESTING (3-5 hours) - RECOMMENDED TO START
+================================================================================
+
+WHAT IT DOES:
+  - Rebuilds features with ONE correct execution model (entry-anchored risk)
+  - Tests this model with comprehensive state filtering for all sessions
+  - Tests directional bias, ORB size impact, pattern recognition
+  - Compares old (fake) vs new (real) results
+
+FILE TO RUN:
+  OVERNIGHT_COMPLETE_MODELB.bat
+
+PROS:
+  - Faster (3-5 hours)
+  - Tests correct risk calculation thoroughly
+  - Good for validating the fix to ORB-anchored bug
+
+CONS:
+  - Only tests ONE execution model variant
+  - Doesn't explore different ORB sizes, entry methods, etc.
+
+WHEN TO USE:
+  - Start with this to see if ANY edges exist with correct math
+  - Good first step before massive grid search
+
+================================================================================
+OPTION 2: MASSIVE GRID SEARCH (6-12 hours) - COMPREHENSIVE
+================================================================================
+
+WHAT IT DOES:
+  - Tests 324 DIFFERENT execution configurations:
+    * 3 ORB sizes (5min, 10min, 15min)
+    * 3 entry methods (close, next-open, 2-bar-confirm)
+    * 2 buffer options (0, 0.5 ticks)
+    * 3 stop modes (full-SL, half-SL, 75pct-SL)
+    * 2 confirmation requirements (1-bar, 2-bar)
+    * 3 R:R ratios (1.0, 1.5, 2.0)
+  - Tests ALL 324 configs on ALL 6 sessions
+  - Total: 239,760 backtest runs
+  - Finds BEST execution config for each session
+  - Combines best configs with state filtering
+
+FILE TO RUN:
+  OVERNIGHT_MASSIVE_GRID_SEARCH.bat
+
+PROS:
+  - TRULY comprehensive - tests EVERYTHING
+  - Finds optimal ORB size, entry method, stop placement
+  - If no edges found here, there are NO edges
+
+CONS:
+  - Takes 6-12 hours
+  - Much more CPU intensive
+  - Generates massive database
+
+WHEN TO USE:
+  - After Option 1 if you want to explore ALL variants
+  - If Option 1 found edges and you want to optimize
+  - For final comprehensive answer on ORB breakouts
+
+AUTO-RESUME:
+  - Both jobs automatically resume if interrupted
+  - Safe to run overnight even if PC hibernates/crashes
+  - Progress is checkpointed every 10 days
+
+================================================================================
+RECOMMENDED WORKFLOW
+================================================================================
+
+1. START WITH OPTION 1 (OVERNIGHT_COMPLETE_MODELB.bat)
+   - Runs 3-5 hours
+   - Validates correct risk calculation
+   - Shows if ANY edges exist
+
+2. READ RESULTS:
+   - FINAL_VALIDATED_EDGES_MODELB.txt
+
+3. IF EDGES FOUND:
+   - Deploy and paper trade
+
+4. IF NO EDGES / WANT TO OPTIMIZE:
+   - Run OPTION 2 (OVERNIGHT_MASSIVE_GRID_SEARCH.bat)
+   - Tests 324 execution variants
+   - Finds optimal parameters
+
+5. READ FINAL RESULTS:
+   - FINAL_GRID_SEARCH_REPORT.txt
+
+================================================================================
+WHAT TO RUN
+================================================================================
+
+OPTION 1 (3-5 hours):
+  cd C:\Users\sydne\OneDrive\myprojectx
+  OVERNIGHT_COMPLETE_MODELB.bat
+
+OPTION 2 (6-12 hours):
+  cd C:\Users\sydne\OneDrive\myprojectx
+  OVERNIGHT_MASSIVE_GRID_SEARCH.bat
+
+================================================================================
+KEY DIFFERENCES
+================================================================================
+
+Model B (Option 1):
+  - ONE execution model
+  - DEEP state filtering
+  - Faster results
+  - Good for quick validation
+
+Grid Search (Option 2):
+  - 324 execution models
+  - FINDS best config per session
+  - Much longer
+  - Definitive answer
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+OPTION 1:
+  - Will likely show NO validated edges at 0900/1000/1100
+  - MAY show edges at 1800/0030 (larger ORBs)
+  - Confirms old ORB-anchored results were fake
+
+OPTION 2:
+  - If ANY execution variant works, this will find it
+  - If NO edges found here, ORB breakouts don't work on MGC
+  - Shows which parameters matter (ORB size, entry method, etc.)
+
+================================================================================
+START COMMAND (Choose one)
+================================================================================
+
+For Model B (3-5 hours):
+  cd C:\Users\sydne\OneDrive\myprojectx
+  OVERNIGHT_COMPLETE_MODELB.bat
+
+For Grid Search (6-12 hours):
+  cd C:\Users\sydne\OneDrive\myprojectx
+  OVERNIGHT_MASSIVE_GRID_SEARCH.bat
+
+Leave running overnight. Check results in the morning.
+
+================================================================================

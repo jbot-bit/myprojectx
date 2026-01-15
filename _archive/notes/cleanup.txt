@@ -1,0 +1,137 @@
+Claude instruction — HARD CLEAN WITH MULTI-STRATEGY SUPPORT
+
+We have multiple strategies, but we must have ONE canonical execution engine.
+
+Your task is to DELETE ALL LEGACY EXECUTION LOGIC while PRESERVING STRATEGY LOGIC.
+
+CORE RULE (NON-NEGOTIABLE)
+
+There must be exactly ONE place in the codebase that defines:
+
+Entry price logic
+
+Stop placement
+
+Target calculation
+
+Same-bar TP/SL resolution
+
+Scan windows and bar iteration
+
+No strategy is allowed to compute fills, stops, targets, or outcomes.
+
+STEP 1 — DELETE / DEPRECATE INVALID EXECUTION SCRIPTS
+
+Remove or hard-deprecate (cannot be imported or run):
+
+backtest_all_orbs_complete.py
+
+backtest_worst_case_execution.py
+
+Any script that:
+
+Enters at ORB high/low
+
+Assumes perfect fills
+
+Uses edge-entry
+
+Reimplements stop/target math
+
+If a script computes entry_price, stop_price, target_price, or outcome, and it is NOT the canonical engine → DELETE IT.
+
+STEP 2 — LOCK THE ONLY VALID EXECUTION ENGINE
+
+The ONLY allowed execution model is:
+
+Entry: first 1-minute close outside ORB
+
+Stop: HALF SL (ORB midpoint, clamped)
+
+RR: explicit parameter (default = 1.0)
+
+Same-bar TP + SL → LOSS
+
+Canonical sources:
+
+build_daily_features_v2.py
+
+v_orb_trades_half
+
+Any other execution tables must be:
+
+Deleted, or
+
+Renamed with _INVALID_EXECUTION
+
+STEP 3 — RECLASSIFY STRATEGIES (DO NOT DELETE)
+
+Strategies are NOT execution engines.
+
+A valid strategy may ONLY output:
+
+should_trade: bool
+
+direction: UP | DOWN
+
+strategy_id
+
+Optional filters / labels (e.g. Asia positioning, prior ORB outcome)
+
+Examples of VALID strategies:
+
+Asia ORB correlation logic (09→10→11)
+
+Session positioning filters
+
+Outcome-conditioning rules
+
+Strategies must call the canonical execution engine for fills.
+
+STEP 4 — PURGE CONFIG & DOC CONTAMINATION
+
+Remove all references to:
+
+RR=4.0 night ORBs
+
+Canonical values sourced from edge-entry runs
+
+Update these to reflect RR=1.0 realistic execution only:
+
+canonical_session_parameters.csv
+
+STRATEGY_HIERARCHY_FINAL.md
+
+TRADING_PLAYBOOK_COMPLETE.md
+
+trading_app/config.py
+
+Source of truth = v_orb_trades_half
+
+STEP 5 — ADD HARD GUARDRAILS
+
+Add a banner or assertion to the execution engine:
+
+“Any entry logic not using FIRST CLOSE OUTSIDE ORB is INVALID.”
+
+Prevent accidental reuse of legacy logic.
+
+STEP 6 — FINAL OUTPUT REQUIRED
+
+Return:
+
+List of deleted / deprecated scripts
+
+List of remaining strategy modules
+
+The single canonical execution engine
+
+A short architecture summary:
+
+Strategies → Execution Engine → Results
+
+If logic conflicts → delete the conflicting logic.
+
+No opinions.
+No theory.
+No optimization.

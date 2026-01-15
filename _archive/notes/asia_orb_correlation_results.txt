@@ -1,0 +1,178 @@
+Error: unsupported format string passed to NoneType.__format__
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\analyze_asia_orb_structure.py", line 411, in <module>
+    main()
+  File "C:\Users\sydne\OneDrive\myprojectx\analyze_asia_orb_structure.py", line 376, in main
+    print(f"  09:00 avg R: {avg_r_0900:+.3f}R")
+                           ^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__
+================================================================================
+ASIA ORB STRUCTURAL CORRELATION ANALYSIS
+================================================================================
+
+STEP 1: BASELINE PERFORMANCE (UNCONDITIONAL)
+--------------------------------------------------------------------------------
+0900 ORB:
+  Trades: 740
+  Avg R: +0.431R
+  Win Rate: 50.3%
+
+1000 ORB:
+  Trades: 740
+  Avg R: +0.342R
+  Win Rate: 47.4%
+
+1100 ORB:
+  Trades: 740
+  Avg R: +0.449R
+  Win Rate: 51.2%
+
+STEP 2: ORB POSITIONING ANALYSIS
+--------------------------------------------------------------------------------
+Analyzing where subsequent ORBs form relative to previous ORBs...
+
+A. 10:00 ORB POSITIONING RELATIVE TO 09:00 ORB
+
+NEAR BOTTOM:
+  Occurrences: 85
+  10:00 avg R: +0.294R (baseline: +0.342R, delta: -0.048R)
+  10:00 win rate: 64.7%
+
+NEAR TOP:
+  Occurrences: 77
+  10:00 avg R: +0.325R (baseline: +0.342R, delta: -0.018R)
+  10:00 win rate: 66.2%
+
+BELOW:
+  Occurrences: 110
+  10:00 avg R: +0.400R (baseline: +0.342R, delta: +0.058R)
+  10:00 win rate: 70.0%
+
+ABOVE:
+  Occurrences: 116
+  10:00 avg R: +0.276R (baseline: +0.342R, delta: -0.066R)
+  10:00 win rate: 63.8%
+
+OVERLAP:
+  Occurrences: 135
+  10:00 avg R: +0.393R (baseline: +0.342R, delta: +0.050R)
+  10:00 win rate: 69.6%
+
+B. 11:00 ORB POSITIONING RELATIVE TO 10:00 ORB
+
+NEAR BOTTOM:
+  Occurrences: 53
+  11:00 avg R: +0.396R (baseline: +0.449R, delta: -0.053R)
+  11:00 win rate: 69.8%
+
+NEAR TOP:
+  Occurrences: 53
+  11:00 avg R: +0.509R (baseline: +0.449R, delta: +0.060R)
+  11:00 win rate: 75.5%
+
+BELOW:
+  Occurrences: 111
+  11:00 avg R: +0.459R (baseline: +0.449R, delta: +0.010R)
+  11:00 win rate: 73.0%
+
+ABOVE:
+  Occurrences: 145
+  11:00 avg R: +0.407R (baseline: +0.449R, delta: -0.042R)
+  11:00 win rate: 70.3%
+
+OVERLAP:
+  Occurrences: 161
+  11:00 avg R: +0.478R (baseline: +0.449R, delta: +0.029R)
+  11:00 win rate: 73.9%
+
+STEP 3: OUTCOME CORRELATION ANALYSIS
+--------------------------------------------------------------------------------
+A. 09:00 OUTCOME -> 10:00 PERFORMANCE
+
+When 09:00 = LOSS (DOWN):
+  10:00 trades: 69
+  10:00 avg R: +0.333R (baseline: +0.342R, delta: -0.009R)
+  10:00 win rate: 66.7%
+  Same direction: 46.4%
+
+When 09:00 = LOSS (UP):
+  10:00 trades: 79
+  10:00 avg R: +0.165R (baseline: +0.342R, delta: -0.178R)
+  10:00 win rate: 58.2%
+  Same direction: 51.9%
+  >>> SIGNIFICANT: -0.178R
+
+When 09:00 = NO_TRADE (DOWN):
+  10:00 trades: 1
+  10:00 avg R: -1.000R (baseline: +0.342R, delta: -1.342R)
+  10:00 win rate: 0.0%
+  Same direction: 100.0%
+
+When 09:00 = NO_TRADE (NONE):
+  10:00 trades: 1
+  10:00 avg R: +1.000R (baseline: +0.342R, delta: +0.658R)
+  10:00 win rate: 100.0%
+  Same direction: 0.0%
+
+When 09:00 = NO_TRADE (UP):
+  10:00 trades: 1
+  10:00 avg R: +1.000R (baseline: +0.342R, delta: +0.658R)
+  10:00 win rate: 100.0%
+  Same direction: 0.0%
+
+When 09:00 = WIN (DOWN):
+  10:00 trades: 180
+  10:00 avg R: +0.411R (baseline: +0.342R, delta: +0.069R)
+  10:00 win rate: 70.6%
+  Same direction: 56.1%
+
+When 09:00 = WIN (UP):
+  10:00 trades: 192
+  10:00 avg R: +0.354R (baseline: +0.342R, delta: +0.012R)
+  10:00 win rate: 67.7%
+  Same direction: 46.9%
+
+B. 10:00 OUTCOME -> 11:00 PERFORMANCE
+
+When 10:00 = LOSS (DOWN):
+  11:00 trades: 99
+  11:00 avg R: +0.414R (baseline: +0.449R, delta: -0.035R)
+  11:00 win rate: 70.7%
+  Same direction: 42.4%
+
+When 10:00 = LOSS (UP):
+  11:00 trades: 73
+  11:00 avg R: +0.425R (baseline: +0.449R, delta: -0.025R)
+  11:00 win rate: 71.2%
+  Same direction: 43.8%
+
+When 10:00 = WIN (DOWN):
+  11:00 trades: 177
+  11:00 avg R: +0.480R (baseline: +0.449R, delta: +0.031R)
+  11:00 win rate: 74.0%
+  Same direction: 48.6%
+
+When 10:00 = WIN (UP):
+  11:00 trades: 174
+  11:00 avg R: +0.448R (baseline: +0.449R, delta: -0.001R)
+  11:00 win rate: 72.4%
+  Same direction: 50.0%
+
+STEP 4: DIRECTION PERSISTENCE ANALYSIS
+--------------------------------------------------------------------------------
+Pattern: ALL_DIFFERENT (Primary: DOWN):
+  Days: 67
+  09:00 avg R: +0.463R
+  10:00 avg R: +0.313R
+  11:00 avg R: +0.313R
+  Combined avg: +0.363R
+
+Pattern: ALL_DIFFERENT (Primary: UP):
+  Days: 69
+  09:00 avg R: +0.449R
+  10:00 avg R: +0.130R
+  11:00 avg R: +0.536R
+  Combined avg: +0.372R
+
+Pattern: ALL_DIFFERENT (Primary: None):
+  Days: 217

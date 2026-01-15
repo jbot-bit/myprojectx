@@ -1,0 +1,127 @@
+[2026-01-15 07:41:52] ================================================================================
+[2026-01-15 07:41:52] MPL OVERNIGHT ANALYSIS - STARTING
+[2026-01-15 07:41:52] ================================================================================
+[2026-01-15 07:41:52] Start time: 2026-01-15 07:41:52
+[2026-01-15 07:41:52] Python: C:\Users\sydne\OneDrive\myprojectx\.venv\Scripts\python.exe
+[2026-01-15 07:41:52] Working directory: C:\Users\sydne\OneDrive\myprojectx
+[2026-01-15 07:41:52] 
+================================================================================
+[2026-01-15 07:41:52] PHASE 1: DATA INGESTION
+[2026-01-15 07:41:52] ================================================================================
+[2026-01-15 07:41:52] Checking for existing MPL data...
+[2026-01-15 07:41:53] 
+EXCEPTION in Data Ingestion: Catalog Error: Table with name bars_1m_mpl does not exist!
+Did you mean "bars_1m"?
+
+LINE 1: SELECT COUNT(*) FROM bars_1m_mpl WHERE symbol = ?
+                             ^
+[2026-01-15 07:41:53] 
+================================================================================
+[2026-01-15 07:41:53] PHASE 2: BASELINE BACKTEST
+[2026-01-15 07:41:53] ================================================================================
+[2026-01-15 07:41:53] STARTING: Run baseline backtest
+[2026-01-15 07:41:53] Command: C:\Users\sydne\OneDrive\myprojectx\.venv\Scripts\python.exe _mpl_baseline_backtest.py
+[2026-01-15 07:41:53] FAILED: Run baseline backtest
+[2026-01-15 07:41:53] Error: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\_mpl_baseline_backtest.py", line 25, in <module>
+    rows = con.execute(query).fetchall()
+           ^^^^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name daily_features_v2_mpl does not exist!
+Did you mean "daily_features_v2"?
+
+LINE 5: ...'0900' as orb_time, orb_0900_outcome, orb_0900_r_multiple FROM daily_features_v2_mpl WHERE instrument = 'MPL'
+                                                   
+[2026-01-15 07:41:53] WARNING: Baseline backtest failed
+[2026-01-15 07:41:53] 
+WARNING: Baseline Backtest failed - continuing to next phase...
+[2026-01-15 07:41:53] 
+================================================================================
+[2026-01-15 07:41:53] PHASE 3: PARAMETER OPTIMIZATION
+[2026-01-15 07:41:53] ================================================================================
+[2026-01-15 07:41:53] Testing parameter variations:
+[2026-01-15 07:41:53] - RR ratios: 1.0, 1.5, 2.0, 3.0
+[2026-01-15 07:41:53] - SL modes: FULL, HALF
+[2026-01-15 07:41:53] - ORB times: All 6 ORBs
+[2026-01-15 07:41:53] STARTING: Run parameter optimization
+[2026-01-15 07:41:53] Command: C:\Users\sydne\OneDrive\myprojectx\.venv\Scripts\python.exe _mpl_optimization.py
+[2026-01-15 07:41:54] FAILED: Run parameter optimization
+[2026-01-15 07:41:54] Error: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\_mpl_optimization.py", line 41, in <module>
+    result = con.execute(
+             ^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name daily_features_v2_mpl does not exist!
+Did you mean "daily_features_v2"?
+
+LINE 1: SELECT MIN(date_local), MAX(date_local) FROM daily_features_v2_mpl WHERE instrument = 'MPL'
+                                                     ^
+
+[2026-01-15 07:41:54] 
+WARNING: Parameter Optimization failed - continuing to next phase...
+[2026-01-15 07:41:54] 
+================================================================================
+[2026-01-15 07:41:54] PHASE 4: VALIDATION & BUG CHECKS
+[2026-01-15 07:41:54] ================================================================================
+[2026-01-15 07:41:54] STARTING: Run validation checks
+[2026-01-15 07:41:54] Command: C:\Users\sydne\OneDrive\myprojectx\.venv\Scripts\python.exe _mpl_validation.py
+[2026-01-15 07:41:54] FAILED: Run validation checks
+[2026-01-15 07:41:54] Error: Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\_mpl_validation.py", line 30, in <module>
+    trades = con.execute(query).fetchone()[0]
+             ^^^^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name daily_features_v2_mpl does not exist!
+Did you mean "daily_features_v2"?
+
+LINE 2: SELECT COUNT(*) FROM daily_features_v2_mpl
+                             ^
+
+[2026-01-15 07:41:54] 
+WARNING: Validation & Bug Checks failed - continuing to next phase...
+[2026-01-15 07:41:54] 
+================================================================================
+[2026-01-15 07:41:54] PHASE 5: FINAL REPORT GENERATION
+[2026-01-15 07:41:54] ================================================================================
+[2026-01-15 07:41:54] 
+Final report saved to MPL_OVERNIGHT_RESULTS.md
+[2026-01-15 07:41:54] Trading plan saved to MPL_TRADING_PLAN.md
+[2026-01-15 07:41:54] 
+================================================================================
+[2026-01-15 07:41:54] MPL OVERNIGHT ANALYSIS - COMPLETE
+[2026-01-15 07:41:54] ================================================================================
+[2026-01-15 07:41:54] End time: 2026-01-15 07:41:54
+[2026-01-15 07:41:54] 
+Phase Results:
+[2026-01-15 07:41:54]   Data Ingestion: EXCEPTION: Catalog Error: Table with name bars_1m_mpl does not exist!
+Did you mean "bars_1m"?
+
+LINE 1: SELECT COUNT(*) FROM bars_1m_mpl WHERE symbol = ?
+                             ^
+[2026-01-15 07:41:54]   Baseline Backtest: FAILED
+[2026-01-15 07:41:54]   Parameter Optimization: FAILED
+[2026-01-15 07:41:54]   Validation & Bug Checks: FAILED
+[2026-01-15 07:41:54]   Final Report Generation: SUCCESS
+[2026-01-15 07:41:54] 
+
+FATAL ERROR: 'charmap' codec can't encode character '\U0001f4ca' in position 24: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\OVERNIGHT_PLATINUM_COMPLETE.py", line 859, in <module>
+    main()
+  File "C:\Users\sydne\OneDrive\myprojectx\OVERNIGHT_PLATINUM_COMPLETE.py", line 844, in main
+    log(f"\n\U0001f4ca Results: {REPORT_FILE}")
+  File "C:\Users\sydne\OneDrive\myprojectx\OVERNIGHT_PLATINUM_COMPLETE.py", line 61, in log
+    print(full_msg)
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f4ca' in position 24: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\OVERNIGHT_PLATINUM_COMPLETE.py", line 866, in <module>
+    log(traceback.format_exc())
+  File "C:\Users\sydne\OneDrive\myprojectx\OVERNIGHT_PLATINUM_COMPLETE.py", line 61, in log
+    print(full_msg)
+  File "C:\Users\sydne\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f4ca' in position 276: character maps to <undefined>

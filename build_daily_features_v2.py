@@ -1,8 +1,16 @@
 # build_daily_features_v2.py
 """
-Daily Feature Builder V2 - ZERO LOOKAHEAD (FIXED)
-================================================
-Rebuilds features with proper temporal structure.
+Daily Feature Builder V2 - ZERO LOOKAHEAD (FIXED) + CANONICAL EXECUTION ENGINE
+===============================================================================
+
+This script implements the CANONICAL EXECUTION ENGINE principles:
+- Entry at first CLOSE outside ORB (NOT ORB edge)
+- Stop at FULL (opposite edge) or HALF (midpoint)
+- Target = entry +/- RR * risk
+- Conservative same-bar resolution (TP+SL both hit = LOSS)
+
+For parameter variations (different RR, confirmations, buffers), use execution_engine.py
+instead of creating new backtest scripts.
 
 CRITICAL:
 - Each ORB can only use information available AT that exact time.
@@ -13,20 +21,22 @@ CRITICAL:
       PRE_LONDON   D 17:00–18:00
       LONDON       D 18:00–23:00  (ORB 18:00)
       PRE_NY       D 23:00–(D+1)00:30
-      NY_FUTURES   D 23:00–(D+1)00:30 (ORB 23:00)
-      NYSE_ORB     (D+1)00:30–00:35 (ORB 00:30)
-      NY_CASH      (D+1)00:35–02:00
+      NY_FUTURES   D 23:00–(D+1)00:30 (ORB 23:00, execution window ends 00:30)
+      NY_CASH      (D+1)00:30–02:00 (includes ORB 00:30, execution window ends 02:00)
 
 Execution Model (1-minute):
 - ORB = first 5 minutes of that open (range from bars_1m high/low)
-- Entry trigger = first 1m CLOSE outside ORB after ORB window ends
-- SL = opposite ORB boundary
+- Entry trigger = first 1m CLOSE outside ORB after ORB window ends (LINE 192)
+- SL = opposite ORB boundary (FULL) or midpoint (HALF)
 - TP = entry +/- RR * risk (risk = abs(entry_close - SL))
 - Outcome checked using subsequent 1m high/low (conservative: if both hit in same bar => LOSS)
+
+GUARDRAIL: Entry must NOT be at ORB edge (assertions at LINE 192+)
 
 Usage:
   python build_daily_features_v2.py 2026-01-10
   python build_daily_features_v2.py 2024-01-02 2026-01-10
+  python build_daily_features_v2.py 2024-01-02 2026-01-10 --sl-mode half
 """
 
 import duckdb
@@ -43,6 +53,7 @@ DB_PATH = "gold.db"
 RSI_LEN = 14
 
 RR_DEFAULT = 1.0  # keep simple for now
+SL_MODE = "full"  # Default: "full" = stop at opposite edge; can override with --sl-mode half
 
 
 def _dt_local(d: date, hh: int, mm: int) -> datetime:
@@ -50,8 +61,10 @@ def _dt_local(d: date, hh: int, mm: int) -> datetime:
 
 
 class FeatureBuilderV2:
-    def __init__(self, db_path: str = DB_PATH):
+    def __init__(self, db_path: str = DB_PATH, sl_mode: str = "full", table_name: str = "daily_features_v2"):
         self.con = duckdb.connect(db_path)
+        self.sl_mode = sl_mode
+        self.table_name = table_name
 
     # ---------- core time-window fetchers (FIX midnight safely) ----------
     def _window_stats_1m(self, start_local: datetime, end_local: datetime) -> Optional[Dict]:
@@ -117,12 +130,27 @@ class FeatureBuilderV2:
         return self._window_stats_1m(_dt_local(trade_date, 18, 0), _dt_local(trade_date, 23, 0))
 
     def get_ny_cash_session(self, trade_date: date) -> Optional[Dict]:
-        # (D+1) 00:35 -> 02:00
-        return self._window_stats_1m(_dt_local(trade_date + timedelta(days=1), 0, 35),
+        # (D+1) 00:30 -> 02:00 (includes 00:30 ORB)
+        return self._window_stats_1m(_dt_local(trade_date + timedelta(days=1), 0, 30),
                                      _dt_local(trade_date + timedelta(days=1), 2, 0))
 
     # ---------- ORB w/ 1m execution ----------
-    def calculate_orb_1m_exec(self, orb_start_local: datetime, scan_end_local: datetime, rr: float = RR_DEFAULT) -> Optional[Dict]:
+    def calculate_orb_1m_exec(self, orb_start_local: datetime, scan_end_local: datetime, rr: float = RR_DEFAULT, sl_mode: str = SL_MODE) -> Optional[Dict]:
+        """
+        Calculate ORB with 1-minute execution AND ORB-anchored MAE/MFE.
+
+        MAE/MFE are measured from ORB EDGE (not entry) and normalized by ORB-anchored R.
+
+        Args:
+            orb_start_local: ORB start time (local)
+            scan_end_local: Scan window end time (local)
+            rr: Risk/reward ratio for target
+            sl_mode: "full" = stop at opposite edge, "half" = stop at midpoint
+
+        Returns:
+            Dict with keys: high, low, size, break_dir, outcome, r_multiple, mae, mfe,
+                           stop_price, risk_ticks (debug)
+        """
         orb_end_local = orb_start_local + timedelta(minutes=5)
 
         orb_stats = self._window_stats_1m(orb_start_local, orb_end_local)
@@ -132,6 +160,7 @@ class FeatureBuilderV2:
         orb_high = orb_stats["high"]
         orb_low = orb_stats["low"]
         orb_size = orb_high - orb_low
+        orb_mid = (orb_high + orb_low) / 2.0
 
         # bars AFTER orb end
         bars = self._fetch_1m_bars(orb_end_local, scan_end_local)
@@ -154,15 +183,49 @@ class FeatureBuilderV2:
                 entry_price = c
                 break
 
+        # GUARDRAIL: Validate entry method (must be at close, not ORB edge)
+        if entry_price is not None:
+            assert entry_price != orb_high, "FATAL: Entry at ORB high (should be at close)"
+            assert entry_price != orb_low, "FATAL: Entry at ORB low (should be at close)"
+
         if break_dir == "NONE":
-            return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": "NONE", "outcome": "NO_TRADE", "r_multiple": None}
+            return {
+                "high": orb_high, "low": orb_low, "size": orb_size,
+                "break_dir": "NONE", "outcome": "NO_TRADE", "r_multiple": None,
+                "mae": None, "mfe": None,
+                "stop_price": None, "risk_ticks": None
+            }
 
-        stop = orb_low if break_dir == "UP" else orb_high
-        risk = abs(entry_price - stop)
-        if risk <= 0:
-            return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "NO_TRADE", "r_multiple": None}
+        # ORB edge (anchor point for R calculation)
+        orb_edge = orb_high if break_dir == "UP" else orb_low
 
-        target = entry_price + rr * risk if break_dir == "UP" else entry_price - rr * risk
+        # Calculate stop based on mode
+        if sl_mode == "full":
+            stop = orb_low if break_dir == "UP" else orb_high
+        else:  # half
+            stop = orb_mid
+
+        # ORB-anchored R: distance from ORB edge to stop
+        r_orb = abs(orb_edge - stop)
+        risk_ticks = r_orb / 0.1
+
+        # Guard: R must be > 0
+        if r_orb <= 0:
+            # This should never happen in practice, but guard against it
+            return {
+                "high": orb_high, "low": orb_low, "size": orb_size,
+                "break_dir": break_dir, "outcome": "NO_TRADE", "r_multiple": None,
+                "mae": None, "mfe": None,
+                "stop_price": stop, "risk_ticks": 0.0
+            }
+
+        # ORB-anchored target (NOT entry-anchored)
+        # Entry price is ONLY used for fill simulation, not for TP/R/expectancy
+        target = orb_edge + rr * r_orb if break_dir == "UP" else orb_edge - rr * r_orb
+
+        # Track MAE/MFE from ORB EDGE (will be normalized by r_orb)
+        mae_raw = 0.0  # Maximum adverse excursion from ORB edge (in price units)
+        mfe_raw = 0.0  # Maximum favorable excursion from ORB edge (in price units)
 
         # start checking AFTER entry bar
         start_i = 0
@@ -175,26 +238,74 @@ class FeatureBuilderV2:
             h = float(h)
             l = float(l)
 
+            # Update MAE/MFE from ORB EDGE (raw price units, will normalize by r_orb)
             if break_dir == "UP":
+                # MAE: how far price went below ORB edge (adverse)
+                mae_raw = max(mae_raw, orb_edge - l)
+                # MFE: how far price went above ORB edge (favorable)
+                mfe_raw = max(mfe_raw, h - orb_edge)
+
                 hit_stop = l <= stop
                 hit_target = h >= target
                 if hit_stop and hit_target:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0}
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0,
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
                 if hit_target:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "WIN", "r_multiple": float(rr)}
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "WIN", "r_multiple": float(rr),
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
                 if hit_stop:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0}
-            else:
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0,
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
+            else:  # DOWN break
+                # MAE: how far price went above ORB edge (adverse)
+                mae_raw = max(mae_raw, h - orb_edge)
+                # MFE: how far price went below ORB edge (favorable)
+                mfe_raw = max(mfe_raw, orb_edge - l)
+
                 hit_stop = h >= stop
                 hit_target = l <= target
                 if hit_stop and hit_target:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0}
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0,
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
                 if hit_target:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "WIN", "r_multiple": float(rr)}
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "WIN", "r_multiple": float(rr),
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
                 if hit_stop:
-                    return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0}
+                    return {
+                        "high": orb_high, "low": orb_low, "size": orb_size,
+                        "break_dir": break_dir, "outcome": "LOSS", "r_multiple": -1.0,
+                        "mae": mae_raw / r_orb, "mfe": mfe_raw / r_orb,
+                        "stop_price": stop, "risk_ticks": risk_ticks
+                    }
 
-        return {"high": orb_high, "low": orb_low, "size": orb_size, "break_dir": break_dir, "outcome": "NO_TRADE", "r_multiple": None}
+        # No exit
+        return {
+            "high": orb_high, "low": orb_low, "size": orb_size,
+            "break_dir": break_dir, "outcome": "NO_TRADE", "r_multiple": None,
+            "mae": (mae_raw / r_orb) if mae_raw > 0 else None,
+            "mfe": (mfe_raw / r_orb) if mfe_raw > 0 else None,
+            "stop_price": stop, "risk_ticks": risk_ticks
+        }
 
     # ---------- RSI ----------
     def calculate_rsi_at(self, at_local: datetime) -> Optional[float]:
@@ -312,12 +423,12 @@ class FeatureBuilderV2:
         london_session = self.get_london_session(trade_date)
         ny_session = self.get_ny_cash_session(trade_date)
 
-        orb_0900 = self.calculate_orb_1m_exec(_dt_local(trade_date, 9, 0), _dt_local(trade_date, 17, 0))
-        orb_1000 = self.calculate_orb_1m_exec(_dt_local(trade_date, 10, 0), _dt_local(trade_date, 17, 0))
-        orb_1100 = self.calculate_orb_1m_exec(_dt_local(trade_date, 11, 0), _dt_local(trade_date, 17, 0))
-        orb_1800 = self.calculate_orb_1m_exec(_dt_local(trade_date, 18, 0), _dt_local(trade_date, 23, 0))
-        orb_2300 = self.calculate_orb_1m_exec(_dt_local(trade_date, 23, 0), _dt_local(trade_date + timedelta(days=1), 0, 30))
-        orb_0030 = self.calculate_orb_1m_exec(_dt_local(trade_date + timedelta(days=1), 0, 30), _dt_local(trade_date + timedelta(days=1), 2, 0))
+        orb_0900 = self.calculate_orb_1m_exec(_dt_local(trade_date, 9, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
+        orb_1000 = self.calculate_orb_1m_exec(_dt_local(trade_date, 10, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
+        orb_1100 = self.calculate_orb_1m_exec(_dt_local(trade_date, 11, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
+        orb_1800 = self.calculate_orb_1m_exec(_dt_local(trade_date, 18, 0), _dt_local(trade_date, 23, 0), sl_mode=self.sl_mode)
+        orb_2300 = self.calculate_orb_1m_exec(_dt_local(trade_date, 23, 0), _dt_local(trade_date + timedelta(days=1), 0, 30), sl_mode=self.sl_mode)
+        orb_0030 = self.calculate_orb_1m_exec(_dt_local(trade_date + timedelta(days=1), 0, 30), _dt_local(trade_date + timedelta(days=1), 2, 0), sl_mode=self.sl_mode)
 
         rsi_at_0030 = self.calculate_rsi_at(_dt_local(trade_date + timedelta(days=1), 0, 30))
         atr_20 = self.calculate_atr(trade_date)
@@ -340,8 +451,8 @@ class FeatureBuilderV2:
         )
 
         self.con.execute(
-            """
-            INSERT OR REPLACE INTO daily_features_v2 (
+            f"""
+            INSERT OR REPLACE INTO {self.table_name} (
                 date_local, instrument,
 
                 pre_asia_high, pre_asia_low, pre_asia_range,
@@ -353,14 +464,14 @@ class FeatureBuilderV2:
                 ny_high, ny_low, ny_range,
                 asia_type_code, london_type_code, pre_ny_type_code,
 
-                orb_0900_high, orb_0900_low, orb_0900_size, orb_0900_break_dir, orb_0900_outcome, orb_0900_r_multiple,
-                orb_1000_high, orb_1000_low, orb_1000_size, orb_1000_break_dir, orb_1000_outcome, orb_1000_r_multiple,
-                orb_1100_high, orb_1100_low, orb_1100_size, orb_1100_break_dir, orb_1100_outcome, orb_1100_r_multiple,
-                orb_1800_high, orb_1800_low, orb_1800_size, orb_1800_break_dir, orb_1800_outcome, orb_1800_r_multiple,
-                orb_2300_high, orb_2300_low, orb_2300_size, orb_2300_break_dir, orb_2300_outcome, orb_2300_r_multiple,
-                orb_0030_high, orb_0030_low, orb_0030_size, orb_0030_break_dir, orb_0030_outcome, orb_0030_r_multiple,
+                orb_0900_high, orb_0900_low, orb_0900_size, orb_0900_break_dir, orb_0900_outcome, orb_0900_r_multiple, orb_0900_mae, orb_0900_mfe, orb_0900_stop_price, orb_0900_risk_ticks,
+                orb_1000_high, orb_1000_low, orb_1000_size, orb_1000_break_dir, orb_1000_outcome, orb_1000_r_multiple, orb_1000_mae, orb_1000_mfe, orb_1000_stop_price, orb_1000_risk_ticks,
+                orb_1100_high, orb_1100_low, orb_1100_size, orb_1100_break_dir, orb_1100_outcome, orb_1100_r_multiple, orb_1100_mae, orb_1100_mfe, orb_1100_stop_price, orb_1100_risk_ticks,
+                orb_1800_high, orb_1800_low, orb_1800_size, orb_1800_break_dir, orb_1800_outcome, orb_1800_r_multiple, orb_1800_mae, orb_1800_mfe, orb_1800_stop_price, orb_1800_risk_ticks,
+                orb_2300_high, orb_2300_low, orb_2300_size, orb_2300_break_dir, orb_2300_outcome, orb_2300_r_multiple, orb_2300_mae, orb_2300_mfe, orb_2300_stop_price, orb_2300_risk_ticks,
+                orb_0030_high, orb_0030_low, orb_0030_size, orb_0030_break_dir, orb_0030_outcome, orb_0030_r_multiple, orb_0030_mae, orb_0030_mfe, orb_0030_stop_price, orb_0030_risk_ticks,
 
-                rsi_at_0030, atr_20
+                rsi_at_0030, rsi_at_orb, atr_20
             ) VALUES (
                 ?, ?,
 
@@ -373,14 +484,14 @@ class FeatureBuilderV2:
                 ?, ?, ?,
                 ?, ?, ?,
 
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
 
-                ?, ?
+                ?, ?, ?
             )
             """,
             [
@@ -418,6 +529,10 @@ class FeatureBuilderV2:
                 orb_0900["break_dir"] if orb_0900 else None,
                 orb_0900["outcome"] if orb_0900 else None,
                 orb_0900["r_multiple"] if orb_0900 else None,
+                orb_0900.get("mae") if orb_0900 else None,
+                orb_0900.get("mfe") if orb_0900 else None,
+                orb_0900.get("stop_price") if orb_0900 else None,
+                orb_0900.get("risk_ticks") if orb_0900 else None,
 
                 orb_1000["high"] if orb_1000 else None,
                 orb_1000["low"] if orb_1000 else None,
@@ -425,6 +540,10 @@ class FeatureBuilderV2:
                 orb_1000["break_dir"] if orb_1000 else None,
                 orb_1000["outcome"] if orb_1000 else None,
                 orb_1000["r_multiple"] if orb_1000 else None,
+                orb_1000.get("mae") if orb_1000 else None,
+                orb_1000.get("mfe") if orb_1000 else None,
+                orb_1000.get("stop_price") if orb_1000 else None,
+                orb_1000.get("risk_ticks") if orb_1000 else None,
 
                 orb_1100["high"] if orb_1100 else None,
                 orb_1100["low"] if orb_1100 else None,
@@ -432,6 +551,10 @@ class FeatureBuilderV2:
                 orb_1100["break_dir"] if orb_1100 else None,
                 orb_1100["outcome"] if orb_1100 else None,
                 orb_1100["r_multiple"] if orb_1100 else None,
+                orb_1100.get("mae") if orb_1100 else None,
+                orb_1100.get("mfe") if orb_1100 else None,
+                orb_1100.get("stop_price") if orb_1100 else None,
+                orb_1100.get("risk_ticks") if orb_1100 else None,
 
                 orb_1800["high"] if orb_1800 else None,
                 orb_1800["low"] if orb_1800 else None,
@@ -439,6 +562,10 @@ class FeatureBuilderV2:
                 orb_1800["break_dir"] if orb_1800 else None,
                 orb_1800["outcome"] if orb_1800 else None,
                 orb_1800["r_multiple"] if orb_1800 else None,
+                orb_1800.get("mae") if orb_1800 else None,
+                orb_1800.get("mfe") if orb_1800 else None,
+                orb_1800.get("stop_price") if orb_1800 else None,
+                orb_1800.get("risk_ticks") if orb_1800 else None,
 
                 orb_2300["high"] if orb_2300 else None,
                 orb_2300["low"] if orb_2300 else None,
@@ -446,6 +573,10 @@ class FeatureBuilderV2:
                 orb_2300["break_dir"] if orb_2300 else None,
                 orb_2300["outcome"] if orb_2300 else None,
                 orb_2300["r_multiple"] if orb_2300 else None,
+                orb_2300.get("mae") if orb_2300 else None,
+                orb_2300.get("mfe") if orb_2300 else None,
+                orb_2300.get("stop_price") if orb_2300 else None,
+                orb_2300.get("risk_ticks") if orb_2300 else None,
 
                 orb_0030["high"] if orb_0030 else None,
                 orb_0030["low"] if orb_0030 else None,
@@ -453,8 +584,13 @@ class FeatureBuilderV2:
                 orb_0030["break_dir"] if orb_0030 else None,
                 orb_0030["outcome"] if orb_0030 else None,
                 orb_0030["r_multiple"] if orb_0030 else None,
+                orb_0030.get("mae") if orb_0030 else None,
+                orb_0030.get("mfe") if orb_0030 else None,
+                orb_0030.get("stop_price") if orb_0030 else None,
+                orb_0030.get("risk_ticks") if orb_0030 else None,
 
                 rsi_at_0030,
+                rsi_at_0030,  # rsi_at_orb = same as rsi_at_0030
                 atr_20,
             ],
         )
@@ -465,8 +601,8 @@ class FeatureBuilderV2:
 
     def init_schema_v2(self):
         self.con.execute(
-            """
-            CREATE TABLE IF NOT EXISTS daily_features_v2 (
+            f"""
+            CREATE TABLE IF NOT EXISTS {self.table_name} (
                 date_local DATE NOT NULL,
                 instrument VARCHAR NOT NULL,
 
@@ -499,6 +635,10 @@ class FeatureBuilderV2:
                 orb_0900_break_dir VARCHAR,
                 orb_0900_outcome VARCHAR,
                 orb_0900_r_multiple DOUBLE,
+                orb_0900_mae DOUBLE,
+                orb_0900_mfe DOUBLE,
+                orb_0900_stop_price DOUBLE,
+                orb_0900_risk_ticks DOUBLE,
 
                 orb_1000_high DOUBLE,
                 orb_1000_low DOUBLE,
@@ -506,6 +646,10 @@ class FeatureBuilderV2:
                 orb_1000_break_dir VARCHAR,
                 orb_1000_outcome VARCHAR,
                 orb_1000_r_multiple DOUBLE,
+                orb_1000_mae DOUBLE,
+                orb_1000_mfe DOUBLE,
+                orb_1000_stop_price DOUBLE,
+                orb_1000_risk_ticks DOUBLE,
 
                 orb_1100_high DOUBLE,
                 orb_1100_low DOUBLE,
@@ -513,6 +657,10 @@ class FeatureBuilderV2:
                 orb_1100_break_dir VARCHAR,
                 orb_1100_outcome VARCHAR,
                 orb_1100_r_multiple DOUBLE,
+                orb_1100_mae DOUBLE,
+                orb_1100_mfe DOUBLE,
+                orb_1100_stop_price DOUBLE,
+                orb_1100_risk_ticks DOUBLE,
 
                 orb_1800_high DOUBLE,
                 orb_1800_low DOUBLE,
@@ -520,6 +668,10 @@ class FeatureBuilderV2:
                 orb_1800_break_dir VARCHAR,
                 orb_1800_outcome VARCHAR,
                 orb_1800_r_multiple DOUBLE,
+                orb_1800_mae DOUBLE,
+                orb_1800_mfe DOUBLE,
+                orb_1800_stop_price DOUBLE,
+                orb_1800_risk_ticks DOUBLE,
 
                 orb_2300_high DOUBLE,
                 orb_2300_low DOUBLE,
@@ -527,6 +679,10 @@ class FeatureBuilderV2:
                 orb_2300_break_dir VARCHAR,
                 orb_2300_outcome VARCHAR,
                 orb_2300_r_multiple DOUBLE,
+                orb_2300_mae DOUBLE,
+                orb_2300_mfe DOUBLE,
+                orb_2300_stop_price DOUBLE,
+                orb_2300_risk_ticks DOUBLE,
 
                 orb_0030_high DOUBLE,
                 orb_0030_low DOUBLE,
@@ -534,8 +690,13 @@ class FeatureBuilderV2:
                 orb_0030_break_dir VARCHAR,
                 orb_0030_outcome VARCHAR,
                 orb_0030_r_multiple DOUBLE,
+                orb_0030_mae DOUBLE,
+                orb_0030_mfe DOUBLE,
+                orb_0030_stop_price DOUBLE,
+                orb_0030_risk_ticks DOUBLE,
 
                 rsi_at_0030 DOUBLE,
+                rsi_at_orb DOUBLE,
                 atr_20 DOUBLE,
 
                 PRIMARY KEY (date_local, instrument)
@@ -543,21 +704,36 @@ class FeatureBuilderV2:
             """
         )
         self.con.commit()
-        print("daily_features_v2 table created")
+        print(f"{self.table_name} table created (sl_mode={self.sl_mode})")
 
     def close(self):
         self.con.close()
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python build_daily_features_v2.py YYYY-MM-DD [YYYY-MM-DD]")
-        return
+    import argparse
 
-    start_date = date.fromisoformat(sys.argv[1])
-    end_date = date.fromisoformat(sys.argv[2]) if len(sys.argv) == 3 else start_date
+    parser = argparse.ArgumentParser(description="Build daily features with optional Half SL mode")
+    parser.add_argument("start_date", type=str, help="Start date (YYYY-MM-DD)")
+    parser.add_argument("end_date", type=str, nargs="?", default=None, help="End date (YYYY-MM-DD), optional")
+    parser.add_argument("--sl-mode", type=str, choices=["full", "half"], default="full",
+                        help="Stop loss mode: 'full' (opposite edge) or 'half' (midpoint)")
 
-    builder = FeatureBuilderV2()
+    args = parser.parse_args()
+
+    start_date = date.fromisoformat(args.start_date)
+    end_date = date.fromisoformat(args.end_date) if args.end_date else start_date
+    sl_mode = args.sl_mode
+
+    # If Half SL mode, write to separate table
+    table_name = "daily_features_v2_half" if sl_mode == "half" else "daily_features_v2"
+
+    print(f"Building features: {start_date} to {end_date}")
+    print(f"SL mode: {sl_mode}")
+    print(f"Target table: {table_name}")
+    print()
+
+    builder = FeatureBuilderV2(sl_mode=sl_mode, table_name=table_name)
     builder.init_schema_v2()
 
     cur = start_date

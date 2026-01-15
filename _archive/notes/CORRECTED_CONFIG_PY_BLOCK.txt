@@ -1,0 +1,11 @@
+# MGC (Micro Gold) - CANONICAL Configuration
+# Source: Database verification (2026-01-14)
+# Note: Win rates are per TRADE (excluding no-breakout days)
+MGC_ORB_CONFIGS = {
+    "0900": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.3% days break, 71.5% WR, +0.431R avg, ~+111R/yr
+    "1000": {"rr": 3.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.7% days break, 67.1% WR, +0.342R avg, ~+88R/yr
+    "1100": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.7% days break, 72.5% WR, +0.449R avg, ~+116R/yr
+    "1800": {"rr": 1.0, "sl_mode": "HALF", "tier": "DAY"},  # 70.5% days break, 71.3% WR, +0.425R avg, ~+110R/yr
+    "2300": {"rr": 1.0, "sl_mode": "HALF", "tier": "NIGHT"},  # 70.5% days break, 69.3% WR, +0.387R avg, ~+100R/yr
+    "0030": {"rr": 1.0, "sl_mode": "HALF", "tier": "NIGHT"},  # 70.7% days break, 61.6% WR, +0.231R avg, ~+60R/yr
+}

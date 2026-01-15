@@ -1,0 +1,142 @@
+================================================================================
+COMBINING BEST CONFIGS WITH STATE FILTERING
+================================================================================
+
+================================================================================
+0900 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 61: 5min, next_open, buf=0.5, half, 1-bar, RR=1.5
+  Baseline: 519 trades, +0.103R
+  [NO VALIDATED STATES]
+
+Config 43: 5min, next_open, buf=0.0, half, 1-bar, RR=1.5
+  Baseline: 519 trades, +0.103R
+  [NO VALIDATED STATES]
+
+Config 44: 5min, next_open, buf=0.0, half, 1-bar, RR=2.0
+  Baseline: 516 trades, +0.087R
+  [VALIDATED STATES]: 2
+    NORMAL: 230 trades, +0.200R (+0.113R delta)
+    NORMAL + D_SMALL: 230 trades, +0.200R (+0.113R delta)
+
+================================================================================
+1000 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 212: 10min, 2bar_confirm, buf=0.5, 75pct, 1-bar, RR=2.0
+  Baseline: 347 trades, +0.176R
+  [NO VALIDATED STATES]
+
+Config 194: 10min, 2bar_confirm, buf=0.0, 75pct, 1-bar, RR=2.0
+  Baseline: 347 trades, +0.176R
+  [NO VALIDATED STATES]
+
+Config 86: 5min, 2bar_confirm, buf=0.0, 75pct, 1-bar, RR=2.0
+  Baseline: 344 trades, +0.160R
+  [VALIDATED STATES]: 1
+    WIDE: 69 trades, +0.261R (+0.101R delta)
+
+================================================================================
+1100 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 98: 5min, 2bar_confirm, buf=0.5, half, 1-bar, RR=2.0
+  Baseline: 379 trades, +0.116R
+  [NO VALIDATED STATES]
+
+Config 80: 5min, 2bar_confirm, buf=0.0, half, 1-bar, RR=2.0
+  Baseline: 379 trades, +0.116R
+  [NO VALIDATED STATES]
+
+Config 60: 5min, next_open, buf=0.5, half, 1-bar, RR=1.0
+  Baseline: 522 trades, +0.103R
+  [NO VALIDATED STATES]
+
+================================================================================
+1800 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 101: 5min, 2bar_confirm, buf=0.5, half, 2-bar, RR=2.0
+  Baseline: 424 trades, +0.132R
+  [NO VALIDATED STATES]
+
+Config 83: 5min, 2bar_confirm, buf=0.0, half, 2-bar, RR=2.0
+  Baseline: 424 trades, +0.132R
+  [NO VALIDATED STATES]
+
+Config 47: 5min, next_open, buf=0.0, half, 2-bar, RR=2.0
+  Baseline: 519 trades, +0.110R
+  [VALIDATED STATES]: 2
+    NORMAL: 243 trades, +0.210R (+0.100R delta)
+    NORMAL + D_SMALL: 243 trades, +0.210R (+0.100R delta)
+
+================================================================================
+2300 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 27: 5min, close, buf=0.5, half, 2-bar, RR=1.0
+  Baseline: 518 trades, +0.042R
+  [NO VALIDATED STATES]
+
+Config 9: 5min, close, buf=0.0, half, 2-bar, RR=1.0
+  Baseline: 518 trades, +0.042R
+  [NO VALIDATED STATES]
+
+Config 255: 15min, next_open, buf=0.0, full, 2-bar, RR=1.0
+  Baseline: 371 trades, +0.035R
+  [NO VALIDATED STATES]
+
+================================================================================
+0030 ORB - TESTING TOP CONFIGS WITH STATE FILTERING
+================================================================================
+
+Testing top 3 configs with state filtering:
+
+Config 183: 10min, 2bar_confirm, buf=0.0, full, 2-bar, RR=1.0
+  Baseline: 240 trades, +0.033R
+  [NO VALIDATED STATES]
+
+Config 201: 10min, 2bar_confirm, buf=0.5, full, 2-bar, RR=1.0
+  Baseline: 240 trades, +0.033R
+  [NO VALIDATED STATES]
+
+Config 219: 15min, close, buf=0.0, full, 2-bar, RR=1.0
+  Baseline: 241 trades, +0.029R
+  [NO VALIDATED STATES]
+
+================================================================================
+FINAL SUMMARY - CONFIGS + STATES
+================================================================================
+
+Sessions with validated combinations: 3
+
+0900 ORB: 2 validated combination(s)
+  Config 44 + NORMAL
+    230 trades, +0.200R (+0.113R delta)
+  Config 44 + NORMAL + D_SMALL
+    230 trades, +0.200R (+0.113R delta)
+
+1000 ORB: 1 validated combination(s)
+  Config 86 + WIDE
+    69 trades, +0.261R (+0.101R delta)
+
+1800 ORB: 2 validated combination(s)
+  Config 47 + NORMAL
+    243 trades, +0.210R (+0.100R delta)
+  Config 47 + NORMAL + D_SMALL
+    243 trades, +0.210R (+0.100R delta)
+
+================================================================================
+STATE FILTERING COMPLETE
+================================================================================

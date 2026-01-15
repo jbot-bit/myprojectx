@@ -1,0 +1,147 @@
+2026-01-13 15:51:17,032 - app_trading_hub - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 140, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-14 08:52:01,602 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 37536)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 89, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 48, in __init__
+    self.con = duckdb.connect(DB_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 37536)
+2026-01-14 08:52:29,211 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 08:52:29,211 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 08:52:30,401 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 08:52:30,405 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 08:52:30,405 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 08:52:30,405 - data_loader - INFO - Backfilling 2 days from ../gold.db for MGC
+2026-01-14 08:52:30,430 - data_loader - INFO - Found 0 bars to backfill from bars_1m
+2026-01-14 08:52:30,433 - data_loader - INFO - Backfill complete
+2026-01-14 08:52:31,680 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:52:32,102 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:52:33,784 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-14 08:52:33,785 - __main__ - INFO - Data initialized for MGC
+2026-01-14 08:52:35,121 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:52:35,122 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:52:35,122 - data_loader - WARNING - No bars found for MGC
+2026-01-14 08:52:41,492 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:52:41,493 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:52:41,495 - data_loader - WARNING - No bars found for MGC
+2026-01-14 08:52:47,813 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:52:47,814 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:52:47,815 - data_loader - WARNING - No bars found for MGC
+2026-01-14 08:52:54,168 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:52:54,170 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:52:54,173 - data_loader - WARNING - No bars found for MGC
+2026-01-14 08:53:30,015 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 08:53:30,016 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 08:53:31,259 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 08:53:31,259 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 08:53:31,259 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 08:53:31,259 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 08:53:31,445 - data_loader - INFO - Found 4140 bars to backfill from bars_1m
+2026-01-14 08:53:31,445 - __main__ - ERROR - Data load error: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 92, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 399, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually
+2026-01-14 08:53:34,407 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 08:53:34,408 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 08:53:35,631 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 08:53:35,631 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-14 08:53:35,631 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-14 08:53:35,631 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-14 08:53:35,653 - data_loader - INFO - Found 0 bars to backfill from bars_1m_nq
+2026-01-14 08:53:35,659 - data_loader - INFO - Backfill complete
+2026-01-14 08:53:37,002 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:53:37,396 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:53:37,398 - data_loader - WARNING - No bars found for MNQ
+2026-01-14 08:53:37,398 - strategy_engine - INFO - Loaded NQ-specific configs: CASCADE gap=15.0pts
+2026-01-14 08:53:37,402 - __main__ - INFO - Data initialized for MNQ
+2026-01-14 08:53:38,630 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-14 08:53:39,042 - data_loader - WARNING - ProjectX fetch failed: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually. Falling back to database.
+2026-01-14 08:53:39,045 - data_loader - WARNING - No bars found for MNQ
+2026-01-14 08:54:28,612 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 08:54:28,613 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 08:54:29,836 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 08:54:29,836 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 08:54:29,838 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 08:54:29,838 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 08:54:29,887 - data_loader - INFO - Found 4140 bars to backfill from bars_1m
+2026-01-14 08:54:29,891 - __main__ - ERROR - Data load error: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 92, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 399, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: There are no UNIQUE/PRIMARY KEY constraints that refer to this table, specify ON CONFLICT columns manually
+2026-01-14 09:51:17,680 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 09:51:17,680 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 09:51:18,981 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 09:51:18,985 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 09:51:18,985 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 09:51:18,985 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 09:51:19,242 - data_loader - INFO - Found 4088 bars to backfill from bars_1m
+2026-01-14 09:51:19,249 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 92, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-14 09:51:21,848 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 09:51:21,848 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 09:51:23,078 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 09:51:23,078 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 09:51:23,082 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 09:51:23,082 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 09:51:23,143 - data_loader - INFO - Found 4088 bars to backfill from bars_1m
+2026-01-14 09:51:23,144 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 92, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-14 10:16:04,236 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 10:16:04,238 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 10:16:05,184 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-14 10:16:05,184 - data_loader - INFO - ProjectX authentication successful
+2026-01-14 10:16:05,433 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 10:16:05,434 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 10:16:05,434 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 10:16:05,434 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 10:16:05,491 - data_loader - INFO - Found 4063 bars to backfill from bars_1m
+2026-01-14 10:16:06,402 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-14 10:16:06,404 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-14 10:16:06,404 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-14 10:16:06,404 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-14 10:16:06,451 - data_loader - INFO - Found 4063 bars to backfill from bars_1m
+2026-01-14 10:16:06,451 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 92, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX

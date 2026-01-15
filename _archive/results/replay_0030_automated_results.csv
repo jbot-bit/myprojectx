@@ -1,0 +1,12 @@
+date,invalidation_check,reaction_pattern,entry_triggered,entry_price,stop_price,outcome_60m,r_multiple,notes
+20260109,NO,B,NO,,,,,"Fake DN: tested 4491.60, reclaimed. No entry: never closed above 4505.50. "
+20251231,YES,NONE,NO,,,,,"Invalidated: DOWN 17.0 ticks, close at 27%"
+20250919,NO,B,YES,3701.4,3694.8,WIN,1.1969696969697272,"Fake DN: tested 3695.30, reclaimed. Entry at 3701.40 (2025-09-20 00:50:00). Target hit: +7.9 ticks. "
+20250903,YES,NONE,NO,,,,,"Invalidated: DOWN 7.1 ticks, close at 23%"
+20250828,NO,B,YES,3469.2,3466.4,LOSS,-3.1428571428573515,"Fake DN: tested 3466.90, reclaimed. Entry at 3469.20 (2025-08-29 00:45:00). Stop hit: -8.8 ticks. "
+20250805,NO,B,YES,3438.7,3432.8,WIN,0.6271186440678815,"Fake DN: tested 3433.30, reclaimed. Entry at 3438.70 (2025-08-06 00:40:00). Target hit: +3.7 ticks. "
+20250724,NO,B,YES,3380.4,3376.6,LOSS,-1.7105263157893917,"Fake DN: tested 3377.10, reclaimed. Entry at 3380.40 (2025-07-25 00:40:00). Stop hit: -6.5 ticks. "
+20250722,NO,B,NO,,,,,"Fake DN: tested 3435.70, reclaimed. No entry: never closed above 3442.00. "
+20250717,NO,B,NO,,,,,"Fake DN: tested 3335.30, reclaimed. No entry: never closed above 3339.50. "
+20250313,NO,B,YES,2976.6,2961.4,WIN,0.6644736842105283,"Fake DN: tested 2961.90, reclaimed. Entry at 2976.60 (2025-03-14 00:40:00). Target hit: +10.1 ticks. "
+20250225,NO,B,NO,,,,,"Fake DN: tested 2955.30, reclaimed. No entry: never closed above 2958.40. "

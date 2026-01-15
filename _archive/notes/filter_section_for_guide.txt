@@ -1,0 +1,111 @@
+
+---
+
+## 23. ORB SIZE FILTERS (NEW - 2026-01-13)
+
+### What Are ORB Size Filters?
+
+**Filters that skip trades when the ORB is too large relative to recent volatility (ATR).**
+
+### Why Filter Large ORBs?
+
+**Pattern discovered:** Large ORB + Breakout = Exhaustion (chasing)
+- Small ORB = Compression = Real breakout energy
+- Large ORB = Expansion = Already moved, false breakout likely
+
+### Which ORBs Have Filters?
+
+| ORB | Filter | What It Means |
+|-----|--------|---------------|
+| 23:00 | Skip if ORB > 15.5% of ATR | Only trade compressed ORBs |
+| 00:30 | Skip if ORB > 11.2% of ATR | Only trade compressed ORBs |
+| 11:00 | Skip if ORB > 9.5% of ATR | Only trade compressed ORBs |
+| 10:00 | Skip if ORB > 8.8% of ATR | Only trade compressed ORBs |
+| 09:00 | No filter | Trade all ORBs |
+| 18:00 | No filter (yet) | Trade all ORBs |
+
+### Visual Example: 23:00 ORB Filter
+
+**SCENARIO 1: SMALL ORB (PASS FILTER)**
+```
+ATR(20) = 10.0 points
+ORB size = 1.2 points
+ORB size / ATR = 1.2 / 10.0 = 0.12 (12%)
+
+Filter threshold = 0.155 (15.5%)
+Result: 12% < 15.5% → PASS → TRADE THIS ORB
+
+Why: Compressed range, genuine breakout likely
+```
+
+**SCENARIO 2: LARGE ORB (REJECT)**
+```
+ATR(20) = 10.0 points
+ORB size = 2.5 points
+ORB size / ATR = 2.5 / 10.0 = 0.25 (25%)
+
+Filter threshold = 0.155 (15.5%)
+Result: 25% > 15.5% → REJECT → SKIP THIS ORB
+
+Why: Already expanded, chasing, false breakout likely
+```
+
+### What You'll See in the App
+
+**When filter is ACTIVE:**
+- Status: "ORB TOO LARGE - FILTER REJECTED"
+- Reason: "ORB size 2.5pts (25% of ATR) > threshold 15.5%"
+- Action: "Stand down - wait for next ORB"
+
+**When filter PASSES:**
+- Normal ORB strategy display
+- Breakout signals work as usual
+- Filter operates silently in background
+
+### Impact on Trading
+
+**Trade Frequency:**
+- 23:00: 36% of trades kept (64% filtered out)
+- 00:30: 13% of trades kept (87% filtered out)
+- 11:00: 11% of trades kept (89% filtered out)
+- 10:00: 42% of trades kept (58% filtered out)
+
+**Expected Monthly Trades:**
+- **Before filters:** ~90 trades/month (all ORBs)
+- **After filters:** ~25 trades/month (filtered ORBs)
+- **Reduction:** 71.5% fewer trades
+
+**Performance Improvement:**
+- **Before filters:** +0.352R average per trade
+- **After filters:** +0.510R average per trade
+- **Improvement:** +0.158R per trade (+44.9%)
+
+### Key Points
+
+1. **Automatic:** Filters apply automatically in live trading
+2. **No lookahead:** Filter uses only historical data (ATR) and ORB size known before entry
+3. **Verified:** Manual calculation confirms all improvements
+4. **Robust:** Works across different threshold values (not curve-fit)
+5. **Trade-off:** Fewer trades but higher quality
+
+### When to Override Filters (NEVER)
+
+**Do NOT manually override filters.** They are based on 500+ trades of verified data.
+
+If you think a filtered trade "looks good", remember:
+- The filter exists because large ORBs statistically underperform
+- Your discretion cannot outperform statistical edge
+- Trust the system
+
+### Monitoring Filters
+
+**Track these metrics:**
+1. Filter rejection rate (expect 58-89% depending on ORB)
+2. Performance of trades that pass filter
+3. Performance of trades that fail filter (if tracked separately)
+
+**Monthly review:**
+- Are rejection rates as expected?
+- Is filtered performance maintaining edge?
+- Any regime changes requiring threshold adjustment?
+

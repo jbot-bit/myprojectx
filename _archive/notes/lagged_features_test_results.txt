@@ -1,0 +1,445 @@
+
+================================================================================
+CREATING LAGGED FEATURES VIEW
+================================================================================
+[OK] Created view with 3026 rows (includes lagged features)
+
+Lagged feature availability by ORB:
+orb_code  total_rows  rows_with_lag
+    0030         506          505.0
+    0900         498            0.0
+    1000         506          505.0
+    1100         506          505.0
+    1800         505          504.0
+    2300         505          504.0
+
+================================================================================
+COMPREHENSIVE LAGGED FEATURE TEST - ALL ORBS
+================================================================================
+
+================================================================================
+ANALYZING 0900 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 502.0
+  Win Rate: 29.5%
+  Avg R: -0.045R
+  Median R: -0.646R
+  Total R: -22.8R
+
+--- Testing: PREV_ASIA_RANGE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_ASIA_IMPULSE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_RANGE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+  No valid buckets with >=30 trades
+
+================================================================================
+ANALYZING 1000 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 510.0
+  Win Rate: 33.3%
+  Avg R: 0.056R
+  Median R: -0.635R
+  Total R: 28.6R
+
+--- Testing: PREV_ASIA_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+  LARGE      50  0.360000  0.137280 -0.615385  6.864010
+  SMALL     290  0.341379  0.080817 -0.666667 23.436803
+ MEDIUM     152  0.302632 -0.037890 -0.633333 -5.759317
+
+  BEST bucket: LARGE
+    Avg R: 0.137R (Delta +0.081R vs baseline)
+    Trades: 50
+  WORST bucket: MEDIUM
+    Avg R: -0.038R (Delta -0.094R vs baseline)
+    Trades: 152
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+   HIGH     166  0.361446  0.136573 -0.615385 22.671102
+    MID     203  0.315271  0.032199 -0.642857  6.536321
+    LOW     123  0.317073 -0.037934 -0.666667 -4.665927
+
+  BEST bucket: HIGH
+    Avg R: 0.137R (Delta +0.081R vs baseline)
+    Trades: 166
+  WORST bucket: LOW
+    Avg R: -0.038R (Delta -0.094R vs baseline)
+    Trades: 123
+
+--- Testing: PREV_ASIA_IMPULSE ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+    LOW     173  0.341040  0.126526 -0.625000 21.888942
+   HIGH      91  0.362637  0.122508 -0.615385 11.148196
+ MEDIUM     228  0.311404 -0.037262 -0.669540 -8.495642
+
+  BEST bucket: LOW
+    Avg R: 0.127R (Delta +0.071R vs baseline)
+    Trades: 173
+  WORST bucket: MEDIUM
+    Avg R: -0.037R (Delta -0.093R vs baseline)
+    Trades: 228
+
+--- Testing: PREV_LONDON_RANGE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+  No valid buckets with >=30 trades
+
+================================================================================
+ANALYZING 1100 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 492.0
+  Win Rate: 30.9%
+  Avg R: 0.026R
+  Median R: -0.620R
+  Total R: 12.6R
+
+--- Testing: PREV_ASIA_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+  SMALL     160  0.350000  0.155302 -0.603175 24.848247
+  LARGE      90  0.311111  0.068034 -0.624038  6.123045
+ MEDIUM     224  0.290179 -0.027121 -0.612159 -6.075116
+
+  BEST bucket: SMALL
+    Avg R: 0.155R (Delta +0.130R vs baseline)
+    Trades: 160
+  WORST bucket: MEDIUM
+    Avg R: -0.027R (Delta -0.053R vs baseline)
+    Trades: 224
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+   HIGH     154  0.376623  0.191782 -0.589286  29.534441
+    LOW     144  0.326389  0.098576 -0.619430  14.194986
+    MID     176  0.250000 -0.107007 -0.631007 -18.833252
+
+  BEST bucket: HIGH
+    Avg R: 0.192R (Delta +0.166R vs baseline)
+    Trades: 154
+  WORST bucket: MID
+    Avg R: -0.107R (Delta -0.133R vs baseline)
+    Trades: 176
+
+--- Testing: PREV_ASIA_IMPULSE ---
+lag_bin  trades  win_rate    avg_r  median_r   total_r
+   HIGH      63  0.349206 0.142708 -0.617647  8.990596
+ MEDIUM     235  0.314894 0.054010 -0.605263 12.692296
+    LOW     176  0.301136 0.018257 -0.632456  3.213284
+
+  BEST bucket: HIGH
+    Avg R: 0.143R (Delta +0.117R vs baseline)
+    Trades: 63
+  WORST bucket: LOW
+    Avg R: 0.018R (Delta -0.007R vs baseline)
+    Trades: 176
+
+--- Testing: PREV_LONDON_RANGE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+  No valid buckets with >=30 trades
+
+================================================================================
+ANALYZING 1800 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 508.0
+  Win Rate: 35.6%
+  Avg R: 0.106R
+  Median R: -0.624R
+  Total R: 54.0R
+
+--- Testing: PREV_ASIA_RANGE ---
+lag_bin  trades  win_rate    avg_r  median_r   total_r
+  LARGE     302  0.370861 0.140722 -0.624103 42.497911
+ MEDIUM     180  0.361111 0.118729 -0.608187 21.371181
+
+  BEST bucket: LARGE
+    Avg R: 0.141R (Delta +0.034R vs baseline)
+    Trades: 302
+  WORST bucket: MEDIUM
+    Avg R: 0.119R (Delta +0.012R vs baseline)
+    Trades: 180
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+   HIGH     180  0.405556  0.238713 -0.600251 42.968398
+    LOW     129  0.379845  0.187908 -0.650000 24.240100
+    MID     181  0.314917 -0.023574 -0.636364 -4.266938
+
+  BEST bucket: HIGH
+    Avg R: 0.239R (Delta +0.132R vs baseline)
+    Trades: 180
+  WORST bucket: MID
+    Avg R: -0.024R (Delta -0.130R vs baseline)
+    Trades: 181
+
+--- Testing: PREV_ASIA_IMPULSE ---
+lag_bin  trades  win_rate     avg_r  median_r   total_r
+ MEDIUM     237  0.388186  0.204541 -0.615385 48.476325
+   HIGH      90  0.400000  0.198619 -0.672671 17.875751
+    LOW     163  0.312883 -0.020923 -0.608108 -3.410517
+
+  BEST bucket: MEDIUM
+    Avg R: 0.205R (Delta +0.098R vs baseline)
+    Trades: 237
+  WORST bucket: LOW
+    Avg R: -0.021R (Delta -0.127R vs baseline)
+    Trades: 163
+
+--- Testing: PREV_LONDON_RANGE ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+  No valid buckets with >=30 trades
+
+================================================================================
+ANALYZING 2300 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 496.0
+  Win Rate: 25.4%
+  Avg R: -0.153R
+  Median R: -0.690R
+  Total R: -75.8R
+
+--- Testing: PREV_ASIA_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+  LARGE     292  0.246575 -0.147865 -0.695745 -43.176561
+ MEDIUM     178  0.247191 -0.173264 -0.683014 -30.840985
+
+  BEST bucket: LARGE
+    Avg R: -0.148R (Delta +0.005R vs baseline)
+    Trades: 292
+  WORST bucket: MEDIUM
+    Avg R: -0.173R (Delta -0.020R vs baseline)
+    Trades: 178
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+    MID     178  0.252809 -0.096107 -0.678409 -17.107028
+    LOW     124  0.250000 -0.187643 -0.720486 -23.267681
+   HIGH     176  0.232955 -0.232165 -0.692799 -40.861091
+
+  BEST bucket: MID
+    Avg R: -0.096R (Delta +0.057R vs baseline)
+    Trades: 178
+  WORST bucket: HIGH
+    Avg R: -0.232R (Delta -0.079R vs baseline)
+    Trades: 176
+
+--- Testing: PREV_ASIA_IMPULSE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+ MEDIUM     238  0.256303 -0.110905 -0.651391 -26.395502
+   HIGH      87  0.275862 -0.160023 -0.712766 -13.921965
+    LOW     153  0.209150 -0.267440 -0.739130 -40.918332
+
+  BEST bucket: MEDIUM
+    Avg R: -0.111R (Delta +0.042R vs baseline)
+    Trades: 238
+  WORST bucket: LOW
+    Avg R: -0.267R (Delta -0.115R vs baseline)
+    Trades: 153
+
+--- Testing: PREV_LONDON_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+ MEDIUM     192  0.291667 -0.091415 -0.705128 -17.551681
+  LARGE     281  0.217082 -0.209398 -0.684211 -58.840878
+
+  BEST bucket: MEDIUM
+    Avg R: -0.091R (Delta +0.061R vs baseline)
+    Trades: 192
+  WORST bucket: LARGE
+    Avg R: -0.209R (Delta -0.057R vs baseline)
+    Trades: 281
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+   HIGH     170  0.258824 -0.114162 -0.679487 -19.407539
+    MID     199  0.256281 -0.144842 -0.691489 -28.823639
+    LOW     109  0.201835 -0.302795 -0.736842 -33.004621
+
+  BEST bucket: HIGH
+    Avg R: -0.114R (Delta +0.039R vs baseline)
+    Trades: 170
+  WORST bucket: LOW
+    Avg R: -0.303R (Delta -0.150R vs baseline)
+    Trades: 109
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+  No valid buckets with >=30 trades
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+  No valid buckets with >=30 trades
+
+================================================================================
+ANALYZING 0030 ORB WITH LAGGED FEATURES
+================================================================================
+
+BASELINE (no lagged conditioning):
+  Trades: 483.0
+  Win Rate: 22.8%
+  Avg R: -0.069R
+  Median R: -0.571R
+  Total R: -33.5R
+
+--- Testing: PREV_ASIA_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+  LARGE     280  0.235714 -0.043476 -0.561463 -12.173166
+ MEDIUM     177  0.220339 -0.082285 -0.568966 -14.564486
+
+  BEST bucket: LARGE
+    Avg R: -0.043R (Delta +0.026R vs baseline)
+    Trades: 280
+  WORST bucket: MEDIUM
+    Avg R: -0.082R (Delta -0.013R vs baseline)
+    Trades: 177
+
+--- Testing: PREV_ASIA_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+    LOW     120  0.291667  0.084794 -0.552912  10.175233
+   HIGH     169  0.230769 -0.047155 -0.571429  -7.969260
+    MID     176  0.181818 -0.185767 -0.576923 -32.694915
+
+  BEST bucket: LOW
+    Avg R: 0.085R (Delta +0.154R vs baseline)
+    Trades: 120
+  WORST bucket: MID
+    Avg R: -0.186R (Delta -0.116R vs baseline)
+    Trades: 176
+
+--- Testing: PREV_ASIA_IMPULSE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+   HIGH      83  0.265060  0.123665 -0.533898  10.264212
+ MEDIUM     224  0.258929 -0.021162 -0.572300  -4.740185
+    LOW     158  0.164557 -0.227930 -0.577935 -36.012969
+
+  BEST bucket: HIGH
+    Avg R: 0.124R (Delta +0.193R vs baseline)
+    Trades: 83
+  WORST bucket: LOW
+    Avg R: -0.228R (Delta -0.159R vs baseline)
+    Trades: 158
+
+--- Testing: PREV_LONDON_RANGE ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+ MEDIUM     187  0.213904 -0.035969 -0.552632  -6.726265
+  LARGE     273  0.241758 -0.067250 -0.573171 -18.359175
+
+  BEST bucket: MEDIUM
+    Avg R: -0.036R (Delta +0.033R vs baseline)
+    Trades: 187
+  WORST bucket: LARGE
+    Avg R: -0.067R (Delta +0.002R vs baseline)
+    Trades: 273
+
+--- Testing: PREV_LONDON_CLOSE_POS ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+    LOW     109  0.220183 -0.059073 -0.549020  -6.438979
+    MID     189  0.232804 -0.064777 -0.568966 -12.242804
+   HIGH     167  0.227545 -0.070702 -0.571429 -11.807158
+
+  BEST bucket: LOW
+    Avg R: -0.059R (Delta +0.010R vs baseline)
+    Trades: 109
+  WORST bucket: HIGH
+    Avg R: -0.071R (Delta -0.001R vs baseline)
+    Trades: 167
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_HIGH ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+     NO     363  0.234160 -0.046824 -0.568966 -16.997199
+    YES     102  0.205882 -0.132272 -0.569048 -13.491742
+
+  BEST bucket: NO
+    Avg R: -0.047R (Delta +0.023R vs baseline)
+    Trades: 363
+  WORST bucket: YES
+    Avg R: -0.132R (Delta -0.063R vs baseline)
+    Trades: 102
+
+--- Testing: PREV_LONDON_SWEPT_ASIA_LOW ---
+lag_bin  trades  win_rate     avg_r  median_r    total_r
+    YES      96  0.250000  0.031604 -0.527847   3.033966
+     NO     369  0.222222 -0.090848 -0.576923 -33.522908
+
+  BEST bucket: YES
+    Avg R: 0.032R (Delta +0.101R vs baseline)
+    Trades: 96
+  WORST bucket: NO
+    Avg R: -0.091R (Delta -0.021R vs baseline)
+    Trades: 369
+
+================================================================================
+FINAL SUMMARY - SIGNIFICANT LAGGED FEATURE FINDINGS
+================================================================================
+
+[OK] FOUND 3 SIGNIFICANT IMPROVEMENTS
+
+ orb             feature best_bucket  best_avg_r  delta_r  trades  win_rate
+0030   PREV_ASIA_IMPULSE        HIGH    0.123665 0.193075      83  0.265060
+1100 PREV_ASIA_CLOSE_POS        HIGH    0.191782 0.166157     154  0.376623
+0030 PREV_ASIA_CLOSE_POS         LOW    0.084794 0.154203     120  0.291667
+
+================================================================================
+GO/NO-GO DECISION
+================================================================================
+
+ORBs with improvements: 0030, 1100
+Maximum improvement: +0.193R
+Average improvement: +0.171R
+
+[GO] IMPLEMENT LAGGED FEATURES
+
+Rationale:
+  - 2 ORBs benefit from lagged conditioning
+  - Maximum delta: +0.193R
+  - Sufficient sample sizes maintained
+
+Next steps:
+  1. Add lagged columns to day_state_features schema
+  2. Rebuild feature table with LAG() calculations
+  3. Update edge state testing scripts to include lagged features
+  4. Retest 'unconditional edge' findings with full feature set

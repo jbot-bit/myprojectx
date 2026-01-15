@@ -1,0 +1,153 @@
+
+================================================================================
+SESSION CONDITIONAL EXPECTANCY ANALYSIS
+Trade Table: orb_trades_5m_exec
+Min Sample Size: 200
+Min Delta: +0.1R
+================================================================================
+
+
+================================================================================
+LONDON ORB (1800) <- ASIA SESSION LABELS
+================================================================================
+
+London ORB trades: 46676
+
+Baseline (London ORB):
+  Sample: 46676
+  Avg R: -0.053R
+  Win Rate: 28.2%
+
+--- SWEEP CONDITIONS (Continuation vs Reversal) ---
+
+asia_sweep_high + UP (CONTINUATION):
+  N=12214, Avg R=0.103, Delta=+0.156R, WR=32.9%
+
+asia_sweep_high + DOWN (REVERSAL):
+  N=11121, Avg R=-0.247, Delta=-0.195R, WR=21.6%
+
+asia_sweep_low + DOWN (CONTINUATION):
+  N=9266, Avg R=-0.210, Delta=-0.157R, WR=24.5%
+
+--- CATEGORICAL CONDITIONS ---
+
+--- BOOLEAN CONDITIONS ---
+
+asia_failure=True:
+  N=23521, Avg R=0.050, Delta=+0.102R, WR=31.2%
+
+asia_failure=False:
+  N=23155, Avg R=-0.156, Delta=-0.104R, WR=25.1%
+
+
+================================================================================
+NY ORB (2300) <- ASIA + LONDON SESSION LABELS
+================================================================================
+
+NY 2300 ORB trades: 42304
+
+Baseline (NY 2300 ORB):
+  Sample: 42304
+  Avg R: -0.144R
+  Win Rate: 20.1%
+
+--- ASIA SWEEP CONDITIONS ---
+
+asia_sweep_low + DOWN (CONTINUATION):
+  N=7001, Avg R=0.034, Delta=+0.178R, WR=26.0%
+
+--- LONDON SWEEP CONDITIONS ---
+
+london_sweep_prior_low + DOWN (CONTINUATION):
+  N=9035, Avg R=0.118, Delta=+0.262R, WR=28.9%
+
+--- LONDON ORB OUTCOME ---
+
+london_orb_outcome=reject:
+  N=640, Avg R=-0.373, Delta=-0.229R, WR=15.5%
+
+
+================================================================================
+NY ORB (0030) <- ASIA + LONDON SESSION LABELS
+================================================================================
+
+NY 0030 ORB trades: 41002
+
+Baseline (NY 0030 ORB):
+  Sample: 41002
+  Avg R: -0.102R
+  Win Rate: 15.8%
+
+--- ASIA SWEEP CONDITIONS ---
+
+--- LONDON SWEEP CONDITIONS ---
+
+london_sweep_prior_low + UP (REVERSAL):
+  N=10602, Avg R=-0.213, Delta=-0.112R, WR=10.6%
+
+--- LONDON ORB OUTCOME ---
+
+london_orb_outcome=reject:
+  N=696, Avg R=0.176, Delta=+0.278R, WR=18.2%
+
+
+================================================================================
+NY ORB (0030) <- NY PRE-ORB SESSION LABELS (2300-0030)
+================================================================================
+
+NY 0030 ORB trades: 41002
+
+Baseline (NY 0030 ORB):
+  Sample: 41002
+  Avg R: -0.102R
+  Win Rate: 15.8%
+
+--- NY INVENTORY STATE CONDITIONS ---
+
+--- NY EXHAUSTION CONDITIONS (Continuation vs Reversal) ---
+
+--- NY CATEGORICAL CONDITIONS ---
+
+ny_net_direction=neutral:
+  N=3585, Avg R=0.115, Delta=+0.217R, WR=24.5%
+
+
+================================================================================
+SUMMARY: SIGNIFICANT CONDITIONS
+(n >= 200, delta >= +0.1R)
+================================================================================
+
+london_orb_outcome=reject:
+  N=696, Avg R=0.176, Delta=+0.278R, WR=18.2%
+
+london_sweep_prior_low + DOWN (CONTINUATION):
+  N=9035, Avg R=0.118, Delta=+0.262R, WR=28.9%
+
+london_orb_outcome=reject:
+  N=640, Avg R=-0.373, Delta=-0.229R, WR=15.5%
+
+ny_net_direction=neutral:
+  N=3585, Avg R=0.115, Delta=+0.217R, WR=24.5%
+
+asia_sweep_high + DOWN (REVERSAL):
+  N=11121, Avg R=-0.247, Delta=-0.195R, WR=21.6%
+
+asia_sweep_low + DOWN (CONTINUATION):
+  N=7001, Avg R=0.034, Delta=+0.178R, WR=26.0%
+
+asia_sweep_low + DOWN (CONTINUATION):
+  N=9266, Avg R=-0.210, Delta=-0.157R, WR=24.5%
+
+asia_sweep_high + UP (CONTINUATION):
+  N=12214, Avg R=0.103, Delta=+0.156R, WR=32.9%
+
+london_sweep_prior_low + UP (REVERSAL):
+  N=10602, Avg R=-0.213, Delta=-0.112R, WR=10.6%
+
+asia_failure=False:
+  N=23155, Avg R=-0.156, Delta=-0.104R, WR=25.1%
+
+asia_failure=True:
+  N=23521, Avg R=0.050, Delta=+0.102R, WR=31.2%
+
+Total significant conditions: 11

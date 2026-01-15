@@ -1,3 +1,4 @@
+import sys; sys.exit("DEPRECATED: This script is a redundant execution engine. Use build_daily_features_v2.py instead. This file is kept for historical reference only.")
 import duckdb
 import argparse
 from datetime import datetime, date, timedelta

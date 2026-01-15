@@ -1,0 +1,109 @@
+You are Claude Code working in my trading research repo.
+
+The new data is found raw at /myprojectx/NQ
+
+MISSION
+- Port the entire Gold (MGC) research stack to NQ (Nasdaq futures) and run “trial everything” on NQ using the same framework.
+- I have ~1 year of Databento DBN data for NQ to start.
+- You must ingest the new DBNs, build a clean DuckDB dataset, and make all analytics/backtests run end-to-end for NQ.
+
+NON-NEGOTIABLES (HONESTY / CORRECTNESS)
+- No lookahead. No future bars in features/signals.
+- Convert all timestamps to UTC+10 (Brisbane) consistently, including DST handling if needed (assume Brisbane no DST; treat as fixed UTC+10 unless we later decide otherwise).
+- Never “assume” schema fields exist; inspect and adapt.
+- If something is missing, stop and say exactly what you need.
+
+SESSION MODEL (KEEP SAME WINDOWS FOR NOW)
+- Use my existing session windows in UTC+10:
+  Asia: 09:00–17:00
+  Asia ORBs: 09:00, 10:00, 11:00
+  London open: 18:00
+  NY Futures: 23:00
+  NYSE ORB: 00:30
+- Apply these windows to NQ for now (even if not “traditional”) because the framework is built around them.
+- Make session windows configurable in one place so we can later switch to NQ RTH definitions if desired.
+
+DELIVERABLES (DO THESE IN ORDER)
+1) Ingest Databento DBN → DuckDB tables
+- Create a script: scripts/ingest_databento_dbn_nq.py
+- Input: a folder of .dbn files (trades or OHLCV) for NQ (and/or continuous).
+- Parse DBN using official Databento python tooling.
+- Produce standardized 1-minute bars table:
+  table: bars_1m_nq
+  columns (minimum):
+    ts_utc (TIMESTAMP), ts_local (TIMESTAMP), date_local (DATE),
+    symbol, source_symbol/contract,
+    open, high, low, close, volume
+- Ensure:
+  - no duplicate bars per (symbol/source_symbol, ts_local)
+  - continuous ordering
+  - log coverage: min/max date, missing minutes per day, total bars
+- Add an optional 5-minute aggregation:
+  table: bars_5m_nq (built from 1m deterministically)
+
+2) Validate data integrity (must be loud if wrong)
+- Create: scripts/audit_nq_data_integrity.py
+- Checks:
+  - date range matches expected
+  - gaps (missing minutes)
+  - timezone conversion sanity (spot-check sample timestamps)
+  - duplicates
+  - contract roll presence in source_symbol
+- Output: outputs/NQ_DATA_AUDIT.md with exact counts + findings.
+
+3) Port feature pipeline
+- Create NQ feature tables analogous to gold:
+  daily_features_nq (and any v2 equivalent)
+- Compute the same core session metrics:
+  - Asia H/L, London H/L, NY H/L
+  - Asia range
+  - Pre-NY travel (18:00→23:00)
+  - Pre-ORB travel (23:00→00:30)
+  - ORB box (00:30–00:35)
+  - ORB break direction
+  - First 5m ORB size
+  - RSI at 00:30 (define exact RSI length from existing implementation; default 14 on 1m closes)
+- Make sure these are computed from bars_1m_nq without lookahead.
+- Write: scripts/build_daily_features_nq.py
+- Output tables:
+  daily_features_nq
+  orb_features_nq (if you already have an ORB table pattern, reuse it)
+
+4) Port backtests and “trial everything”
+- Fork or parameterize existing backtest scripts to support symbol = “NQ”.
+- Do NOT rewrite logic blindly. Make the engine accept:
+  - bars table name (bars_1m vs bars_1m_nq)
+  - features table name
+  - tick size / tick value config (store in config)
+- Create: configs/market_nq.yaml with:
+  tick_size, tick_value, contract_code, session windows, fees/slippage defaults
+- Run the same suite you used for gold:
+  - ORB variants across all defined ORB times (09:00, 10:00, 11:00, 18:00, 23:00, 00:30)
+  - conservative execution mode supported (next-bar entry, same-bar TP+SL => LOSS)
+- Output:
+  outputs/nq_backtest_summary.md
+  outputs/nq_backtest_results.csv
+  and any tables you normally store (orb_trades_*_nq)
+
+5) Make the app/dashboard NQ-aware (minimal viable)
+- Add a selector (MGC vs NQ) that switches table names + config.
+- Ensure the app runs with NQ only data present.
+
+IMPLEMENTATION RULES
+- Prefer small, testable commits:
+  - Ingest → Audit → Features → Backtests → Dashboard
+- Every script must be runnable from repo root with clear CLI args.
+- Every stage writes an output report to /outputs so I can verify without reading code.
+
+FIRST ACTION RIGHT NOW
+- Inspect current repo structure and existing gold ingestion + feature scripts.
+- Then implement ingestion for DBN first (scripts/ingest_databento_dbn_nq.py).
+- Run it on my DBN folder path (ask me only for the path if not obvious).
+- Immediately run the audit script and produce outputs/NQ_DATA_AUDIT.md.
+
+WHEN YOU FINISH
+Reply with:
+- files created/modified
+- exact commands to run (ingest, audit, features, backtests)
+- a short summary of audit results (counts, date range, missing minutes)
+- any blockers (explicit)

@@ -1,0 +1,163 @@
+================================================================================
+COMPLETE OVERNIGHT JOB - START HERE (3-5 HOURS)
+================================================================================
+
+WHAT YOU'RE ABOUT TO RUN:
+-------------------------
+
+This is a COMPREHENSIVE overnight job that will:
+
+1. REBUILD all features with correct Model B execution (30-60 min)
+   - Entry-anchored risk (NOT ORB-anchored)
+   - Entry at next bar OPEN (NOT close)
+   - 5-minute ORB (00:30-00:35)
+
+2. COMPREHENSIVE ANALYSIS for ALL 6 sessions (2-3 hours)
+   - Baseline performance
+   - State filtering (all combinations)
+   - Directional bias (UP vs DOWN)
+   - ORB size impact
+   - Pattern-based filtering
+   - Temporal stability on EVERYTHING
+
+3. OLD VS NEW COMPARISON (10-20 min)
+   - Shows impact of correct risk calculation
+   - Exposes fake edges from old ORB-anchored math
+
+4. FINAL VALIDATED EDGES REPORT (10 min)
+   - Compiles ALL validated edges across ALL sessions
+   - Strict criteria: >=40 trades, >=+0.10R delta, 3/3 chunks positive
+
+TOTAL TIME: 3-5 hours
+
+================================================================================
+WHAT TO RUN (in CMD)
+================================================================================
+
+cd C:\Users\sydne\OneDrive\myprojectx
+OVERNIGHT_COMPLETE_MODELB.bat
+
+Press ENTER at the prompt to start.
+Leave it running overnight.
+
+================================================================================
+WHAT YOU'LL GET (Output Files)
+================================================================================
+
+BASELINE:
+  - results_modelb_baseline.txt (quick overview of all sessions)
+
+COMPREHENSIVE SESSION ANALYSIS (read these for details):
+  - results_0900_modelb_comprehensive.txt
+  - results_1000_modelb_comprehensive.txt
+  - results_1100_modelb_comprehensive.txt
+  - results_1800_modelb_comprehensive.txt
+  - results_2300_modelb_comprehensive.txt
+  - results_0030_modelb_comprehensive.txt
+
+COMPARISON & VERIFICATION:
+  - results_old_vs_new_comparison.txt (shows fake edges from old calculation)
+  - results_modelb_verification.txt (confirms correct math)
+
+FINAL REPORT (START HERE WHEN DONE):
+  - FINAL_VALIDATED_EDGES_MODELB.txt <-- READ THIS FIRST!
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+BEFORE (Old ORB-anchored risk):
+  - 0900: +0.43R (FAKE - risk was understated by 2-3x)
+  - 1000: Similar fake edges
+  - 1100: Similar fake edges
+
+AFTER (New entry-anchored risk):
+  - 0900: Likely negative or near zero (HONEST)
+  - 1000/1100: Likely no validated edges (HONEST)
+  - 1800/0030: May still have edges (larger ORBs, less affected by slippage)
+
+This is GOOD - you're not trading fake edges anymore!
+
+================================================================================
+WHAT TO DO AFTER IT COMPLETES
+================================================================================
+
+1. Read FINAL_VALIDATED_EDGES_MODELB.txt
+   - This tells you what (if any) edges are REAL
+   - Lists all validated edges with exact specifications
+
+2. Review individual session files
+   - Deep dive into any validated edges
+   - Understand why they work
+
+3. Check comparison file
+   - See exactly how much old edges were inflated
+   - Understand the impact of correct math
+
+4. Make trading decisions
+   - Deploy validated edges (if any)
+   - Do NOT trade anything that failed validation
+   - Consider next steps if no edges found
+
+================================================================================
+MODEL B SPECIFICATION (What You're Testing)
+================================================================================
+
+1. ORB: 5 minutes (00:30-00:35 Brisbane)
+2. Trigger: 1m close outside ORB
+3. Entry: NEXT 1m bar OPEN (not the close)
+4. Risk: |entry - stop| (entry-anchored, NOT ORB-anchored)
+5. Target: entry +/- (R * 1.0)
+6. Same-bar TP+SL = LOSS (conservative)
+7. Stop: ORB mid for half-SL, ORB opposite edge for full-SL
+
+================================================================================
+FILES CREATED FOR THIS JOB
+================================================================================
+
+Feature builder:
+  - build_daily_features_v3_modelb.py
+
+Analysis scripts (one per session):
+  - analyze_0900_modelb_comprehensive.py
+  - analyze_1000_modelb_comprehensive.py
+  - analyze_1100_modelb_comprehensive.py
+  - analyze_1800_modelb_comprehensive.py
+  - analyze_2300_modelb_comprehensive.py
+  - analyze_0030_modelb_comprehensive.py
+
+Comparison & reporting:
+  - analyze_all_sessions_modelb_baseline.py
+  - compare_old_vs_new_modelb.py
+  - generate_final_validated_edges_modelb.py
+  - verify_modelb_results.py
+
+Helper scripts:
+  - create_v3_modelb_views.py
+
+Main batch file:
+  - OVERNIGHT_COMPLETE_MODELB.bat <-- RUN THIS
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+If it fails:
+  1. Check you have bars_1m data for 2024-01-01 to 2026-01-10
+  2. Check Python is in your PATH
+  3. Check no Python processes are locking gold.db
+  4. Read error messages in the output files
+
+If results look wrong:
+  1. Run verify_modelb_results.py manually
+  2. Check a few sample trades to confirm entry-anchored risk
+  3. Compare risk_ticks values between old and new tables
+
+================================================================================
+
+Ready to run?
+
+cd C:\Users\sydne\OneDrive\myprojectx
+OVERNIGHT_COMPLETE_MODELB.bat
+
+================================================================================

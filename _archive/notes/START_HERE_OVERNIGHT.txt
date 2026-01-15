@@ -1,0 +1,61 @@
+================================================================================
+OVERNIGHT REBUILD - START HERE
+================================================================================
+
+PROBLEM FOUND:
+Your daily_features_v2_half table uses ORB-ANCHORED RISK (wrong).
+This creates FAKE EDGES on tiny ORBs like 0900.
+
+Example: 0900 showed +0.43R but uses risk from ORB edge to ORB mid (0.85 ticks).
+Reality: Entry slippage makes real risk 2-3x larger, making edge unprofitable.
+
+SOLUTION:
+Rebuild with MODEL B execution (entry-anchored risk, next-bar-open entry).
+
+================================================================================
+WHAT TO RUN (in CMD)
+================================================================================
+
+cd C:\Users\sydne\OneDrive\myprojectx
+OVERNIGHT_REBUILD_MODELB.bat
+
+This will:
+1. Build daily_features_v3_modelb (full-SL, entry-anchored)
+2. Build daily_features_v3_modelb_half (half-SL, entry-anchored)
+3. Create views (v_orb_trades_v3_modelb, v_orb_trades_v3_modelb_half)
+4. Verify results are correct
+
+TIME: 30-60 minutes
+
+================================================================================
+AFTER REBUILD
+================================================================================
+
+1. Check verification output confirms entry-anchored risk
+2. Expect results WORSE than old table (old table was inflated)
+3. Re-run 0900/1000/1100 edge discovery with NEW tables:
+   - USE: v_orb_trades_v3_modelb_half (correct)
+   - DO NOT USE: v_orb_trades_half (wrong, fake edges)
+
+================================================================================
+FILES CREATED
+================================================================================
+
+- build_daily_features_v3_modelb.py - Model B feature builder
+- OVERNIGHT_REBUILD_MODELB.bat - Batch script (RUN THIS)
+- create_v3_modelb_views.py - Creates convenience views
+- verify_modelb_results.py - Verifies correct calculation
+- MODELB_REBUILD_README.md - Full documentation
+
+================================================================================
+MODEL B SPEC (LOCKED)
+================================================================================
+
+1. ORB: 5 minutes (00:30-00:35 Brisbane)
+2. Trigger: 1m close outside ORB
+3. Entry: NEXT 1m bar OPEN (not the close)
+4. Risk: |entry - stop| (ENTRY-ANCHORED, not ORB-anchored)
+5. Target: entry +/- (R * RR)
+6. Same-bar TP+SL = LOSS (conservative)
+
+================================================================================

@@ -1,0 +1,227 @@
+* You’re correct: **filtering out “anomalies” is only valid if the anomaly is predictable at entry time** (no lookahead).
+
+**Step 1 — Define what “valid anomaly filter” means**
+
+* A filter is valid only if:
+
+  * It’s computed using **only data available before/at entry** (timestamp ≤ entry_ts)
+  * It’s **repeatable** (shows up across many days)
+  * It removes a **loss cluster**, not random noise
+
+**Step 2 — Turn “anomalies” into “entry-time conditions”**
+For each losing anomaly cluster, you need to translate it into pre-entry features like:
+
+* **Pre-open travel** (e.g., 18:00→23:00, 23:00→00:30)
+* **Session range state** (compressed / expanded)
+* **Sweep flags** (took prior session high/low and returned)
+* **Volatility regime** (range/ADR or range/ATR)
+* **Time-to-entry** (entry occurs immediately vs late)
+* **ORB size ratio** (orb_size / ADR or ATR)
+
+These are all knowable at entry (or at the bar close that triggers entry).
+
+**Step 3 — The “anomaly → condition” conversion method (no bullshit)**
+
+* Take all trades
+* Mark “bad trades” as:
+
+  * bottom 20–30% by R, OR
+  * MAE ≥ some threshold, OR
+  * LOSS with fast failure (failed break within N minutes)
+* Then find **overrepresented conditions** among bad trades:
+
+  * condition frequency in bad trades ÷ frequency overall
+  * keep only conditions with a strong lift (e.g., 1.5x–2.0x)
+
+**Step 4 — Prove it’s not lookahead**
+For every candidate condition:
+
+* Specify the exact computation timestamp:
+
+  * “uses bars up to **entry bar close**”
+  * never uses “max after entry”, “day high”, “later session outcome”, etc.
+
+**Step 5 — Validate like a machine**
+
+* Baseline stats vs Filtered stats:
+
+  * trades, win rate, avg R, expectancy
+* Must pass:
+
+  * **time-split OOS** (older period vs newer period)
+  * **robustness** (small threshold changes don’t kill it)
+
+If it only works with one exact threshold → it’s curve-fit.
+
+**Check-in**
+
+* Are your “anomalies” mainly:
+
+  * (A) **fast reversals / failed breaks**, or
+  * (B) **trend days that don’t pull back**, or
+  * (C) **high-volatility stop-outs**?
+You are working on a quantitative trading research project.
+
+PRIMARY CONSTRAINT (NON-NEGOTIABLE)
+Everything you propose must be HONEST.
+
+Definition of HONEST:
+• Any feature, condition, filter, or edge must be computable using ONLY information available at or before the exact trade entry bar close.
+• No lookahead. No future session labels. No “day high/low”, MAE/MFE, or outcome-derived logic.
+• If a variable cannot be timestamped ≤ entry_ts, it is INVALID.
+
+YOUR TASK
+Help discover and validate repeatable trading edges or filters by:
+1) Analyzing losing trades to find STRUCTURAL loss clusters
+2) Translating those clusters into ENTRY-TIME-KNOWABLE conditions
+3) Testing whether those conditions improve expectancy when used as filters
+
+STRICT WORKFLOW YOU MUST FOLLOW
+1) Identify loss clusters using outcome data ONLY for discovery (never for execution rules)
+2) Strip away any variable that uses future information
+3) Re-express remaining patterns as:
+   • session range states
+   • pre-entry travel
+   • volatility regime
+   • sweep / compression / expansion flags
+   • time-of-day context
+4) Restate each candidate condition as a boolean rule that can be evaluated at entry_bar_close
+5) Re-test from scratch using ONLY those conditions
+
+VALIDATION RULES
+For every proposed condition, you MUST report:
+• Sample size (trades)
+• Baseline vs filtered expectancy
+• Change in trade count
+• Out-of-sample performance (time-split)
+• Sensitivity check (± threshold variation)
+
+DISALLOWED BEHAVIOR
+• Do NOT suggest indicators or new signals
+• Do NOT flip losing trades into reverse strategies unless structurally justified
+• Do NOT optimize thresholds for best fit
+• Do NOT use outcome-dependent labels in execution logic
+
+FAIL FAST RULE
+If you cannot:
+• timestamp a feature,
+• explain it without referencing outcomes,
+• or show it works out-of-sample,
+
+you must explicitly mark it as INVALID.
+
+OUTPUT FORMAT
+• Bulleted, concise
+• Quantitative, not narrative
+• Clearly label: VALID / INVALID / NEEDS DATA
+
+If uncertain at any point, STOP and ask for the exact data required.
+
+
+You are Claude Code operating inside my trading research repo.
+
+GOAL
+- Find ANY profitable, reproducible trade behaviors around the 18:00 (local UTC+10) session open (“1800”).
+- Do NOT start with strict filters. Start broad, then tighten only after you prove a real signal exists.
+- We want BOTH:
+  1) rare outliers that are reproducible, and
+  2) higher-frequency trade styles that remain profitable after robustness checks.
+
+NON-NEGOTIABLE RULES (HONESTY / NO HALLUCINATION)
+- No lookahead bias. Every feature must be computable at or before the decision timestamp.
+- No cherry-picking single lucky configs. Require replication across time splits and parameter neighborhoods.
+- If a metric cannot be computed from existing tables, say so and stop, don’t guess.
+- Log every assumption explicitly in code comments.
+
+DATA CONTEXT
+- Database: gold.db (DuckDB).
+- Instrument: MGC.
+- Local timezone: UTC+10 (Brisbane).
+- 1800 session: ORB forms 18:00–18:05, but you are allowed to search broader than ORB (e.g., 17:30–19:30).
+- Prefer building from daily_features_v2 / daily_features_v2_half and bars_1m / bars_5m.
+- Keep the approach compatible with existing backtest logic patterns in repo.
+
+WHAT TO BUILD (DELIVERABLES)
+1) Create a NEW research script:
+   - scripts/research_1800_any_edges.py
+   It must:
+   - Pull raw bars for a window around 18:00 (e.g., 17:00–20:00 local).
+   - Build a broad library of candidate “event definitions” and “trade templates” (below).
+   - Backtest each candidate with conservative execution assumptions:
+       * next-bar execution after signal
+       * same-bar TP+SL => LOSS
+       * include realistic slippage/fees as a parameter (default small; allow sensitivity test)
+   - Output a ranked report (CSV + markdown) with:
+       expectancy (avg R), win rate, trades, max DD proxy, and stability scores.
+
+2) Candidate trade templates (broad, not strict)
+Implement multiple families. Keep parameters as ranges, but small grids (don’t brute force millions):
+A) Breakout / continuation:
+   - break above/below a reference level after 18:00
+B) Fade / mean reversion:
+   - rejection of a level after sweep
+C) Pullback continuation:
+   - breakout then pullback to trigger zone then continuation
+D) Range expansion / contraction:
+   - volatility burst after compression
+E) Time-based:
+   - first X minutes after 18:00, last X minutes before 19:00, etc.
+
+Reference levels you MAY use (compute without lookahead):
+- 1800 ORB high/low/mid (18:00–18:05)
+- Asia session high/low (09:00–17:00)
+- Pre-1800 micro-range (e.g., 17:30–18:00)
+- Prior day high/low/close
+- VWAP if computable from intraday bars up to time t (optional)
+
+3) Candidate features (broad)
+Generate features at decision time t, such as:
+- ORB size (absolute, and normalized by ATR(20) if available)
+- pre-1800 travel from 17:00->18:00, and 16:00->18:00
+- distance to Asia high/low at 18:00
+- whether Asia high/low was swept during 17:00–18:00
+- microstructure proxies: number of consecutive up/down closes into 18:00, etc.
+
+4) Search strategy (avoid overfit)
+- Use a 3-stage funnel:
+  Stage 1: broad scan, minimal params, find candidates with avgR > 0 and N >= 80 trades (or justify different).
+  Stage 2: stability checks:
+     * time split: 2024+ OOS vs pre-2024 IS (or similar split based on data)
+     * parameter neighborhood: candidate must remain positive across nearby thresholds
+  Stage 3: realism checks:
+     * slippage sensitivity (0, 1 tick, 2 ticks)
+     * exclude top 1% best days and re-evaluate (outlier dependence test)
+
+5) Output requirements
+- Write outputs to:
+  - outputs/research_1800_ranked.csv
+  - outputs/research_1800_report.md
+- In the report, include:
+  - Top 10 candidates with full definition (signal + entry + stop + target + timeouts)
+  - Evidence they’re not overfit (splits + neighborhood + slippage sensitivity)
+  - A clear “DO NOT TRADE” note for any candidate that fails robustness.
+
+6) Guardrails
+- Do not assume ORB breakout works by default; treat it as one candidate family only.
+- If you discover something profitable, attempt to simplify it:
+  - fewer conditions, same or better expectancy.
+- If nothing survives robustness, say so clearly and propose next “structure sources” to test.
+
+START NOW
+- First: inspect schema (SHOW TABLES, DESCRIBE).
+- Then: implement the script + run it.
+- Then: write the ranked CSV + MD report.
+- Keep runtime reasonable; prefer vectorized DuckDB queries over Python loops.
+
+When done, reply with:
+- Files created/modified
+- How to run the script
+- Summary of top findings (numbers, not vibes)
+
+
+
+
+
+
+
+

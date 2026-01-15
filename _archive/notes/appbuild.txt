@@ -1,0 +1,216 @@
+FULL PROMPT FOR CLAUDE
+You are building a LIVE Streamlit trading application for me.
+This is NOT a backtesting or research app.
+This is a real-time decision-support engine.
+
+The goal:
+- Ingest live 1-minute market data
+- Continuously evaluate ALL known strategy structures
+- Rank them by priority
+- Tell me EXACTLY how to proceed at any moment
+
+This app must NOT:
+- Optimize parameters
+- Invent new strategies
+- Use indicators beyond VWAP
+- Use predictive language
+
+It MUST:
+- Be reactive
+- Be rule-based
+- Follow a strict strategy hierarchy
+
+----------------------------------------------------------------
+DATA
+----------------------------------------------------------------
+- Use Databento for live 1-minute bars
+- Maintain a rolling window (at least last 48 hours)
+- All timestamps must be converted to UTC+10
+- Instruments:
+  - Primary: NQ or MNQ (configurable)
+  - Secondary: MGC (optional toggle)
+
+----------------------------------------------------------------
+SESSION DEFINITIONS (UTC+10)
+----------------------------------------------------------------
+- Asia: 09:00–17:00
+- London: 18:00–23:00
+- NY Futures: 23:00
+- NYSE ORB: 00:30
+- Asia ORBs: 09:00, 10:00, 11:00
+
+----------------------------------------------------------------
+STRATEGY HIERARCHY (HARD RULE)
+----------------------------------------------------------------
+At any moment, ONLY ONE strategy can be active.
+
+Priority order (highest → lowest):
+
+1. MULTI-LIQUIDITY CASCADES (A+)
+2. PROXIMITY PRESSURE (A)
+3. NIGHT ORBs (23:00, 00:30) (B)
+4. SINGLE LIQUIDITY REACTIONS (B-Backup)
+5. DAY ORBs (09:00, 10:00, 11:00) (C)
+
+If a higher-tier strategy is valid or preparing,
+ALL lower-tier strategies are DISABLED.
+
+----------------------------------------------------------------
+STRATEGY LOGIC (SUMMARY LEVEL)
+----------------------------------------------------------------
+
+1) CASCADES
+- ≥2 session liquidity levels swept in sequence
+- Failure to hold last swept level
+- Gap size between levels is above median
+- Typically around session opens (esp 23:00)
+- Low frequency, extreme payoff
+- Management: structure-based trailing only
+
+2) PROXIMITY PRESSURE
+- Two recent session highs/lows unusually close
+- Liquidity compressed between them
+- Sweep of the cluster + failure
+- More frequent than cascades, less violent
+- Middle layer between ORBs and cascades
+
+3) ORBs
+- Only these are allowed:
+  - 23:00 ORB
+  - 00:30 ORB
+  - 11:00 ORB
+- Fixed exits allowed
+- Low risk, bread-and-butter only
+
+----------------------------------------------------------------
+WHAT THE APP MUST DO LIVE
+----------------------------------------------------------------
+
+Every refresh (e.g. every 5–10 seconds):
+
+1. Recompute:
+   - Session highs/lows
+   - Proximity gaps
+   - Cascade gap size
+   - ORB ranges
+   - VWAP
+
+2. Evaluate EACH strategy independently:
+   - Is it INVALID?
+   - Is it FORMING / PREPARING?
+   - Is it READY?
+   - Is it ACTIVE (ENTER / MANAGE)?
+
+3. Select ONE active plan using the hierarchy.
+
+----------------------------------------------------------------
+OUTPUT REQUIREMENTS (CRITICAL)
+----------------------------------------------------------------
+
+The app must present a single “What to do now” panel with:
+
+- STATUS:
+  One of:
+  STAND DOWN
+  PREPARE
+  ENTER
+  MANAGE
+  EXIT
+
+- ACTIVE STRATEGY:
+  Cascade / Proximity / ORB (which one)
+
+- WHY (max 3 bullets):
+  Very short, factual reasons
+  e.g.:
+  - Asia High & London High within 0.25 ATR
+  - Both swept, price rejected
+  - Gap above median
+
+- NEXT ACTION:
+  ONE explicit instruction only
+  e.g.:
+  - “Wait for 1m close back inside zone”
+  - “Place limit at 18342.25, stop above sweep”
+  - “Move stop to breakeven (+1R hit)”
+  - “Do nothing”
+
+NO PARAGRAPHS.
+NO OPINIONS.
+NO MULTIPLE OPTIONS.
+
+----------------------------------------------------------------
+UI REQUIREMENTS (STREAMLIT)
+----------------------------------------------------------------
+
+Tabs:
+- LIVE (default)
+  - Live 1m chart
+  - Session levels overlaid
+  - Proximity zones shaded
+  - ORB boxes drawn
+  - Decision panel (“What to do now”)
+
+- LEVELS
+  - Table of current session highs/lows
+  - Gap values
+  - Proximity distances
+
+- TRADE PLAN
+  - Entry / stop / risk %
+  - Position size calculator
+  - Management rules reminder
+
+- JOURNAL
+  - Auto-log every signal state
+  - Timestamped
+  - Stored in DuckDB
+
+----------------------------------------------------------------
+ENGINEERING RULES
+----------------------------------------------------------------
+- Modular code
+- Clear strategy evaluation functions
+- Easy to disable/enable instruments
+- No hardcoded symbols
+- No lookahead bias
+- Deterministic logic only
+
+----------------------------------------------------------------
+DELIVERABLE
+----------------------------------------------------------------
+Produce:
+1. File/folder structure
+2. Streamlit app skeleton
+3. Databento live data loader
+4. Strategy engine stubs for:
+   - Cascades
+   - Proximity Pressure
+   - ORBs
+5. Priority resolution logic
+6. Clear TODO markers where strategy rules plug in
+
+This app is my live trading “brain”.
+Build it cleanly and conservatively.
+
+IMPORTANT FINAL NOTE (READ THIS)
+
+When Claude responds:
+
+❌ If it starts inventing indicators → stop it
+
+❌ If it starts optimizing → stop it
+
+❌ If it tries to predict outcomes → stop it
+
+You want:
+
+State awareness
+
+Context
+
+Readiness
+
+Instruction
+
+Not signals. Not predictions.

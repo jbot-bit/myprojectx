@@ -1,0 +1,485 @@
+[
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 1.0,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "full",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 3.0,
+    "sl_mode": "half",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 1.0,
+    "sl_mode": "half",
+    "buffer_ticks": 2.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1800",
+    "close_confirmations": 1,
+    "rr": 1.5,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "full",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "full",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "full",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "full",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 2,
+    "rr": 1.5,
+    "sl_mode": "full",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.0,
+    "sl_mode": "half",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 15.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 5.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 0.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "full",
+    "buffer_ticks": 10.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 1,
+    "rr": 2.5,
+    "sl_mode": "half",
+    "buffer_ticks": 20.0
+  },
+  {
+    "orb": "1000",
+    "close_confirmations": 3,
+    "rr": 2.5,
+    "sl_mode": "",
+    "buffer_ticks": 0.0
+  }
+]
