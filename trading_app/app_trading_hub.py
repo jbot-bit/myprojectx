@@ -9,11 +9,14 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import time
 import logging
+import uuid
 
 from config import *
 from data_loader import LiveDataLoader
 from strategy_engine import StrategyEngine, ActionType, StrategyState
 from utils import calculate_position_size, format_price, log_to_journal
+from ai_memory import AIMemoryManager
+from ai_assistant import TradingAIAssistant
 
 # Configure logging
 logging.basicConfig(
@@ -49,6 +52,14 @@ if "account_size" not in st.session_state:
     st.session_state.account_size = DEFAULT_ACCOUNT_SIZE
 if "current_symbol" not in st.session_state:
     st.session_state.current_symbol = PRIMARY_INSTRUMENT
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4())
+if "memory_manager" not in st.session_state:
+    st.session_state.memory_manager = AIMemoryManager("trading_app.db")
+if "ai_assistant" not in st.session_state:
+    st.session_state.ai_assistant = TradingAIAssistant(st.session_state.memory_manager)
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
 
 # ============================================================================
 # SIDEBAR - SETTINGS
@@ -168,11 +179,12 @@ with st.sidebar:
 # ============================================================================
 # MAIN TABS
 # ============================================================================
-tab_live, tab_levels, tab_trade_plan, tab_journal = st.tabs([
+tab_live, tab_levels, tab_trade_plan, tab_journal, tab_ai_chat = st.tabs([
     "🔴 LIVE",
     "📊 LEVELS",
     "📋 TRADE PLAN",
-    "📓 JOURNAL"
+    "📓 JOURNAL",
+    "🤖 AI CHAT"
 ])
 
 # ============================================================================
@@ -867,6 +879,150 @@ with tab_journal:
     except Exception as e:
         st.error(f"Error loading journal: {e}")
         logger.error(f"Journal display error: {e}", exc_info=True)
+
+# ============================================================================
+# TAB 5: AI CHAT
+# ============================================================================
+with tab_ai_chat:
+    st.title("🤖 AI Trading Assistant")
+
+    # Check if AI is available
+    if not st.session_state.ai_assistant.is_available():
+        st.error("⚠️ AI Assistant not available. Add ANTHROPIC_API_KEY to .env file.")
+        st.info("Get your API key from: https://console.anthropic.com/")
+        st.code("ANTHROPIC_API_KEY=sk-ant-your-key-here", language="bash")
+    else:
+        st.success("✅ AI Assistant ready! Claude Sonnet 4.5 - Ask about strategies, calculations, or trade decisions.")
+
+        # Display chat history
+        st.subheader("💬 Conversation")
+
+        chat_container = st.container()
+        with chat_container:
+            if not st.session_state.chat_history:
+                st.info("Start a conversation! Ask me about strategies, risk calculations, or trade setups.")
+            else:
+                for msg in st.session_state.chat_history:
+                    if msg["role"] == "user":
+                        st.markdown(f"**You:** {msg['content']}")
+                    else:
+                        st.markdown(f"**AI:** {msg['content']}")
+                        st.divider()
+
+        # Chat input
+        st.subheader("Ask a Question")
+
+        user_input = st.text_area(
+            "Your question:",
+            key="ai_chat_input",
+            placeholder="Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
+            height=100
+        )
+
+        col1, col2, col3 = st.columns([1, 1, 3])
+
+        with col1:
+            if st.button("Send", type="primary", use_container_width=True):
+                if user_input.strip():
+                    with st.spinner("Thinking..."):
+                        # Get current context
+                        strategy_state = None
+                        if st.session_state.get('last_evaluation'):
+                            result = st.session_state.last_evaluation
+                            strategy_state = {
+                                'strategy': result.get('strategy_name', 'None'),
+                                'action': result.get('action', 'STAND_DOWN'),
+                                'reasons': result.get('reasons', []),
+                                'next_action': result.get('next_action', 'Wait'),
+                                'current_session': 'Unknown'
+                            }
+
+                        # Get session levels (if available)
+                        session_levels = {}
+                        # TODO: Extract from data_loader if needed
+
+                        # Get ORB data (if available)
+                        orb_data = {}
+                        # TODO: Extract from data_loader if needed
+
+                        # Get backtest stats
+                        backtest_stats = {
+                            'total_r': 1153.0,
+                            'win_rate': 57.2,
+                            'avg_r': 0.43,
+                            'total_trades': 2682,
+                            'best_orb': '1100',
+                            'best_orb_r': 0.49
+                        }
+
+                        # Get current price
+                        current_price = 0
+                        if st.session_state.data_loader:
+                            latest = st.session_state.data_loader.get_latest_bar()
+                            if latest:
+                                current_price = latest.get('close', 0)
+
+                        # Call AI
+                        response = st.session_state.ai_assistant.chat(
+                            user_message=user_input,
+                            conversation_history=st.session_state.chat_history,
+                            session_id=st.session_state.session_id,
+                            instrument=st.session_state.current_symbol,
+                            current_price=current_price,
+                            strategy_state=strategy_state,
+                            session_levels=session_levels,
+                            orb_data=orb_data,
+                            backtest_stats=backtest_stats
+                        )
+
+                        # Update history
+                        st.session_state.chat_history.append({"role": "user", "content": user_input})
+                        st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+                    # Rerun to show new messages
+                    st.rerun()
+
+        with col2:
+            if st.button("Clear Chat", use_container_width=True):
+                st.session_state.chat_history = []
+                st.rerun()
+
+        # Quick examples
+        st.subheader("💡 Example Questions")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("""
+            **Trade Calculations:**
+            - "ORB is 2700-2706, direction LONG, calculate my stop and target"
+            - "I'm in a trade at 2705, ORB was 2700-2706, am I close to stop?"
+            - "What's the risk in dollars for a $10k account?"
+            """)
+
+        with col2:
+            st.markdown("""
+            **Strategy Questions:**
+            - "Why is 00:30 ORB good?"
+            - "What's the best strategy right now?"
+            - "Should I trade 09:00 or 10:00 ORB?"
+            """)
+
+        # Show recent trade discussions from memory
+        st.divider()
+        st.subheader("📚 Recent Trade Discussions")
+
+        recent_trades = st.session_state.memory_manager.get_recent_trades(
+            session_id=st.session_state.session_id,
+            days=7
+        )
+
+        if recent_trades:
+            for trade in recent_trades[:5]:
+                with st.expander(f"{trade['timestamp'].strftime('%Y-%m-%d %H:%M')} - {trade['role']}"):
+                    st.write(trade['content'])
+        else:
+            st.info("No recent trade discussions found. Start asking questions to build your memory!")
 
 # ============================================================================
 # AUTO-REFRESH

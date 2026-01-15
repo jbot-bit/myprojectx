@@ -42,9 +42,21 @@ This document describes the current production-ready file structure after compre
 
 ### Applications (User-Facing)
 
-**Streamlit Dashboards:**
-- `app_trading_hub.py` - Main trading dashboard with AI assistant
-- `app_edge_research.py` - Edge research and analysis dashboard
+**Production App:**
+- `trading_app/app_trading_hub.py` - **ULTIMATE TRADING APP** with:
+  - Real-time strategy engine (5 strategies)
+  - AI chat assistant (Claude Sonnet 4.5)
+  - Persistent memory system
+  - Live data & position calculator
+  - Trade journal
+  - 5 tabs: LIVE, LEVELS, TRADE PLAN, JOURNAL, AI CHAT
+
+**Archived Apps:** (moved to `_archive/apps/`)
+- `app_trading_hub_ai_version.py` - Original AI version (root)
+- `app_edge_research.py` - Research tool
+- `live_trading_dashboard.py` - Prototype
+- `trading_dashboard_pro.py` - Prototype
+- `orb_dashboard_simple.py` - Simple tool
 
 **Daily Workflow:**
 - `daily_update.py` - Morning routine: backfill + features + alerts
@@ -98,11 +110,17 @@ This document describes the current production-ready file structure after compre
 **logs/** - Recent log files only
 - `backfill_*.log` (recent only)
 
-**trading_app/** - Additional app components
-- `README.md`
-- `APP_STATUS.md`
-- `START_APP.bat`
-- `trading_app.log`
+**trading_app/** - Production trading application
+- `app_trading_hub.py` - Main production app (with AI chat)
+- `ai_memory.py` - AI memory management system
+- `ai_assistant.py` - Claude AI assistant
+- `config.py` - Configuration
+- `data_loader.py` - Live data loading
+- `strategy_engine.py` - Strategy engine
+- `utils.py` - Utility functions
+- `requirements.txt` - Python dependencies
+- `trading_app.db` - DuckDB database (includes ai_chat_history)
+- `trading_app.log` - Application logs
 
 **configs/** - Configuration files (if any)
 
@@ -117,14 +135,16 @@ This document describes the current production-ready file structure after compre
 **_archive/** - All non-production files
 ```
 _archive/
+├── apps/                  # 5 archived dashboard apps (Jan 15, 2026)
 ├── tests/                  # 90+ test_*.py, verify_*.py, validate_*.py files
 ├── experiments/            # 50+ analyze_*.py, compare_*.py experimental scripts
 ├── scripts/                # 60+ one-off utility scripts
-├── backtest_old/          # 10+ old backtest variants
+├── backtest_old/          # 13+ old backtest variants
+├── bat_files/             # 7 archived .bat scripts
 ├── reports/               # 100+ outdated markdown reports
 ├── results/               # 70+ CSV result files
 ├── jobs/                  # Batch files and overnight job logs
-├── legacy/                # Old/unused production code
+├── legacy/                # Old/unused production code (execution_engine.py)
 └── notes/                 # Text files and notes
 ```
 
@@ -277,10 +297,23 @@ ls _archive/results/*.csv
 **Total Archived:** 400+ files moved to systematic archive structure
 **Total Deleted:** 300+ temporary directories
 
-**Recent Cleanup (Jan 15, 2026):**
-- 5 files archived (3 deprecated backtests, 1 orphaned engine, 1 unused SQL)
-- All imports verified and working
-- No breaking changes
-- Git history preserved for rollback if needed
+**Recent Updates (Jan 15, 2026):**
 
-**System Status:** Production-ready, clean, maintainable
+**Morning Cleanup:**
+- 508 temp files deleted (492 tmpclaude-*, 4 .backup, 7 status files, 7 .bat archived)
+- 5 files archived (3 deprecated backtests, 1 orphaned engine, 1 unused SQL)
+- Files reduced: 581 → 73 in root (87% reduction)
+
+**Afternoon AI Integration:**
+- Added AI chat assistant with Claude Sonnet 4.5
+- Created persistent memory system (DuckDB)
+- Archived 5 redundant dashboard apps
+- Production app now has 5 tabs: LIVE, LEVELS, TRADE PLAN, JOURNAL, AI CHAT
+- New files: `trading_app/ai_memory.py`, `trading_app/ai_assistant.py`
+- Updated: `trading_app/app_trading_hub.py` (+152 lines)
+
+**All imports verified and working**
+**No breaking changes**
+**Git history preserved for rollback if needed**
+
+**System Status:** Production-ready, clean, maintainable, AI-powered

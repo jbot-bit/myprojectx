@@ -11,6 +11,7 @@ duckdb>=0.9.0
 # API & HTTP
 httpx>=0.24.0
 python-dotenv>=1.0.0
+anthropic>=0.40.0
 
 # Charting
 plotly>=5.17.0
