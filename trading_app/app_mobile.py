@@ -287,6 +287,10 @@ render_card_navigation(current_card, len(CARDS), card_names)
 st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)  # Spacer
 
 try:
+    # Debug: Log which card we're rendering
+    card_name = CARDS[current_card]['name']
+    logger.info(f"Rendering card: {card_name}")
+
     if current_card == 0:
         # Dashboard
         render_dashboard_card(
@@ -314,17 +318,47 @@ try:
     st.markdown("### 🤖 AI Assistant")
 
     # Compact AI chat for all cards
-    render_ai_chat_card(
-        st.session_state.ai_assistant,
-        st.session_state.chat_history,
-        st.session_state.current_symbol,
-        st.session_state.data_loader,
-        compact=True  # New parameter for compact mode
-    )
+    try:
+        render_ai_chat_card(
+            st.session_state.ai_assistant,
+            st.session_state.chat_history,
+            st.session_state.current_symbol,
+            st.session_state.data_loader,
+            compact=True  # New parameter for compact mode
+        )
+    except Exception as ai_error:
+        st.warning(f"AI Assistant temporarily unavailable: {ai_error}")
+        st.info("You can still use all other features. Chart and Trade Calculator work normally.")
 
 except Exception as e:
-    st.error(f"Error rendering card: {e}")
-    logger.error(f"Card render error: {e}", exc_info=True)
+    card_name = CARDS[current_card]['name']
+    st.error(f"❌ Error rendering {card_name} card: {e}")
+
+    # Show more details for debugging
+    import traceback
+    with st.expander("🔍 Error Details (for debugging)"):
+        st.code(traceback.format_exc())
+        st.json({
+            "card": card_name,
+            "card_index": current_card,
+            "error": str(e),
+            "error_type": type(e).__name__
+        })
+
+    logger.error(f"Card render error ({card_name}): {e}", exc_info=True)
+
+    st.warning("Try refreshing the page or switching to a different card.")
+
+    # Fallback: Show basic trade calculator
+    st.markdown("### 📊 Trade Calculator (Fallback)")
+    st.info("While we fix the issue, you can use the basic calculator:")
+
+    orb_high = st.number_input("ORB High", value=2655.0, step=0.1)
+    orb_low = st.number_input("ORB Low", value=2650.0, step=0.1)
+
+    if orb_high > orb_low:
+        orb_size = orb_high - orb_low
+        st.metric("ORB Size", f"{orb_size:.2f} points")
 
 # ============================================================================
 # SETTINGS MODAL (OPTIONAL - ACCESSIBLE VIA BOTTOM BUTTON)

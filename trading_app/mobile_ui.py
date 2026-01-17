@@ -986,7 +986,7 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
             st.error(f"Chart error: {e}")
 
     # ORB Metrics Summary
-    if latest_evaluation:
+    if latest_evaluation and hasattr(latest_evaluation, 'state') and latest_evaluation.state:
         state = latest_evaluation.state
         orb_high = state.current_orb_high if hasattr(state, 'current_orb_high') else None
         orb_low = state.current_orb_low if hasattr(state, 'current_orb_low') else None
