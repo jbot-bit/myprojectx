@@ -193,31 +193,33 @@ def _init_validated_setups(con: duckdb.DuckDBPyConnection):
         )
     """)
 
-    # Populate with 17 production setups
+    # Populate with 19 production setups (verified from gold.db 2026-01-17)
     mgc_setups = [
-        ('2300', 1.5, 'HALF', 1, 0.0, 0.155, 522, 56.1, 0.403, 'S+', '⭐ BEST OVERALL'),
-        ('1000', 8.0, 'FULL', 1, 0.0, None, 516, 15.3, 0.378, 'S+', '🦄 CROWN JEWEL'),
-        ('1800', 1.5, 'FULL', 1, 0.0, None, 522, 51.0, 0.274, 'S', 'London open'),
         ('0030', 3.0, 'HALF', 1, 0.0, 0.112, 520, 31.3, 0.254, 'S', 'NY ORB'),
-        ('1100', 3.0, 'FULL', 1, 0.0, None, 520, 30.4, 0.215, 'A', 'Late Asia'),
         ('0900', 6.0, 'FULL', 1, 0.0, None, 514, 17.1, 0.198, 'A', 'Asymmetric Asia'),
+        ('1000', 8.0, 'FULL', 1, 0.0, None, 516, 15.3, 0.378, 'S+', 'CROWN JEWEL'),
+        ('1100', 3.0, 'FULL', 1, 0.0, None, 520, 30.4, 0.215, 'A', 'Late Asia'),
+        ('1800', 1.5, 'FULL', 1, 0.0, None, 522, 51.0, 0.274, 'S', 'London open'),
+        ('2300', 1.5, 'HALF', 1, 0.0, 0.155, 522, 56.1, 0.403, 'S+', 'BEST OVERALL'),
+        ('CASCADE', 4.0, 'DYNAMIC', 3, 1.0, None, 69, 19.0, 1.950, 'S+', 'Multi-liquidity cascade'),
+        ('SINGLE_LIQ', 3.0, 'DYNAMIC', 3, 1.0, None, 118, 33.7, 1.440, 'S', 'Single liquidity sweep'),
     ]
 
     nq_setups = [
         ('0030', 1.0, 'HALF', 1, 0.0, None, 100, 66.0, 0.320, 'S+', 'BEST NQ ORB'),
-        ('1800', 1.0, 'HALF', 1, 0.0, 0.50, 161, 64.6, 0.292, 'S', 'London'),
-        ('1100', 1.0, 'HALF', 1, 0.0, 0.50, 134, 64.2, 0.284, 'S', 'Asia late'),
+        ('0900', 1.0, 'HALF', 1, 0.0, 1.0, 110, 56.4, 0.127, 'B', 'Small ORBs'),
         ('1000', 1.0, 'HALF', 1, 0.0, None, 221, 57.9, 0.158, 'A', 'Asia mid'),
-        ('0900', 1.0, 'HALF', 1, 0.0, 0.30, 167, 56.3, 0.127, 'A', 'Small ORBs'),
+        ('1100', 1.0, 'HALF', 1, 0.0, 0.5, 134, 64.2, 0.284, 'S', 'Asia late'),
+        ('1800', 1.0, 'HALF', 1, 0.0, 0.5, 161, 64.6, 0.292, 'S', 'London'),
     ]
 
     mpl_setups = [
-        ('2300', 1.5, 'FULL', 1, 0.0, 0.135, 522, 54.0, 0.296, 'S', 'NY ORB'),
-        ('1800', 1.0, 'HALF', 1, 0.0, 0.155, 522, 57.5, 0.286, 'S', 'London'),
-        ('0030', 2.0, 'HALF', 1, 0.0, 0.095, 520, 37.5, 0.256, 'S', 'Asia early'),
-        ('1100', 2.0, 'FULL', 1, 0.0, None, 520, 37.7, 0.250, 'A', 'Asia late'),
-        ('1000', 2.0, 'FULL', 1, 0.0, None, 516, 37.6, 0.239, 'A', 'Asia mid'),
-        ('0900', 3.0, 'FULL', 1, 0.0, None, 514, 26.1, 0.135, 'B', 'Asia open'),
+        ('0030', 1.0, 'FULL', 1, 0.0, None, 246, 60.6, 0.211, 'A', 'Asia early'),
+        ('0900', 1.0, 'FULL', 1, 0.0, None, 239, 61.5, 0.230, 'A', 'Asia open'),
+        ('1000', 1.0, 'FULL', 1, 0.0, None, 255, 56.1, 0.122, 'B', 'Asia mid'),
+        ('1100', 1.0, 'FULL', 1, 0.0, None, 254, 67.3, 0.346, 'S+', 'BEST MPL'),
+        ('1800', 1.0, 'FULL', 1, 0.0, None, 255, 55.3, 0.106, 'B', 'London'),
+        ('2300', 1.0, 'FULL', 1, 0.0, None, 245, 65.7, 0.314, 'S+', 'NY ORB'),
     ]
 
     for instrument, setups in [('MGC', mgc_setups), ('NQ', nq_setups), ('MPL', mpl_setups)]:
@@ -237,7 +239,7 @@ def _init_validated_setups(con: duckdb.DuckDBPyConnection):
                 trades, wr, avg_r, annual_trades, tier, notes, date.today()
             ])
 
-    logger.info(f"Populated validated_setups with {len(mgc_setups)} MGC, {len(nq_setups)} NQ, {len(mpl_setups)} MPL setups")
+    logger.info(f"Populated validated_setups with {len(mgc_setups)} MGC, {len(nq_setups)} NQ, {len(mpl_setups)} MPL setups (19 total)")
 
 
 def show_cloud_setup_instructions():
