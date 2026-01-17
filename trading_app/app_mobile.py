@@ -65,7 +65,7 @@ logger = logging.getLogger(__name__)
 # PAGE CONFIG - MOBILE OPTIMIZED
 # ============================================================================
 st.set_page_config(
-    page_title="Trading Hub Mobile",
+    page_title="myprojectx",
     page_icon="📱",
     layout="wide",  # Use wide for card layout
     initial_sidebar_state="collapsed"  # Hide sidebar on mobile
@@ -168,20 +168,20 @@ if st.session_state.auto_refresh_enabled:
 # DATA INITIALIZATION CHECK
 # ============================================================================
 if not st.session_state.data_loader or not st.session_state.strategy_engine:
-    # Show initialization screen
+    # Show initialization screen - FIXED positioning
     st.markdown("""
     <div style="
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100vh;
+        min-height: 60vh;
         padding: 20px;
         text-align: center;
     ">
         <div style="font-size: 64px; margin-bottom: 24px;">📱</div>
         <div style="font-size: 28px; font-weight: 700; color: #f9fafb; margin-bottom: 16px;">
-            Trading Hub Mobile
+            myprojectx
         </div>
         <div style="font-size: 16px; color: #9ca3af; margin-bottom: 32px;">
             Swipeable cards • Dark mode • Touch optimized
@@ -189,9 +189,7 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
     </div>
     """, unsafe_allow_html=True)
 
-    st.markdown("### Initialize Data")
-
-    if st.button("🚀 Start Trading Hub", use_container_width=True, type="primary"):
+    if st.button("🚀 Start myprojectx", use_container_width=True, type="primary"):
         with st.spinner("Loading data..."):
             try:
                 # Initialize data loader
@@ -267,17 +265,20 @@ except Exception as e:
 # CARD-BASED NAVIGATION
 # ============================================================================
 
-# Card definitions
+# Card definitions - 3 cards with integrated AI chat
 CARDS = [
     {"name": "Dashboard", "icon": "📊", "render": render_dashboard_card},
     {"name": "Chart", "icon": "📈", "render": render_chart_card},
     {"name": "Trade", "icon": "🎯", "render": render_trade_entry_card},
-    {"name": "Positions", "icon": "💼", "render": render_positions_card},
-    {"name": "AI Chat", "icon": "🤖", "render": render_ai_chat_card},
 ]
 
 card_names = [f"{card['icon']} {card['name']}" for card in CARDS]
 current_card = st.session_state.mobile_current_card
+
+# Bounds check (in case we reduced cards from 5 to 3)
+if current_card >= len(CARDS):
+    st.session_state.mobile_current_card = 0
+    current_card = 0
 
 # Navigation
 render_card_navigation(current_card, len(CARDS), card_names)
@@ -307,20 +308,19 @@ try:
             st.session_state.data_loader,
             st.session_state.strategy_engine
         )
-    elif current_card == 3:
-        # Positions
-        render_positions_card(
-            st.session_state.risk_manager,
-            st.session_state.data_loader
-        )
-    elif current_card == 4:
-        # AI Chat
-        render_ai_chat_card(
-            st.session_state.ai_assistant,
-            st.session_state.chat_history,
-            st.session_state.current_symbol,
-            st.session_state.data_loader
-        )
+
+    # AI Chat integrated at bottom of every card
+    st.markdown("---")
+    st.markdown("### 🤖 AI Assistant")
+
+    # Compact AI chat for all cards
+    render_ai_chat_card(
+        st.session_state.ai_assistant,
+        st.session_state.chat_history,
+        st.session_state.current_symbol,
+        st.session_state.data_loader,
+        compact=True  # New parameter for compact mode
+    )
 
 except Exception as e:
     st.error(f"Error rendering card: {e}")

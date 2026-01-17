@@ -39,11 +39,19 @@ MOBILE_CSS = """
         --border-subtle: #374151;
     }
 
-    /* Main Container - Full Viewport */
+    /* Main Container - Constrained for desktop */
     .main .block-container {
         padding: 0 !important;
-        max-width: 100% !important;
-        margin: 0 !important;
+        max-width: 600px !important;  /* Max width on desktop monitors */
+        margin: 0 auto !important;  /* Center on large screens */
+    }
+
+    /* On actual mobile, use full width */
+    @media (max-width: 768px) {
+        .main .block-container {
+            max-width: 100% !important;
+            margin: 0 !important;
+        }
     }
 
     /* Hide Desktop Elements */
@@ -185,22 +193,22 @@ MOBILE_CSS = """
         background: var(--bg-card);
         border: 1px solid var(--border-subtle);
         border-radius: 12px;
-        padding: 20px;
+        padding: 16px;
         text-align: center;
         margin: 8px 0;
     }
 
     .mobile-metric-label {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
         color: var(--text-secondary);
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .mobile-metric-value {
-        font-size: 32px;
+        font-size: 24px;
         font-weight: 800;
         color: var(--text-primary);
         line-height: 1.2;
@@ -208,7 +216,7 @@ MOBILE_CSS = """
     }
 
     .mobile-metric-value-large {
-        font-size: 48px;
+        font-size: 36px;
     }
 
     .mobile-metric-subtitle {
@@ -221,27 +229,27 @@ MOBILE_CSS = """
     .mobile-countdown {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: 2px solid var(--accent-indigo);
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 12px;
+        padding: 16px;
         text-align: center;
-        margin: 16px 0;
+        margin: 12px 0;
     }
 
     .mobile-countdown-value {
-        font-size: 48px;
+        font-size: 32px;
         font-weight: 800;
         color: var(--accent-indigo);
         font-variant-numeric: tabular-nums;
-        letter-spacing: -2px;
+        letter-spacing: -1px;
     }
 
     .mobile-countdown-label {
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 600;
         color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 8px;
+        letter-spacing: 0.5px;
+        margin-top: 6px;
     }
 
     /* Status Card */
@@ -595,37 +603,66 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
     # Get current data
     latest_bar = data_loader.get_latest_bar() if data_loader else None
     current_price = latest_bar['close'] if latest_bar else 0
-    current_atr = data_loader.get_today_atr() if data_loader else 40.0
+
+    # Handle None from get_today_atr() (happens on weekends/holidays)
+    atr_raw = data_loader.get_today_atr() if data_loader else None
+    current_atr = atr_raw if atr_raw is not None else 40.0
+
+    # Check if we have live data
+    has_data = latest_bar is not None and current_price > 0
 
     # Large price display
-    st.markdown(f"""
-    <div class="mobile-metric">
-        <div class="mobile-metric-label">MGC Price</div>
-        <div class="mobile-metric-value mobile-metric-value-large">${current_price:.2f}</div>
-        <div class="mobile-metric-subtitle">{datetime.now(TZ_LOCAL).strftime('%H:%M:%S')}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    if has_data:
+        st.markdown(f"""
+        <div class="mobile-metric">
+            <div class="mobile-metric-label">MGC Price</div>
+            <div class="mobile-metric-value mobile-metric-value-large">${current_price:.2f}</div>
+            <div class="mobile-metric-subtitle">{datetime.now(TZ_LOCAL).strftime('%H:%M:%S')}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        # Show last available data timestamp if exists
+        if latest_bar and 'ts_local' in latest_bar:
+            last_time = latest_bar['ts_local'].strftime('%Y-%m-%d %H:%M')
+            subtitle = f"Last: {last_time}"
+        else:
+            subtitle = "Market Closed / No Data"
+
+        st.markdown(f"""
+        <div class="mobile-metric">
+            <div class="mobile-metric-label">MGC Price</div>
+            <div class="mobile-metric-value mobile-metric-value-large">--</div>
+            <div class="mobile-metric-subtitle">{subtitle}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # ATR + Filter Status
     col1, col2 = st.columns(2)
     with col1:
+        atr_display = f"{current_atr:.2f}" if current_atr else "--"
         st.markdown(f"""
         <div class="mobile-metric">
             <div class="mobile-metric-label">ATR (20)</div>
-            <div class="mobile-metric-value">{current_atr:.2f}</div>
+            <div class="mobile-metric-value">{atr_display}</div>
             <div class="mobile-metric-subtitle">points</div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
         # Check if next ORB has filter
-        filter_2300 = 0.155 * current_atr
-        filter_passed = "✅" if filter_2300 > 0 else "⏭️"
+        if current_atr:
+            filter_2300 = 0.155 * current_atr
+            filter_passed = "✅" if filter_2300 > 0 else "⏭️"
+            filter_display = f"&lt;{filter_2300:.1f}pts"
+        else:
+            filter_passed = "⏸️"
+            filter_display = "N/A"
+
         st.markdown(f"""
         <div class="mobile-metric">
             <div class="mobile-metric-label">Filter Status</div>
             <div class="mobile-metric-value" style="font-size: 40px;">{filter_passed}</div>
-            <div class="mobile-metric-subtitle">&lt;{filter_2300:.1f}pts</div>
+            <div class="mobile-metric-subtitle">{filter_display}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -740,8 +777,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
     # Session Info (Basic - not full Market Intelligence)
     st.markdown("### 📊 Session & Time")
     try:
-        from datetime import datetime
-        from config import TZ_LOCAL
+        # datetime and TZ_LOCAL already imported at module level
 
         # Determine current session based on hour (simple time-based)
         now = datetime.now(TZ_LOCAL)
@@ -1216,9 +1252,12 @@ def render_positions_card(risk_manager, data_loader):
 # CARD 5: AI CHAT
 # ============================================================================
 
-def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader):
+def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader, compact=False):
     """
     AI Chat Assistant Card
+
+    Args:
+        compact (bool): If True, show compact version with last 3 messages only
 
     Shows:
     - Chat history (scrollable)
@@ -1227,7 +1266,8 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader)
     - Compact message bubbles
     """
 
-    st.markdown("## 🤖 AI Assistant")
+    if not compact:
+        st.markdown("## 🤖 AI Assistant")
 
     # Check if AI is available
     if not ai_assistant or not ai_assistant.is_available():
@@ -1235,31 +1275,33 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader)
         st.info("Get your API key from: https://console.anthropic.com/")
         return
 
-    st.success("✅ Claude Sonnet 4.5 ready!")
+    if not compact:
+        st.success("✅ Claude Sonnet 4.5 ready!")
 
     # Chat history
-    st.markdown("### 💬 Conversation")
+    message_limit = 3 if compact else 10
 
     chat_container = st.container()
     with chat_container:
         if not chat_history:
-            st.info("Ask me about strategies, risk calculations, or trade setups!")
+            st.info("💡 Ask about strategies, risk, or setups")
         else:
-            for msg in chat_history[-10:]:  # Show last 10 messages
+            for msg in chat_history[-message_limit:]:  # Show last N messages
                 if msg["role"] == "user":
                     st.markdown(f"**You:** {msg['content']}")
                 else:
                     st.markdown(f"**AI:** {msg['content']}")
                 st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
 
-    # Input
-    st.markdown("### Ask a Question")
+    # Input (minimum 68px for Streamlit)
+    input_height = 70 if compact else 100
 
     user_input = st.text_area(
         "Your question:",
-        key="ai_chat_input_mobile",
-        placeholder="Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
-        height=80
+        key=f"ai_chat_input_mobile_{'compact' if compact else 'full'}",
+        placeholder="Ask me anything..." if compact else "Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
+        height=input_height,
+        label_visibility="collapsed" if compact else "visible"
     )
 
     col1, col2 = st.columns([2, 1])
@@ -1299,17 +1341,18 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader)
             chat_history.clear()
             st.rerun()
 
-    # Quick actions
-    st.markdown("### 💡 Quick Actions")
+    # Quick actions (only in full mode)
+    if not compact:
+        st.markdown("### 💡 Quick Actions")
 
-    col1, col2 = st.columns(2)
+        col1, col2 = st.columns(2)
 
-    with col1:
-        if st.button("📊 Calculate Trade", key="quick_calc", use_container_width=True):
-            chat_history.append({"role": "user", "content": "How do I calculate my stop and target for an ORB trade?"})
-            st.rerun()
+        with col1:
+            if st.button("📊 Calculate Trade", key="quick_calc", use_container_width=True):
+                chat_history.append({"role": "user", "content": "How do I calculate my stop and target for an ORB trade?"})
+                st.rerun()
 
-    with col2:
-        if st.button("❓ Why Good?", key="quick_why", use_container_width=True):
-            chat_history.append({"role": "user", "content": "Why is the current setup a good trade?"})
-            st.rerun()
+        with col2:
+            if st.button("❓ Why Good?", key="quick_why", use_container_width=True):
+                chat_history.append({"role": "user", "content": "Why is the current setup a good trade?"})
+                st.rerun()

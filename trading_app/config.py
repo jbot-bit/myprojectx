@@ -163,7 +163,7 @@ DATABENTO_API_KEY = os.getenv("DATABENTO_API_KEY", "")
 # ============================================================================
 # RISK MANAGEMENT
 # ============================================================================
-DEFAULT_ACCOUNT_SIZE = 100000.0  # $100k default
+DEFAULT_ACCOUNT_SIZE = 50000.0  # $50k default
 RISK_LIMITS = {
     "CASCADE": {"min": 0.10, "max": 0.25, "default": 0.25},  # % of account
     "PROXIMITY": {"min": 0.10, "max": 0.50, "default": 0.25},
