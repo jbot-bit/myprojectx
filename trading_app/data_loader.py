@@ -67,19 +67,23 @@ class LiveDataLoader:
             logger.warning("ProjectX credentials not found in .env. Using database only mode.")
 
     def _setup_tables(self):
-        """Create live bars table if not exists."""
-        self.con.execute(f"""
-            CREATE TABLE IF NOT EXISTS live_bars (
-                ts_utc TIMESTAMPTZ NOT NULL,
-                symbol VARCHAR NOT NULL,
-                open DOUBLE,
-                high DOUBLE,
-                low DOUBLE,
-                close DOUBLE,
-                volume BIGINT,
-                PRIMARY KEY (symbol, ts_utc)
-            )
-        """)
+        """Create live bars table if not exists (local only)."""
+        try:
+            self.con.execute(f"""
+                CREATE TABLE IF NOT EXISTS live_bars (
+                    ts_utc TIMESTAMPTZ NOT NULL,
+                    symbol VARCHAR NOT NULL,
+                    open DOUBLE,
+                    high DOUBLE,
+                    low DOUBLE,
+                    close DOUBLE,
+                    volume BIGINT,
+                    PRIMARY KEY (symbol, ts_utc)
+                )
+            """)
+        except Exception as e:
+            # In cloud mode (MotherDuck), can't create tables - that's OK
+            logger.info(f"Could not create live_bars table (cloud mode): {e}")
 
     def _login_projectx(self):
         """Login to ProjectX API and get auth token."""
@@ -150,12 +154,31 @@ class LiveDataLoader:
         # Fall back to database
         cutoff = datetime.now(TZ_UTC) - timedelta(minutes=lookback_minutes)
 
-        result = self.con.execute(f"""
-            SELECT ts_utc, open, high, low, close, volume
-            FROM live_bars
-            WHERE symbol = ? AND ts_utc >= ?
-            ORDER BY ts_utc
-        """, [self.symbol, cutoff]).fetchdf()
+        # Try live_bars first (cache), then fall back to historical bars_1m
+        try:
+            result = self.con.execute(f"""
+                SELECT ts_utc, open, high, low, close, volume
+                FROM live_bars
+                WHERE symbol = ? AND ts_utc >= ?
+                ORDER BY ts_utc
+            """, [self.symbol, cutoff]).fetchdf()
+        except:
+            # live_bars doesn't exist (cloud mode), use historical bars_1m
+            result = pd.DataFrame()
+
+        if len(result) == 0:
+            # Fall back to historical bars from bars_1m (MotherDuck)
+            logger.info(f"No live_bars found, querying bars_1m for {self.symbol}")
+            try:
+                result = self.con.execute(f"""
+                    SELECT ts_utc, open, high, low, close, volume
+                    FROM bars_1m
+                    WHERE symbol = ? AND ts_utc >= ?
+                    ORDER BY ts_utc
+                """, [self.symbol, cutoff]).fetchdf()
+            except Exception as e:
+                logger.warning(f"No bars found in bars_1m for {self.symbol}: {e}")
+                return pd.DataFrame(columns=["ts_utc", "open", "high", "low", "close", "volume"])
 
         if len(result) == 0:
             logger.warning(f"No bars found for {self.symbol}")
