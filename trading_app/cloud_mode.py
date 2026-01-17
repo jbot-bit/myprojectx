@@ -165,7 +165,9 @@ def _init_daily_features_v2(con: duckdb.DuckDBPyConnection):
 
 
 def _init_validated_setups(con: duckdb.DuckDBPyConnection):
-    """Create validated_setups table"""
+    """Create and populate validated_setups table with 17 production setups"""
+    from datetime import date
+
     con.execute("""
         CREATE TABLE IF NOT EXISTS validated_setups (
             setup_id VARCHAR NOT NULL,
@@ -186,10 +188,56 @@ def _init_validated_setups(con: duckdb.DuckDBPyConnection):
             notes VARCHAR,
             validated_date DATE,
             data_source VARCHAR,
-            
+
             PRIMARY KEY (setup_id)
         )
     """)
+
+    # Populate with 17 production setups
+    mgc_setups = [
+        ('2300', 1.5, 'HALF', 1, 0.0, 0.155, 522, 56.1, 0.403, 'S+', '⭐ BEST OVERALL'),
+        ('1000', 8.0, 'FULL', 1, 0.0, None, 516, 15.3, 0.378, 'S+', '🦄 CROWN JEWEL'),
+        ('1800', 1.5, 'FULL', 1, 0.0, None, 522, 51.0, 0.274, 'S', 'London open'),
+        ('0030', 3.0, 'HALF', 1, 0.0, 0.112, 520, 31.3, 0.254, 'S', 'NY ORB'),
+        ('1100', 3.0, 'FULL', 1, 0.0, None, 520, 30.4, 0.215, 'A', 'Late Asia'),
+        ('0900', 6.0, 'FULL', 1, 0.0, None, 514, 17.1, 0.198, 'A', 'Asymmetric Asia'),
+    ]
+
+    nq_setups = [
+        ('0030', 1.0, 'HALF', 1, 0.0, None, 100, 66.0, 0.320, 'S+', 'BEST NQ ORB'),
+        ('1800', 1.0, 'HALF', 1, 0.0, 0.50, 161, 64.6, 0.292, 'S', 'London'),
+        ('1100', 1.0, 'HALF', 1, 0.0, 0.50, 134, 64.2, 0.284, 'S', 'Asia late'),
+        ('1000', 1.0, 'HALF', 1, 0.0, None, 221, 57.9, 0.158, 'A', 'Asia mid'),
+        ('0900', 1.0, 'HALF', 1, 0.0, 0.30, 167, 56.3, 0.127, 'A', 'Small ORBs'),
+    ]
+
+    mpl_setups = [
+        ('2300', 1.5, 'FULL', 1, 0.0, 0.135, 522, 54.0, 0.296, 'S', 'NY ORB'),
+        ('1800', 1.0, 'HALF', 1, 0.0, 0.155, 522, 57.5, 0.286, 'S', 'London'),
+        ('0030', 2.0, 'HALF', 1, 0.0, 0.095, 520, 37.5, 0.256, 'S', 'Asia early'),
+        ('1100', 2.0, 'FULL', 1, 0.0, None, 520, 37.7, 0.250, 'A', 'Asia late'),
+        ('1000', 2.0, 'FULL', 1, 0.0, None, 516, 37.6, 0.239, 'A', 'Asia mid'),
+        ('0900', 3.0, 'FULL', 1, 0.0, None, 514, 26.1, 0.135, 'B', 'Asia open'),
+    ]
+
+    for instrument, setups in [('MGC', mgc_setups), ('NQ', nq_setups), ('MPL', mpl_setups)]:
+        for setup in setups:
+            orb, rr, sl_mode, confirm, buffer, orb_filter, trades, wr, avg_r, tier, notes = setup
+            filter_str = f"ORB{orb_filter}" if orb_filter else "NOFILTER"
+            setup_id = f"{instrument}_{orb}_RR{rr}_{sl_mode}_C{confirm}_B{buffer}_{filter_str}"
+            annual_trades = int(trades * 365 / 740)
+
+            con.execute("""
+                INSERT INTO validated_setups VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL,
+                    ?, ?, ?, ?, ?, ?, ?, 'cloud_init'
+                )
+            """, [
+                setup_id, instrument, orb, rr, sl_mode, confirm, buffer, orb_filter,
+                trades, wr, avg_r, annual_trades, tier, notes, date.today()
+            ])
+
+    logger.info(f"Populated validated_setups with {len(mgc_setups)} MGC, {len(nq_setups)} NQ, {len(mpl_setups)} MPL setups")
 
 
 def show_cloud_setup_instructions():
