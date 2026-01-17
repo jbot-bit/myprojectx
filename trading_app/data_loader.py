@@ -45,8 +45,18 @@ class LiveDataLoader:
             symbol: Trading symbol (e.g., "MNQ", "MGC")
         """
         self.symbol = symbol
-        # Use read_only mode to avoid locking issues with multiple connections
-        self.con = duckdb.connect(DB_PATH, read_only=False)
+
+        # Use cloud_mode connection in cloud, local DB_PATH otherwise
+        from cloud_mode import get_database_connection, is_cloud_deployment
+        if is_cloud_deployment():
+            # Cloud mode - use MotherDuck
+            self.con = get_database_connection()
+            logger.info(f"Cloud mode: Connected to MotherDuck for {symbol}")
+        else:
+            # Local mode - use gold.db
+            self.con = duckdb.connect(DB_PATH, read_only=False)
+            logger.info(f"Local mode: Connected to {DB_PATH} for {symbol}")
+
         self._setup_tables()
         self.bars_df = pd.DataFrame()  # In-memory cache
 
@@ -67,19 +77,23 @@ class LiveDataLoader:
             logger.warning("ProjectX credentials not found in .env. Using database only mode.")
 
     def _setup_tables(self):
-        """Create live bars table if not exists."""
-        self.con.execute(f"""
-            CREATE TABLE IF NOT EXISTS live_bars (
-                ts_utc TIMESTAMPTZ NOT NULL,
-                symbol VARCHAR NOT NULL,
-                open DOUBLE,
-                high DOUBLE,
-                low DOUBLE,
-                close DOUBLE,
-                volume BIGINT,
-                PRIMARY KEY (symbol, ts_utc)
-            )
-        """)
+        """Create live bars table if not exists (local only)."""
+        try:
+            self.con.execute(f"""
+                CREATE TABLE IF NOT EXISTS live_bars (
+                    ts_utc TIMESTAMPTZ NOT NULL,
+                    symbol VARCHAR NOT NULL,
+                    open DOUBLE,
+                    high DOUBLE,
+                    low DOUBLE,
+                    close DOUBLE,
+                    volume BIGINT,
+                    PRIMARY KEY (symbol, ts_utc)
+                )
+            """)
+        except Exception as e:
+            # In cloud mode (MotherDuck), can't create tables - that's OK
+            logger.info(f"Could not create live_bars table (cloud mode): {e}")
 
     def _login_projectx(self):
         """Login to ProjectX API and get auth token."""
@@ -150,12 +164,31 @@ class LiveDataLoader:
         # Fall back to database
         cutoff = datetime.now(TZ_UTC) - timedelta(minutes=lookback_minutes)
 
-        result = self.con.execute(f"""
-            SELECT ts_utc, open, high, low, close, volume
-            FROM live_bars
-            WHERE symbol = ? AND ts_utc >= ?
-            ORDER BY ts_utc
-        """, [self.symbol, cutoff]).fetchdf()
+        # Try live_bars first (cache), then fall back to historical bars_1m
+        try:
+            result = self.con.execute(f"""
+                SELECT ts_utc, open, high, low, close, volume
+                FROM live_bars
+                WHERE symbol = ? AND ts_utc >= ?
+                ORDER BY ts_utc
+            """, [self.symbol, cutoff]).fetchdf()
+        except:
+            # live_bars doesn't exist (cloud mode), use historical bars_1m
+            result = pd.DataFrame()
+
+        if len(result) == 0:
+            # Fall back to historical bars from bars_1m (MotherDuck)
+            logger.info(f"No live_bars found, querying bars_1m for {self.symbol}")
+            try:
+                result = self.con.execute(f"""
+                    SELECT ts_utc, open, high, low, close, volume
+                    FROM bars_1m
+                    WHERE symbol = ? AND ts_utc >= ?
+                    ORDER BY ts_utc
+                """, [self.symbol, cutoff]).fetchdf()
+            except Exception as e:
+                logger.warning(f"No bars found in bars_1m for {self.symbol}: {e}")
+                return pd.DataFrame(columns=["ts_utc", "open", "high", "low", "close", "volume"])
 
         if len(result) == 0:
             logger.warning(f"No bars found for {self.symbol}")
@@ -434,22 +467,24 @@ class LiveDataLoader:
         """
         today = datetime.now(TZ_LOCAL).date()
 
-        # Determine table name based on symbol
+        # Map symbol to instrument name
         if self.symbol == "NQ" or self.symbol == "MNQ":
-            table_name = "daily_features_v2_nq"
+            instrument = "NQ"
+        elif self.symbol == "MPL":
+            instrument = "MPL"
         else:
-            table_name = "daily_features_v2"
+            instrument = "MGC"
 
-        # Try from gold.db if available
+        # Try from gold.db if available (unified daily_features_v2 table)
         try:
             # Use absolute path to avoid working directory issues
             gold_db_path = os.getenv("GOLD_DB_PATH", str(Path(__file__).parent.parent / "gold.db"))
             gold_con = duckdb.connect(gold_db_path, read_only=True)
-            result = gold_con.execute(f"""
+            result = gold_con.execute("""
                 SELECT atr_20
-                FROM {table_name}
-                WHERE date_local = ?
-            """, [today]).fetchone()
+                FROM daily_features_v2
+                WHERE date_local = ? AND instrument = ?
+            """, [today, instrument]).fetchone()
 
             if result and result[0] is not None:
                 gold_con.close()
@@ -457,11 +492,11 @@ class LiveDataLoader:
 
             # Try yesterday if today not available yet
             yesterday = today - timedelta(days=1)
-            result = gold_con.execute(f"""
+            result = gold_con.execute("""
                 SELECT atr_20
-                FROM {table_name}
-                WHERE date_local = ?
-            """, [yesterday]).fetchone()
+                FROM daily_features_v2
+                WHERE date_local = ? AND instrument = ?
+            """, [yesterday, instrument]).fetchone()
 
             gold_con.close()
 

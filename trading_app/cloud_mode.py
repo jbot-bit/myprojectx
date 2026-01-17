@@ -1,5 +1,5 @@
 """
-Cloud Mode Handler - Makes app work in Streamlit Cloud without local database
+Cloud Mode Handler - Uses MotherDuck for Streamlit Cloud deployment
 """
 
 import os
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def is_cloud_deployment() -> bool:
     """Detect if running in Streamlit Cloud"""
-    # Streamlit Cloud sets STREAMLIT_SHARING_MODE or has specific paths
+    # Streamlit Cloud sets STREAMLIT_SHARING_MODE or has specific env vars
     return (
         os.getenv("STREAMLIT_SHARING_MODE") is not None
         or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
@@ -20,214 +20,149 @@ def is_cloud_deployment() -> bool:
     )
 
 
-def get_database_path() -> str:
-    """Get database path appropriate for environment"""
+def get_motherduck_connection():
+    """
+    Get MotherDuck connection for cloud deployment.
+
+    Returns:
+        duckdb.Connection to MotherDuck projectx_prod database
+    """
+    # Try from Streamlit secrets first, then environment
+    try:
+        import streamlit as st
+        token = st.secrets.get("MOTHERDUCK_TOKEN", os.getenv("MOTHERDUCK_TOKEN"))
+    except:
+        token = os.getenv("MOTHERDUCK_TOKEN")
+
+    if not token:
+        raise ValueError(
+            "MOTHERDUCK_TOKEN not found. Add it to Streamlit Cloud secrets:\n"
+            "1. Go to https://share.streamlit.io/\n"
+            "2. Open your app settings → Secrets\n"
+            "3. Add: MOTHERDUCK_TOKEN = 'your_token_here'"
+        )
+
+    # Connect to MotherDuck projectx_prod database
+    try:
+        conn = duckdb.connect(f'md:projectx_prod?motherduck_token={token}')
+        logger.info("Connected to MotherDuck: md:projectx_prod")
+        return conn
+    except Exception as e:
+        logger.error(f"Failed to connect to MotherDuck: {e}")
+        raise
+
+
+def get_database_connection():
+    """
+    Get appropriate database connection based on environment.
+
+    Returns:
+        duckdb.Connection - MotherDuck in cloud, local gold.db otherwise
+    """
     if is_cloud_deployment():
-        # In cloud, use local trading_app.db (will be empty initially)
-        # Use absolute path to ensure it's in the app directory
-        app_dir = Path(__file__).parent
-        db_path = app_dir / "trading_app.db"
-        db_path_str = str(db_path)
-        
-        # Initialize schema if database is newly created
-        _ensure_schema_initialized(db_path_str)
-        
-        return db_path_str
+        # Cloud mode - use MotherDuck
+        return get_motherduck_connection()
     else:
-        # Locally, use parent directory's gold.db
+        # Local mode - use gold.db
+        app_dir = Path(__file__).parent
+        db_path = app_dir.parent / "gold.db"
+        return duckdb.connect(str(db_path), read_only=True)
+
+
+def get_database_path() -> str:
+    """
+    Get database path for legacy code that expects a path string.
+
+    Returns:
+        str: Path to database (or MotherDuck connection string)
+    """
+    if is_cloud_deployment():
+        # For cloud, return connection string
+        try:
+            import streamlit as st
+            token = st.secrets.get("MOTHERDUCK_TOKEN", os.getenv("MOTHERDUCK_TOKEN"))
+        except:
+            token = os.getenv("MOTHERDUCK_TOKEN")
+
+        if token:
+            return f'md:projectx_prod?motherduck_token={token}'
+        else:
+            # Fallback to empty local db for demo mode
+            app_dir = Path(__file__).parent
+            return str(app_dir / "trading_app.db")
+    else:
+        # Local - use gold.db
         app_dir = Path(__file__).parent
         db_path = app_dir.parent / "gold.db"
         return str(db_path)
 
 
-def _ensure_schema_initialized(db_path: str):
-    """Initialize database schema if database is newly created or missing tables"""
-    try:
-        db_path_obj = Path(db_path)
-        
-        # Check if database exists
-        db_exists = db_path_obj.exists()
-        
-        # Connect to database
-        con = duckdb.connect(db_path)
-        
-        try:
-            # Check if daily_features_v2 table exists
-            tables = con.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'main'
-            """).fetchall()
-            
-            table_names = [t[0] for t in tables]
-            
-            # Initialize schema if needed
-            needs_init = False
-            
-            if 'daily_features_v2' not in table_names:
-                logger.info(f"Initializing daily_features_v2 table in {db_path}")
-                _init_daily_features_v2(con)
-                needs_init = True
-            
-            if 'validated_setups' not in table_names:
-                logger.info(f"Initializing validated_setups table in {db_path}")
-                _init_validated_setups(con)
-                needs_init = True
-            
-            if needs_init:
-                logger.info(f"Schema initialized for {db_path}")
-        
-        finally:
-            con.close()
-    
-    except Exception as e:
-        logger.warning(f"Could not initialize schema for {db_path}: {e}")
-
-
-def _init_daily_features_v2(con: duckdb.DuckDBPyConnection):
-    """Create daily_features_v2 table"""
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS daily_features_v2 (
-            date_local DATE NOT NULL,
-            instrument VARCHAR NOT NULL,
-            
-            pre_asia_high DOUBLE,
-            pre_asia_low DOUBLE,
-            pre_asia_range DOUBLE,
-            pre_london_high DOUBLE,
-            pre_london_low DOUBLE,
-            pre_london_range DOUBLE,
-            pre_ny_high DOUBLE,
-            pre_ny_low DOUBLE,
-            pre_ny_range DOUBLE,
-            
-            asia_high DOUBLE,
-            asia_low DOUBLE,
-            asia_range DOUBLE,
-            london_high DOUBLE,
-            london_low DOUBLE,
-            london_range DOUBLE,
-            ny_high DOUBLE,
-            ny_low DOUBLE,
-            ny_range DOUBLE,
-            asia_type_code VARCHAR,
-            london_type_code VARCHAR,
-            pre_ny_type_code VARCHAR,
-            
-            orb_0900_high DOUBLE,
-            orb_0900_low DOUBLE,
-            orb_0900_size DOUBLE,
-            orb_0900_break_dir VARCHAR,
-            orb_0900_outcome VARCHAR,
-            orb_0900_r_multiple DOUBLE,
-            
-            orb_1000_high DOUBLE,
-            orb_1000_low DOUBLE,
-            orb_1000_size DOUBLE,
-            orb_1000_break_dir VARCHAR,
-            orb_1000_outcome VARCHAR,
-            orb_1000_r_multiple DOUBLE,
-            
-            orb_1100_high DOUBLE,
-            orb_1100_low DOUBLE,
-            orb_1100_size DOUBLE,
-            orb_1100_break_dir VARCHAR,
-            orb_1100_outcome VARCHAR,
-            orb_1100_r_multiple DOUBLE,
-            
-            orb_1800_high DOUBLE,
-            orb_1800_low DOUBLE,
-            orb_1800_size DOUBLE,
-            orb_1800_break_dir VARCHAR,
-            orb_1800_outcome VARCHAR,
-            orb_1800_r_multiple DOUBLE,
-            
-            orb_2300_high DOUBLE,
-            orb_2300_low DOUBLE,
-            orb_2300_size DOUBLE,
-            orb_2300_break_dir VARCHAR,
-            orb_2300_outcome VARCHAR,
-            orb_2300_r_multiple DOUBLE,
-            
-            orb_0030_high DOUBLE,
-            orb_0030_low DOUBLE,
-            orb_0030_size DOUBLE,
-            orb_0030_break_dir VARCHAR,
-            orb_0030_outcome VARCHAR,
-            orb_0030_r_multiple DOUBLE,
-            
-            rsi_at_0030 DOUBLE,
-            atr_20 DOUBLE,
-            
-            PRIMARY KEY (date_local, instrument)
-        )
-    """)
-
-
-def _init_validated_setups(con: duckdb.DuckDBPyConnection):
-    """Create validated_setups table"""
-    con.execute("""
-        CREATE TABLE IF NOT EXISTS validated_setups (
-            setup_id VARCHAR NOT NULL,
-            instrument VARCHAR NOT NULL,
-            orb_time VARCHAR NOT NULL,
-            rr DOUBLE NOT NULL,
-            sl_mode VARCHAR NOT NULL,
-            close_confirmations INTEGER,
-            buffer_ticks DOUBLE,
-            orb_size_filter DOUBLE,
-            atr_filter DOUBLE,
-            min_gap_filter DOUBLE,
-            trades INTEGER,
-            win_rate DOUBLE,
-            avg_r DOUBLE,
-            annual_trades INTEGER,
-            tier VARCHAR,
-            notes VARCHAR,
-            validated_date DATE,
-            data_source VARCHAR,
-            
-            PRIMARY KEY (setup_id)
-        )
-    """)
-
-
 def show_cloud_setup_instructions():
-    """Display instructions for setting up data in cloud"""
+    """Display instructions for setting up MotherDuck in cloud"""
     import streamlit as st
 
-    st.warning("⚠️ Cloud Deployment Detected - Database Not Found")
+    st.warning("⚠️ MotherDuck Token Required")
 
     st.info("""
-    **Your app is running in the cloud!**
+    **Your app needs MotherDuck to access data!**
 
-    The local `gold.db` database is not available here. You have two options:
+    MotherDuck is your cloud database that stores all historical data, strategies, and features.
+    With MotherDuck configured, your app works on any device without needing your PC on.
 
-    **Option 1: Demo Mode (Recommended for testing)**
-    - The app will work with AI chat and strategy explanations
-    - No live data or backtesting available yet
-    - Perfect for exploring the interface on mobile
+    ## Setup Steps:
 
-    **Option 2: Backfill Data in Cloud**
-    1. Add your `DATABENTO_API_KEY` to Streamlit Cloud secrets
-    2. Click "Initialize/Refresh Data" to backfill from Databento
-    3. This will download and store data in the cloud
+    1. **Add Token to Streamlit Secrets:**
+       - Go to: https://share.streamlit.io/
+       - Find your app: **myprojectx**
+       - Click **⋮** → **Settings** → **Secrets**
+       - Add this line:
+       ```
+       MOTHERDUCK_TOKEN = "your_token_here"
+       ```
+       - Click **Save**
 
-    **To use Demo Mode now:**
-    - AI Chat tab works immediately
-    - Ask strategy questions, get calculations
-    - Test the interface on your phone
+    2. **Reboot App:**
+       - Click **⋮** → **Reboot app**
+       - Wait 30-60 seconds
 
-    **To backfill data:**
-    - Go to https://share.streamlit.io/
-    - Open your app settings → Secrets
-    - Add: `ANTHROPIC_API_KEY`, `DATABENTO_API_KEY`, etc.
-    - Restart the app and click "Initialize/Refresh Data"
+    3. **Verify Connection:**
+       - App should now load with live data
+       - All strategies and signals will be available
+
+    ## Where to Get Your Token:
+
+    Your MotherDuck token is already in your local `.env` file.
+
+    Just copy it from:
+    ```
+    C:\\Users\\sydne\\OneDrive\\myprojectx\\.env
+    ```
+
+    Look for the line:
+    ```
+    MOTHERDUCK_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+
+    ## What MotherDuck Provides:
+
+    ✅ **Historical data** - bars_1m, bars_5m (MGC, MPL, NQ)
+    ✅ **Daily features** - ORBs, ATR, session stats
+    ✅ **Validated setups** - 19 production strategies
+    ✅ **Works offline** - No need for PC to be on
+    ✅ **Accessible anywhere** - Phone, tablet, any browser
+
+    ## Total data in cloud:
+    - bars_1m: 1,397,853 rows
+    - bars_5m: 320,534 rows
+    - daily_features_v2: 1,780 rows (MGC, MPL, NQ)
+    - validated_setups: 19 strategies
+
+    Once configured, your mobile app will have full access to all strategies and live signals!
     """)
 
 
 def get_demo_data():
-    """Return demo/placeholder data for cloud mode"""
+    """Return demo/placeholder data when MotherDuck not configured"""
     from datetime import datetime, timedelta
     import pandas as pd
 
@@ -251,19 +186,57 @@ def get_demo_data():
 
 
 def get_demo_strategy_result():
-    """Return demo strategy evaluation"""
+    """Return demo strategy evaluation when MotherDuck not configured"""
     return {
         "strategy_name": "DEMO_MODE",
         "action": "STAND_DOWN",
-        "state": "DEMO",
+        "state": "SETUP_REQUIRED",
         "reasons": [
-            "Cloud deployment detected",
-            "No database connected",
-            "Add API keys to enable live data"
+            "MotherDuck token not configured",
+            "Add MOTHERDUCK_TOKEN to Streamlit secrets",
+            "See instructions above"
         ],
-        "next_action": "Set up Databento API in Streamlit Cloud secrets",
+        "next_action": "Configure MotherDuck token in Streamlit Cloud settings",
         "entry_price": None,
         "stop_price": None,
         "target_price": None,
         "risk_pct": None
     }
+
+
+def test_motherduck_connection():
+    """Test MotherDuck connection and return status"""
+    try:
+        conn = get_motherduck_connection()
+
+        # Test query
+        result = conn.execute("SELECT COUNT(*) FROM bars_1m").fetchone()[0]
+
+        conn.close()
+
+        return {
+            "success": True,
+            "message": f"Connected to MotherDuck successfully! Found {result:,} bars in bars_1m.",
+            "bars_count": result
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"MotherDuck connection failed: {str(e)}",
+            "error": str(e)
+        }
+
+
+if __name__ == "__main__":
+    # Test connection
+    print("Testing MotherDuck connection...")
+
+    if is_cloud_deployment():
+        print("Cloud deployment detected")
+        result = test_motherduck_connection()
+        print(f"Result: {result}")
+    else:
+        print("Local deployment detected")
+        db_path = get_database_path()
+        print(f"Using local database: {db_path}")

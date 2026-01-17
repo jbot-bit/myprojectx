@@ -1,0 +1,74 @@
+================================================================================
+AUDIT SYSTEM - QUICK REFERENCE CARD
+================================================================================
+
+🚀 TO RUN AUDIT NOW:
+    Double-click: RUN_AUDIT.bat
+
+📊 RESULTS LOCATION:
+    audit_reports/master_audit_report.json
+    audit_reports/audit_summary.csv
+
+⚡ QUICK MODE (FAST):
+    Double-click: RUN_AUDIT_QUICK.bat
+
+🎯 WHAT GETS TESTED:
+    ✅ Step 1: Data integrity (7 tests)
+       - Session boundaries
+       - ORB windows
+       - Missing/duplicate bars
+       - ATR validity
+       - Zero-lookahead
+
+    ✅ Step 2: Feature verification (13+ tests)
+       - Deterministic rebuild
+       - ORB calculations
+       - Feature distributions
+       - Leakage detection
+
+    ⚔️ Attack harness (11 attacks)
+       - Slippage shock
+       - Stop-first bias
+       - Latency injection
+       - Trade skipping
+       - Spread widening
+       - Missing bars
+
+⚠️ IF TESTS FAIL:
+    1. Check audit_reports/ folder for details
+    2. Fix data or rebuild features
+    3. Re-run: python audit_master.py
+    4. Achieve 100% pass before deploying
+
+📞 DOCUMENTATION:
+    AUDIT_COMPLETE.md      ← START HERE
+    AUDIT_README.md        ← Full guide
+    MASTER_AUDIT_PLAN.md   ← Complete spec
+
+🔧 COMMAND LINE OPTIONS:
+    python audit_master.py              # Run all
+    python audit_master.py --step 1     # Data only
+    python audit_master.py --step 2     # Features only
+    python audit_master.py --quick      # Critical tests
+
+⏱️ WHEN TO RUN:
+    ✓ Before live trading (MANDATORY)
+    ✓ After data backfill
+    ✓ After strategy changes
+    ✓ Weekly validation (quick mode)
+
+🎯 SUCCESS CRITERIA:
+    ✅ Step 1: 100% pass (no data issues)
+    ✅ Step 2: ≥95% pass (minor warnings OK)
+    ✅ No critical failures
+    ✅ All warnings understood
+
+🚨 STOP CONDITIONS:
+    ❌ DO NOT DEPLOY if:
+       - Step 1 fails (data corrupt)
+       - Any attack flips expectancy negative
+       - Critical failures present
+
+================================================================================
+READY TO RUN? Double-click RUN_AUDIT.bat
+================================================================================

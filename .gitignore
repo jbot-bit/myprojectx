@@ -1,10 +1,13 @@
 # DuckDB databases (local only - never commit!)
 *.db
+*.db.wal
 *.duckdb
 *.sqlite
 *.sqlite3
 gold.db
 trading_app.db
+live_data.db
+live_data.db.wal
 
 # Python cache
 __pycache__/
