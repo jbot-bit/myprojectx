@@ -145,3 +145,693 @@ Traceback (most recent call last):
   File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
     self.con.execute("""
 _duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 08:59:16,135 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 08:59:16,641 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 08:59:17,309 - app_trading_hub - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 572, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-16 09:02:06,425 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 09:02:06,784 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 09:02:07,265 - app_trading_hub - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 575, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-16 09:02:39,054 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 09:02:39,472 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 09:02:52,236 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:02:52,237 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:02:53,451 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:02:53,453 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:02:53,453 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:02:53,453 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:02:56,424 - data_loader - INFO - Found 5064 bars to backfill from bars_1m
+2026-01-16 09:02:56,438 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:04:45,527 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:04:45,527 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:04:46,725 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:04:46,726 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:04:46,726 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:04:46,726 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:04:46,793 - data_loader - INFO - Found 5062 bars to backfill from bars_1m
+2026-01-16 09:04:46,793 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:05:07,388 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:07,390 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:07,613 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:07,617 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:08,602 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:08,602 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:08,602 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:08,605 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:08,669 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:08,804 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:08,808 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:08,808 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:08,810 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:08,871 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:08,871 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:05:26,444 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:26,444 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:26,775 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:26,779 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:26,999 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:27,000 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:27,277 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:27,278 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:27,527 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:27,530 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:27,713 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:27,714 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:27,714 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:27,715 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:27,788 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:27,973 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:05:27,973 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:05:28,212 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:28,213 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:28,213 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:28,213 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:28,274 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:28,342 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:28,343 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:28,344 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:28,344 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:28,407 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:28,581 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:28,581 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:28,581 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:28,581 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:28,644 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:28,803 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:28,803 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:28,803 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:28,803 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:28,864 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:29,209 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:05:29,213 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 09:05:29,213 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 09:05:29,213 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 09:05:29,285 - data_loader - INFO - Found 5061 bars to backfill from bars_1m
+2026-01-16 09:05:29,286 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 405, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 342, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:06:40,129 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:06:40,580 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 09:07:41,957 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 143, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 48, in __init__
+    self.con = duckdb.connect(DB_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:07:43,485 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 143, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 48, in __init__
+    self.con = duckdb.connect(DB_PATH)
+               ^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:09:46,161 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:09:46,565 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 09:09:53,163 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 143, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:11:28,741 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:11:29,106 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 09:12:12,025 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 143, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 8784)
+2026-01-16 09:12:47,000 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:12:47,002 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:12:48,244 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:12:48,248 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 09:12:48,248 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 09:12:48,248 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 09:12:48,401 - data_loader - INFO - Found 1427 bars to backfill from bars_1m_nq
+2026-01-16 09:12:48,405 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:16:56,474 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:16:56,475 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:16:57,679 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:16:57,680 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 09:16:57,680 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 09:16:57,680 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 09:16:57,716 - data_loader - INFO - Found 1423 bars to backfill from bars_1m_nq
+2026-01-16 09:16:57,716 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 09:31:50,405 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 09:31:50,405 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 09:31:51,590 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 09:31:51,591 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 09:31:51,591 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 09:31:51,591 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 09:31:51,626 - data_loader - INFO - Found 1408 bars to backfill from bars_1m_nq
+2026-01-16 09:31:51,630 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 156, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 10:08:23,164 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:08:23,566 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:14:54,961 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:14:55,323 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:24:39,668 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:24:40,066 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:25:53,240 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:25:53,602 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:39:19,471 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:39:19,831 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:42:26,193 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:42:27,212 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:52:07,584 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 10:52:08,703 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:52:42,194 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 10:52:42,194 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 10:52:43,957 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 10:52:43,957 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 10:52:43,957 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 10:52:43,957 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 10:52:44,215 - data_loader - INFO - Found 1327 bars to backfill from bars_1m_nq
+2026-01-16 10:52:44,230 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 178, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 10:53:14,992 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 10:53:14,992 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 10:53:16,858 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 10:53:16,858 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 10:53:16,858 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 10:53:16,858 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 10:53:16,881 - data_loader - INFO - Found 1326 bars to backfill from bars_1m_nq
+2026-01-16 10:53:16,883 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 178, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 10:53:20,850 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 10:53:20,850 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 10:53:22,755 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 10:53:22,755 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 10:53:22,755 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 10:53:22,755 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 10:53:22,822 - data_loader - INFO - Found 4953 bars to backfill from bars_1m
+2026-01-16 10:53:22,825 - __main__ - ERROR - Data load error: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 178, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 406, in backfill_from_gold_db
+    self.insert_bar({
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 343, in insert_bar
+    self.con.execute("""
+_duckdb.BinderException: Binder Error: The specified columns as conflict target are not referenced by a UNIQUE/PRIMARY KEY CONSTRAINT or INDEX
+2026-01-16 10:57:45,208 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 10:57:46,381 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 10:57:46,544 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:00:23,551 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:00:24,677 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:00:24,846 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:01:21,970 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:01:23,204 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:01:23,399 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:01:28,621 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 165, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:02:25,936 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:02:26,355 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:02:26,426 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:05:38,953 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:05:38,954 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:05:40,126 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:05:40,127 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 11:05:40,127 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 11:05:40,128 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 11:05:40,222 - data_loader - INFO - Found 1314 bars to backfill from bars_1m_nq
+2026-01-16 11:05:46,093 - data_loader - INFO - Backfill complete
+2026-01-16 11:05:47,323 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:05:59,794 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:05:59,795 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:06:01,045 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:06:01,046 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 11:06:01,046 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 11:06:01,047 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 11:06:01,058 - data_loader - INFO - Found 1313 bars to backfill from bars_1m_nq
+2026-01-16 11:06:01,624 - data_loader - INFO - Fetched 2760 bars from ProjectX for MNQ
+2026-01-16 11:06:03,887 - data_loader - INFO - Backfill complete
+2026-01-16 11:06:05,207 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:06:15,607 - data_loader - INFO - Fetched 2760 bars from ProjectX for MNQ
+2026-01-16 11:06:15,608 - strategy_engine - INFO - Loaded NQ-specific configs: CASCADE gap=15.0pts
+2026-01-16 11:06:15,624 - __main__ - INFO - Data initialized for MNQ
+2026-01-16 11:06:17,149 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:06:18,231 - data_loader - INFO - Fetched 140 bars from ProjectX for MNQ
+2026-01-16 11:06:38,085 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:06:38,086 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:06:39,312 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:06:39,313 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 11:06:39,313 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 11:06:39,313 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 11:06:39,347 - data_loader - INFO - Found 4940 bars to backfill from bars_1m
+2026-01-16 11:07:00,875 - data_loader - INFO - Backfill complete
+2026-01-16 11:07:02,121 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:07:12,384 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 11:07:12,385 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 11:07:12,386 - __main__ - INFO - Data initialized for MGC
+2026-01-16 11:07:12,434 - __main__ - ERROR - Intelligence panel error: 'instrument'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 356, in <module>
+    render_intelligence_panel(
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\render_intelligence.py", line 168, in render_intelligence_panel
+    opportunities = market_intelligence.rank_opportunities(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\market_intelligence.py", line 207, in rank_opportunities
+    if setup['instrument'] != market_condition.instrument:
+       ~~~~~^^^^^^^^^^^^^^
+KeyError: 'instrument'
+2026-01-16 11:07:13,669 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:07:14,235 - data_loader - INFO - Fetched 140 bars from ProjectX for MGC
+2026-01-16 11:11:02,084 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:11:02,596 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:11:02,696 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:14:05,548 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 176, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+2026-01-16 11:14:35,452 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 176, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+2026-01-16 11:15:38,981 - ai_memory - ERROR - Error initializing AI memory schema: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:15:39,333 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:15:39,400 - ai_memory - ERROR - Error loading session history: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\trading_app.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 12816)
+2026-01-16 11:15:45,552 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 176, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 22296)
+2026-01-16 11:17:55,923 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:17:56,333 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:19:44,947 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:19:44,948 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:19:44,948 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:19:44,949 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:19:44,950 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:19:44,951 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:19:46,268 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:19:46,269 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 11:19:46,269 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 11:19:46,269 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 11:19:46,270 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:19:46,270 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 11:19:46,271 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 11:19:46,271 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 11:19:46,275 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:19:46,276 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 11:19:46,276 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 11:19:46,277 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 11:19:46,412 - data_loader - INFO - Found 1300 bars to backfill from bars_1m_nq
+2026-01-16 11:19:46,429 - data_loader - INFO - Found 1300 bars to backfill from bars_1m_nq
+2026-01-16 11:19:46,430 - data_loader - INFO - Found 4927 bars to backfill from bars_1m
+2026-01-16 11:19:52,225 - data_loader - INFO - Backfill complete
+2026-01-16 11:19:53,517 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:20:05,060 - data_loader - INFO - Backfill complete
+2026-01-16 11:20:06,380 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:20:08,394 - data_loader - INFO - Fetched 2760 bars from ProjectX for MNQ
+2026-01-16 11:20:16,614 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 11:20:16,615 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 11:20:16,616 - __main__ - INFO - Data initialized for MGC
+2026-01-16 11:20:16,676 - __main__ - ERROR - Intelligence panel error: 'instrument'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 381, in <module>
+    render_intelligence_panel(
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\render_intelligence.py", line 168, in render_intelligence_panel
+    opportunities = market_intelligence.rank_opportunities(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\market_intelligence.py", line 207, in rank_opportunities
+    if setup['instrument'] != market_condition.instrument:
+       ~~~~~^^^^^^^^^^^^^^
+KeyError: 'instrument'
+2026-01-16 11:20:17,918 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:20:18,499 - data_loader - INFO - Fetched 141 bars from ProjectX for MGC
+2026-01-16 11:32:11,652 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:32:12,024 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:35:25,791 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 6896)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 176, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 6896)
+2026-01-16 11:36:15,362 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:36:15,736 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:38:38,875 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 11:38:38,876 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 11:38:40,058 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 11:38:40,059 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 11:38:40,059 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 11:38:40,060 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 11:38:41,280 - data_loader - INFO - Found 1281 bars to backfill from bars_1m_nq
+2026-01-16 11:38:47,106 - data_loader - INFO - Backfill complete
+2026-01-16 11:38:48,336 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 11:38:59,835 - data_loader - INFO - Fetched 2760 bars from ProjectX for MNQ
+2026-01-16 11:41:31,263 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:41:31,624 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:41:31,678 - app_trading_hub - ERROR - Intelligence panel error: 'NoneType' object has no attribute 'get_latest_bar'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 375, in <module>
+    latest_bar = st.session_state.data_loader.get_latest_bar()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get_latest_bar'
+2026-01-16 11:41:31,680 - app_trading_hub - ERROR - Evaluation error: 'NoneType' object has no attribute 'evaluate_all'
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 623, in <module>
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'evaluate_all'
+2026-01-16 11:51:16,142 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:51:16,552 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:58:21,694 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 11:58:22,107 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 11:58:26,429 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 23032)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 177, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 23032)
+2026-01-16 12:19:32,900 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 12:19:33,271 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 12:19:47,180 - __main__ - ERROR - Data load error: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 23032)
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 177, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.IOException: IO Error: Cannot open file "c:\users\sydne\onedrive\myprojectx\trading_app\live_data.db": The process cannot access the file because it is being used by another process.
+
+File is already open in 
+C:\Users\sydne\AppData\Local\Programs\Python\Python312\python.exe (PID 23032)
+2026-01-16 12:20:27,259 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 12:20:27,648 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 12:20:32,486 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 12:20:32,487 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 12:20:33,717 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 12:20:33,718 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 12:20:33,718 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 12:20:33,718 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 12:20:33,977 - data_loader - INFO - Found 4866 bars to backfill from bars_1m
+2026-01-16 12:20:57,339 - data_loader - INFO - Backfill complete
+2026-01-16 12:20:58,636 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 12:21:10,549 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 12:21:10,550 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 12:21:10,554 - __main__ - INFO - Data initialized for MGC
+2026-01-16 12:21:11,901 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 12:21:12,274 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 12:26:14,007 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 12:26:14,008 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 12:26:15,210 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 12:26:15,211 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 12:26:15,211 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 12:26:15,211 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 12:26:15,242 - data_loader - INFO - Found 4860 bars to backfill from bars_1m
+2026-01-16 12:26:23,672 - data_loader - INFO - Backfill complete
+2026-01-16 12:26:24,930 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 12:26:32,384 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 12:26:32,385 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 12:26:32,386 - __main__ - INFO - Data initialized for MGC
+2026-01-16 12:26:33,757 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 12:26:34,125 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 13:24:19,282 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 13:24:20,388 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 13:25:00,272 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 13:25:00,273 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 13:25:01,993 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 13:25:01,994 - data_loader - INFO - Active contract: MNQH6 (ID: CON.F.US.MNQ.H26)
+2026-01-16 13:25:01,994 - data_loader - INFO - ProjectX initialized for MNQ: MNQH6
+2026-01-16 13:25:01,995 - data_loader - INFO - Backfilling 7 days from ../gold.db for MNQ
+2026-01-16 13:25:02,128 - data_loader - INFO - Found 1174 bars to backfill from bars_1m_nq
+2026-01-16 13:25:06,595 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 13:25:06,597 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 13:25:07,897 - data_loader - INFO - Backfill complete
+2026-01-16 13:25:08,289 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 13:25:08,290 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 13:25:08,290 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 13:25:08,291 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 13:25:08,326 - data_loader - INFO - Found 4801 bars to backfill from bars_1m
+2026-01-16 13:25:09,826 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 13:25:18,950 - data_loader - INFO - Backfill complete
+2026-01-16 13:25:20,285 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 13:25:23,396 - data_loader - INFO - Fetched 2760 bars from ProjectX for MNQ
+2026-01-16 13:25:28,679 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 17:48:47,487 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 17:48:47,882 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 17:48:52,809 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 17:48:52,810 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 17:48:54,024 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 17:48:54,025 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 17:48:54,025 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 17:48:54,025 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 17:48:57,451 - data_loader - INFO - Found 4538 bars to backfill from bars_1m
+2026-01-16 17:49:05,245 - data_loader - INFO - Backfill complete
+2026-01-16 17:49:06,472 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 17:49:13,089 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 17:49:13,090 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 17:49:13,093 - __main__ - INFO - Data initialized for MGC
+2026-01-16 17:49:14,524 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 17:49:15,399 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-17 03:00:55,558 - ai_memory - INFO - AI memory schema initialized
+2026-01-17 03:00:55,954 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-17 03:01:15,830 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-17 03:01:15,831 - data_loader - INFO - ProjectX authentication successful
+2026-01-17 03:01:17,086 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-17 03:01:17,087 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-17 03:01:17,087 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-17 03:01:18,337 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-17 03:01:27,362 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-17 03:01:28,623 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-17 03:01:37,243 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-17 03:01:38,725 - ml_inference.inference_engine - INFO - Loading model from C:\Users\sydne\OneDrive\myprojectx\ml_models\registry\directional_v1\v_20260117_023515
+2026-01-17 03:01:38,743 - ml_inference.inference_engine - INFO - Loaded lightgbm model (version: v_20260117_023515)
+2026-01-17 03:01:38,743 - ml_inference.inference_engine - INFO - Features: 58
+2026-01-17 03:01:38,743 - ml_inference.inference_engine - INFO - Directional model loaded successfully
+2026-01-17 03:01:38,744 - ml_inference.inference_engine - INFO - ML Inference Engine initialized
+2026-01-17 03:01:38,744 - __main__ - INFO - ML engine initialized successfully
+2026-01-17 03:01:38,744 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-17 03:01:38,744 - strategy_engine - INFO - ML engine enabled for strategy evaluation
+2026-01-17 03:01:38,745 - __main__ - INFO - Data initialized for MGC
+2026-01-17 03:01:38,802 - strategy_engine - ERROR - ML inference failed: 'LiveDataLoader' object has no attribute 'get_orb'
+2026-01-17 03:01:40,102 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-17 03:01:41,134 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-17 03:01:41,633 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^

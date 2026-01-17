@@ -1,12 +1,13 @@
 """
-RR Optimization - Universal (MGC & NQ)
-======================================
+RR Optimization - Universal (MGC, NQ & MPL)
+============================================
 
 Tests different Risk:Reward ratios for each ORB to find optimal target distance.
 
 Usage:
   python scripts/optimize_rr.py MGC          # Test all ORBs for MGC
   python scripts/optimize_rr.py NQ           # Test all ORBs for NQ
+  python scripts/optimize_rr.py MPL          # Test all ORBs for MPL
   python scripts/optimize_rr.py MGC 0030     # Test specific ORB only
   python scripts/optimize_rr.py NQ 0030 --sl-mode half  # Test with HALF SL
 
@@ -36,6 +37,8 @@ def get_table_name(symbol: str) -> str:
         return "daily_features_v2"
     elif symbol == "NQ":
         return "daily_features_v2_nq"
+    elif symbol == "MPL":
+        return "daily_features_v2_mpl"
     else:
         raise ValueError(f"Unknown symbol: {symbol}")
 
@@ -46,6 +49,8 @@ def get_tick_size(symbol: str) -> float:
         return 0.1
     elif symbol == "NQ":
         return 0.25
+    elif symbol == "MPL":
+        return 0.1
     else:
         raise ValueError(f"Unknown symbol: {symbol}")
 
@@ -240,8 +245,8 @@ def main():
         sys.exit(1)
 
     symbol = sys.argv[1].upper()
-    if symbol not in ['MGC', 'NQ']:
-        print(f"Error: Symbol must be MGC or NQ, got: {symbol}")
+    if symbol not in ['MGC', 'NQ', 'MPL']:
+        print(f"Error: Symbol must be MGC, NQ, or MPL, got: {symbol}")
         sys.exit(1)
 
     # Optional: specific ORB

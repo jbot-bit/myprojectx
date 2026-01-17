@@ -1,0 +1,197 @@
+"""
+MGC TRADING HELPER - RIGHT NOW
+Simple dashboard for trading MGC setups
+"""
+
+import streamlit as st
+from datetime import datetime
+import pytz
+
+st.set_page_config(page_title="MGC Trading Helper", layout="wide")
+
+# Brisbane time
+brisbane_tz = pytz.timezone('Australia/Brisbane')
+now = datetime.now(brisbane_tz)
+current_hour = now.hour
+current_minute = now.minute
+
+st.title("⚡ MGC MICRO GOLD - TRADING HELPER")
+st.write(f"**Current Time (Brisbane)**: {now.strftime('%H:%M:%S')}")
+
+# Show which ORB is active/upcoming
+st.header("🎯 WHAT TO TRADE RIGHT NOW")
+
+if current_hour == 0 and current_minute >= 30:
+    st.success("### 🔥 0030 ORB - ACTIVE NOW!")
+    st.write("**Setup**: S Tier (69.5% WR, +0.390R)")
+    st.write("**Window**: 00:30-00:35")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 12% of ATR")
+    st.write("**Risk**: 0.5% of account")
+
+    st.info("📋 **Right Now**: Watch the 00:30-00:35 range forming")
+
+    # Input section
+    st.subheader("📝 Enter ORB Details")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        orb_high = st.number_input("ORB High", value=2650.0, step=0.1, format="%.1f")
+    with col2:
+        orb_low = st.number_input("ORB Low", value=2648.0, step=0.1, format="%.1f")
+    with col3:
+        current_price = st.number_input("Current Price", value=2649.0, step=0.1, format="%.1f")
+
+    orb_size = orb_high - orb_low
+    orb_mid = (orb_high + orb_low) / 2
+
+    st.write(f"**ORB Size**: {orb_size:.1f} points")
+    st.write(f"**ORB Mid**: {orb_mid:.1f}")
+
+    # Show what to do
+    if current_price > orb_high:
+        st.success("### ✅ LONG SETUP")
+        entry = current_price
+        stop = orb_mid
+        target = entry + (entry - stop)
+        risk = entry - stop
+
+        st.write(f"**Entry**: {entry:.1f}")
+        st.write(f"**Stop**: {stop:.1f} (ORB mid)")
+        st.write(f"**Target**: {target:.1f}")
+        st.write(f"**Risk**: {risk:.1f} points")
+
+        # Position size
+        account = 25000
+        risk_pct = 0.5
+        risk_dollars = account * (risk_pct / 100)
+        risk_per_contract = risk * 10  # MGC = $10/point
+        contracts = int(risk_dollars / risk_per_contract)
+
+        st.write(f"**Contracts**: {contracts} (${risk_dollars:.0f} risk on ${account:,} account)")
+
+    elif current_price < orb_low:
+        st.error("### ⬇️ SHORT SETUP")
+        entry = current_price
+        stop = orb_mid
+        target = entry - (stop - entry)
+        risk = stop - entry
+
+        st.write(f"**Entry**: {entry:.1f}")
+        st.write(f"**Stop**: {stop:.1f} (ORB mid)")
+        st.write(f"**Target**: {target:.1f}")
+        st.write(f"**Risk**: {risk:.1f} points")
+
+        # Position size
+        account = 25000
+        risk_pct = 0.5
+        risk_dollars = account * (risk_pct / 100)
+        risk_per_contract = risk * 10  # MGC = $10/point
+        contracts = int(risk_dollars / risk_per_contract)
+
+        st.write(f"**Contracts**: {contracts} (${risk_dollars:.0f} risk on ${account:,} account)")
+
+    else:
+        st.warning("### ⏳ INSIDE RANGE - Wait for break")
+        st.write(f"- Break above {orb_high:.1f} = LONG")
+        st.write(f"- Break below {orb_low:.1f} = SHORT")
+
+elif current_hour == 23:
+    st.success("### 🔥 2300 ORB - ACTIVE NOW!")
+    st.write("**Setup**: S+ Tier (72.8% WR, +0.457R)")
+    st.write("**Window**: 23:00-23:05")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 12% of ATR")
+    st.write("**Risk**: 0.5% of account")
+
+    st.info("📋 **Right Now**: Watch the 23:00-23:05 range forming")
+
+elif current_hour == 18:
+    st.success("### 🔥 1800 ORB - ACTIVE NOW!")
+    st.write("**Setup**: S Tier (70.5% WR, +0.411R)")
+    st.write("**Window**: 18:00-18:05")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 20% of ATR")
+    st.write("**Risk**: 0.5% of account")
+
+    st.info("📋 **Right Now**: Watch the 18:00-18:05 range forming")
+
+elif current_hour == 11:
+    st.success("### 🔥 1100 ORB - ULTRA ELITE SETUP!")
+    st.write("**Setup**: S+ Tier (86.8% WR!, +0.737R)")
+    st.write("**Window**: 11:00-11:05")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 10% of ATR (MANDATORY!)")
+    st.write("**Risk**: 0.25% of account (rare setup, small size)")
+
+    st.warning("⚠️ This is the ELITE setup - only ~31 trades/year!")
+
+elif current_hour == 10:
+    st.success("### 🔥 1000 ORB - NEWLY ELITE!")
+    st.write("**Setup**: S+ Tier (77.4% WR, +0.547R)")
+    st.write("**Window**: 10:00-10:05")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 5% of ATR (small ORBs only!)")
+    st.write("**Risk**: 0.25% of account")
+
+elif current_hour == 9:
+    st.success("### 🔥 0900 ORB - NEWLY ELITE!")
+    st.write("**Setup**: S+ Tier (77.4% WR, +0.548R)")
+    st.write("**Window**: 09:00-09:05")
+    st.write("**SL Mode**: HALF (stop at ORB midpoint)")
+    st.write("**Filter**: Skip if ORB > 5% of ATR (small ORBs only!)")
+    st.write("**Risk**: 0.25% of account")
+
+else:
+    st.info("### ⏰ No ORB active right now")
+    st.write("**Next ORBs:**")
+
+    orbs = [
+        ("09:00", "0900", "S+ TIER - NEWLY ELITE, 77.4% WR"),
+        ("10:00", "1000", "S+ TIER - NEWLY ELITE, 77.4% WR"),
+        ("11:00", "1100", "S+ ULTRA ELITE, 86.8% WR"),
+        ("18:00", "1800", "S Tier, 70.5% WR"),
+        ("23:00", "2300", "S+ Tier, 72.8% WR"),
+        ("00:30", "0030", "S Tier, 69.5% WR"),
+    ]
+
+    for time_str, orb_name, description in orbs:
+        hour = int(time_str.split(':')[0])
+        if hour > current_hour or (hour == 0 and current_hour == 23):
+            st.write(f"**{time_str}** - {orb_name} ORB ({description})")
+
+# Quick reference
+st.header("📋 MGC QUICK REFERENCE")
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("All MGC Setups (OPTIMIZED)")
+    st.write("""
+    - **1100**: S+ Tier (86.8% WR, +0.737R) - ULTRA ELITE
+    - **0900**: S+ Tier (77.4% WR, +0.548R) - NEWLY ELITE!
+    - **1000**: S+ Tier (77.4% WR, +0.547R) - NEWLY ELITE!
+    - **2300**: S+ Tier (72.8% WR, +0.457R) - Night workhorse
+    - **1800**: S Tier (70.5% WR, +0.411R) - Most trades
+    - **0030**: S Tier (69.5% WR, +0.390R) - Late night
+    """)
+
+with col2:
+    st.subheader("MGC Specs")
+    st.write("""
+    - **Tick Size**: 0.1 points
+    - **Tick Value**: $1.00
+    - **Point Value**: $10.00
+    - **Contract**: MGC (Micro Gold)
+    - **Exchange**: COMEX
+    """)
+
+st.header("🎯 TRADING RULES")
+st.write("""
+1. **Wait for ORB to form** (5-minute window: XX:00-XX:05)
+2. **Enter on first CLOSE outside range** (not touch)
+3. **Stop at ORB midpoint** (HALF SL mode)
+4. **Target at 1R** (same distance as risk)
+5. **Check filters** (skip large ORBs per setup)
+6. **Risk 0.25-0.5%** per trade (smaller for rare setups)
+""")
+
+st.info("💡 **Tip**: You now have 4 S+ ELITE setups! 1100 (86.8% WR, BEST), 0900 (77.4% WR), 1000 (77.4% WR), 2300 (72.8% WR). Average: 78.6% WR, +0.572R!")

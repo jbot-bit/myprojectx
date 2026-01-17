@@ -6,7 +6,65 @@ This document describes the current production-ready file structure after compre
 
 ---
 
-## Root Directory - Core Files Only (28 Python files, 11 Markdown docs)
+## LATEST UPDATE: 2026-01-16 - SCAN WINDOW BUG FIX & SYNCHRONIZATION
+
+**CRITICAL FIX IMPLEMENTED:**
+- Fixed scan window bug: Extended all ORBs to scan until 09:00 next day
+- OLD BUG: Night ORBs scanned only 85 minutes, missed 30+ point moves
+- NEW FIX: Captures full overnight moves (3-8 hours to develop)
+- **RESULT: System improved from +400R/year to +600R/year (+50%!)**
+
+**FILES UPDATED:**
+- `execution_engine.py` - Extended scan windows (CANONICAL)
+- `validated_strategies.py` - CORRECTED MGC RR values (1000=8.0, 2300=1.5, 0030=3.0, etc.)
+- `trading_app/config.py` - Synchronized with database (MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS)
+- `populate_validated_setups.py` - Unified script with CORRECTED values (17 setups: 6 MGC, 5 NQ, 6 MPL)
+
+**NEW FILES ADDED:**
+- `test_app_sync.py` - Validates database ↔ config.py synchronization (CRITICAL)
+- `SCAN_WINDOW_BUG_FIX_SUMMARY.md` - Complete bug fix documentation
+- `UNICORN_SETUPS_CORRECTED.md` - Trading playbook with corrected setups
+- `ALL_ORBS_EXTENDED_WINDOWS.csv` - Test results
+
+**DUPLICATES REMOVED:**
+- Consolidated 3 populate scripts → 1 unified script
+- Archived `outdated/` folder contents
+- Archived `_WRONG_BUGGY_CALCS_JAN16/` to `_archive/reports/`
+- Cleaned up completion/status docs
+
+**STATUS:** ✅ **SYNCHRONIZED & VALIDATED - SAFE TO BUILD**
+
+---
+
+## UPDATE: 2026-01-16 (AFTERNOON) - APP SIMPLIFICATION & BUG FIXES
+
+**APP OVERHAUL COMPLETED:**
+- Created `trading_app/app_simplified.py` - New single-page dashboard (400 lines vs 1,200)
+- Simplified from 5 tabs → 1 page with everything visible
+- Made trade signals HUGE and prominent
+- ORB status always visible in status bar
+- 70% code reduction while keeping ALL money-making features
+
+**BUGS FIXED:**
+- Fixed StrategyEngine initialization (was passing string instead of data_loader object)
+- Fixed method call (evaluate_all() not evaluate_all_orbs())
+- Fixed ActionType check (ENTER/MANAGE instead of WAIT which doesn't exist)
+- Documented in `BUG_FIX_SUMMARY.md`
+
+**NEW FILES ADDED:**
+- `trading_app/app_simplified.py` - Simplified single-page trading dashboard
+- `BUG_FIX_SUMMARY.md` - Bug fix documentation
+- `debug_app.py` - Temporary debug script (archive candidate)
+- `APP_BEFORE_AFTER.md` - Comparison documentation (archive candidate)
+- `APP_REDESIGN_PROPOSAL.md` - Design proposal (archive candidate)
+- `SIMPLIFIED_APP_COMPLETE.md` - Completion doc (archive candidate)
+- `SYNC_PROJECT_NOW.md` - This sync plan
+
+**STATUS:** ✅ **APP SIMPLIFIED, BUGS FIXED, READY FOR CLEANUP**
+
+---
+
+## Root Directory - Target: 34 Python files, 22 Markdown docs (after cleanup)
 
 ### Data Pipeline (Core Production)
 
@@ -40,9 +98,13 @@ This document describes the current production-ready file structure after compre
 - `inspect_dbn.py` - Inspect DBN files
 - `check_dbn_symbols.py` - Check symbols in DBN files
 
+**Validation & Testing:**
+- `test_app_sync.py` - **CRITICAL** Validates database ↔ config.py synchronization
+- `test_night_orbs_full_sl.py` - Test night ORBs with extended scan windows
+
 ### Applications (User-Facing)
 
-**Production App:**
+**Production Apps:**
 - `trading_app/app_trading_hub.py` - **ULTIMATE TRADING APP** with:
   - Real-time strategy engine (5 strategies)
   - AI chat assistant (Claude Sonnet 4.5)
@@ -50,6 +112,14 @@ This document describes the current production-ready file structure after compre
   - Live data & position calculator
   - Trade journal
   - 5 tabs: LIVE, LEVELS, TRADE PLAN, JOURNAL, AI CHAT
+
+- `trading_app/app_simplified.py` - **SIMPLIFIED SINGLE-PAGE DASHBOARD** with:
+  - Same core functionality as trading_hub
+  - 1 page instead of 5 tabs (everything visible at once)
+  - HUGE trade signals (impossible to miss)
+  - ORB status always visible
+  - 70% less code (400 vs 1,200 lines)
+  - Faster and cleaner for focused trading
 
 **Archived Apps:** (moved to `_archive/apps/`)
 - `app_trading_hub_ai_version.py` - Original AI version (root)
@@ -70,30 +140,46 @@ This document describes the current production-ready file structure after compre
 ### Strategy Library (Production)
 
 **Validated Strategies:**
-- `validated_strategies.py` - V2 zero-lookahead validated strategy definitions
+- `validated_strategies.py` - **CORRECTED** V2 zero-lookahead strategy definitions (post scan window fix)
+- `execution_engine.py` - **CANONICAL** execution engine with extended scan windows (09:00 next day)
+- `populate_validated_setups.py` - Unified script to populate validated_setups table (MGC+NQ+MPL)
+- `trading_app/setup_detector.py` - Live setup detection across all instruments
 
-**Note:** Legacy backtest execution models (1m/5m/5mhalfsl) archived on Jan 15, 2026. Strategy logic preserved in validated_strategies.py and build_daily_features_v2.py.
+**Note:** Legacy backtest execution models (1m/5m/5mhalfsl) archived on Jan 15, 2026. Strategy logic preserved in validated_strategies.py and build_daily_features_v2.py. Scan window bug fixed on Jan 16, 2026.
 
 ---
 
-## Documentation (11 Essential Files)
+## Documentation (22 Essential Files)
 
 **Primary Docs:**
 - `README.md` - Main project overview and tool reference
-- `CLAUDE.md` - Instructions for Claude AI (canonical commands)
+- `CLAUDE.md` - Instructions for Claude AI (canonical commands + SYNC RULES)
 - `TRADING_PLAYBOOK.md` - V2 zero-lookahead trading strategies
-- `ZERO_LOOKAHEAD_RULES.md` - Methodology and data integrity rules
+- `UNICORN_SETUPS_CORRECTED.md` - Complete playbook with corrected setups (post scan window bug fix)
+- `SCAN_WINDOW_BUG_FIX_SUMMARY.md` - Critical scan window bug fix documentation
+- `BUG_FIX_SUMMARY.md` - App simplification bug fixes (Jan 16, 2026)
+- `SYNC_PROJECT_NOW.md` - Project synchronization guide
 
 **Technical Reference:**
 - `DATABASE_SCHEMA.md` - Schema documentation
+- `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md` - Canonical schema reference
 - `TERMINOLOGY_EXPLAINED.md` - Glossary of terms
+- `PROJECT_STRUCTURE.md` - This file
 
 **User Guides:**
 - `QUICK_START.md` - Quick start guide
 - `QUICK_START_GUIDE.md` - Alternate quick start
-- `WORKFLOW_GUIDE.md` - Daily workflow guide
 - `SETUP_TRADING_HUB.md` - Dashboard setup instructions
 - `README_STREAMLIT.md` - Streamlit-specific documentation
+- `DEPLOY_TO_STREAMLIT_CLOUD.md` - Cloud deployment guide
+- `REMOTE_ACCESS_GUIDE.md` - Remote access setup
+
+**Audit & Reports:**
+- `AUDIT_INDEX.md` - Index of all audits
+- `AUDIT_REPORT_2026-01-15.md` - Latest audit report
+- `AUDIT_SUMMARY_2026-01-15.md` - Audit summary
+- `COMPLETE_PROJECT_AUDIT_2026-01-15.md` - Complete audit documentation
+- `AI_INTEGRATION_COMPLETE.md` - AI assistant integration docs
 
 ---
 
@@ -285,9 +371,27 @@ ls _archive/results/*.csv
 
 ## Status
 
-**Latest Update:** January 15, 2026 - Audit Cleanup Completed
+**Latest Update:** January 16, 2026 - App Simplification & Bug Fixes
 
-**Files Reduced:**
+**Current State (Jan 16, 2026 - Afternoon):**
+- Python files in root: 32 ✅ (target: 33)
+- Markdown files in root: 22 ✅ (target: 22)
+- Python files in trading_app/: 27 (includes new app_simplified.py)
+- Status: ✅ App fixed and running, ✅ Cleanup complete
+
+**Recent Work (Jan 16, 2026):**
+1. ✅ Created simplified single-page trading dashboard (app_simplified.py)
+2. ✅ Fixed 3 critical bugs (StrategyEngine init, method call, ActionType)
+3. ✅ Updated PROJECT_STRUCTURE.md with new files
+4. ✅ Executed cleanup (archived 50+ files, deleted 3 junk files)
+5. ✅ Created CLEANUP_COMPLETE_JAN16.md summary
+6. ✅ Project root now clean and synced with documentation
+
+---
+
+**Previous Update:** January 15, 2026 - Audit Cleanup Completed
+
+**Files Reduced (Jan 15):**
 - Python files: 200+ → 28 (86% reduction)
 - Markdown files: 130+ → 11 (92% reduction)
 - SQL files: 4 → 3 (1 archived)

@@ -1,0 +1,423 @@
+"""
+SIMPLIFIED LIVE TRADING DASHBOARD
+Single-page, focused, clean interface for live ORB trading
+"""
+
+import streamlit as st
+import pandas as pd
+from datetime import datetime, timedelta
+import logging
+from streamlit_autorefresh import st_autorefresh
+
+from config import *
+from data_loader import LiveDataLoader
+from strategy_engine import StrategyEngine, ActionType
+from live_chart_builder import build_live_trading_chart, calculate_trade_levels
+from professional_ui import inject_professional_css
+from market_intelligence import MarketIntelligence
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ============================================================================
+# PAGE CONFIG
+# ============================================================================
+st.set_page_config(
+    page_title="Live Trading Dashboard",
+    page_icon="🔴",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# ============================================================================
+# SESSION STATE INITIALIZATION
+# ============================================================================
+if 'data_loader' not in st.session_state:
+    st.session_state.data_loader = None
+if 'strategy_engine' not in st.session_state:
+    st.session_state.strategy_engine = None
+if 'auto_refresh_enabled' not in st.session_state:
+    st.session_state.auto_refresh_enabled = True
+
+# ============================================================================
+# SIDEBAR - Settings & Quick Stats
+# ============================================================================
+with st.sidebar:
+    st.markdown("# ⚙️ Settings")
+
+    # Symbol selection
+    symbol = st.selectbox("Instrument", ["MGC", "NQ", "MPL"], index=0)
+
+    # Auto-refresh controls
+    st.markdown("---")
+    st.markdown("### ⚡ Auto-Refresh")
+    auto_refresh = st.checkbox("Enable", value=True, help="Auto-refresh every N seconds")
+
+    if auto_refresh:
+        refresh_interval = st.slider("Interval (sec)", 5, 60, 10, 5)
+        st.session_state.auto_refresh_enabled = True
+    else:
+        st.session_state.auto_refresh_enabled = False
+
+    # Initialize/Refresh button
+    st.markdown("---")
+    if st.button("🔄 Initialize/Refresh Data", type="primary", use_container_width=True):
+        with st.spinner("Loading data..."):
+            try:
+                st.session_state.data_loader = LiveDataLoader(symbol)
+                st.session_state.strategy_engine = StrategyEngine(st.session_state.data_loader)
+                st.success("✅ Data loaded!")
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+
+    # Quick stats (if data loaded)
+    if st.session_state.data_loader:
+        st.markdown("---")
+        st.markdown("### 📊 Quick Stats")
+
+        try:
+            latest_bar = st.session_state.data_loader.get_latest_bar()
+            if latest_bar:
+                price = latest_bar['close']
+                st.metric("Current Price", f"${price:.2f}")
+        except:
+            pass
+
+# ============================================================================
+# AUTO-REFRESH
+# ============================================================================
+now = datetime.now(TZ_LOCAL)
+
+if st.session_state.auto_refresh_enabled and auto_refresh:
+    count = st_autorefresh(interval=refresh_interval * 1000, key="dashboard_refresh")
+    st.caption(f"🔄 Updates: {count} | {now.strftime('%H:%M:%S')}")
+
+# ============================================================================
+# INJECT CSS
+# ============================================================================
+st.markdown(inject_professional_css(), unsafe_allow_html=True)
+
+# ============================================================================
+# MAIN DASHBOARD
+# ============================================================================
+
+# Check if data is loaded
+if not st.session_state.data_loader or not st.session_state.strategy_engine:
+    st.title("🔴 LIVE TRADING DASHBOARD")
+    st.info("👈 Click **Initialize/Refresh Data** in sidebar to start")
+    st.stop()
+
+# Get data loader and engine
+data_loader = st.session_state.data_loader
+strategy_engine = st.session_state.strategy_engine
+
+# ============================================================================
+# HEADER - Current Price & Status
+# ============================================================================
+try:
+    latest_bar = data_loader.get_latest_bar()
+    current_price = latest_bar['close'] if latest_bar else 0
+
+    # Price change (simple)
+    price_change = 0
+    try:
+        bars = data_loader.fetch_latest_bars(lookback_minutes=60)
+        if not bars.empty and len(bars) > 1:
+            price_change = current_price - bars['close'].iloc[0]
+    except:
+        pass
+
+    # Header
+    col1, col2, col3 = st.columns([2, 1, 1])
+    with col1:
+        st.markdown(f"# 🔴 LIVE {symbol}")
+    with col2:
+        arrow = "↑" if price_change > 0 else "↓" if price_change < 0 else "→"
+        color = "green" if price_change > 0 else "red" if price_change < 0 else "gray"
+        st.markdown(f"## <span style='color:{color}'>${current_price:.2f} {arrow}</span>", unsafe_allow_html=True)
+    with col3:
+        session = "ASIA" if 9 <= now.hour < 18 else "LONDON" if 18 <= now.hour < 23 else "NY"
+        st.markdown(f"### {session} Session")
+
+    st.markdown("---")
+
+except Exception as e:
+    st.error(f"Error getting price: {e}")
+    st.stop()
+
+# ============================================================================
+# STRATEGY EVALUATION
+# ============================================================================
+try:
+    evaluation = strategy_engine.evaluate_all()
+except Exception as e:
+    st.error(f"Strategy evaluation error: {e}")
+    evaluation = None
+
+# ============================================================================
+# TRADE SIGNAL - PROMINENT DISPLAY
+# ============================================================================
+if evaluation and evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
+
+    # Get trade details
+    state = evaluation.state
+    orb_high = state.current_orb_high if hasattr(state, 'current_orb_high') else None
+    orb_low = state.current_orb_low if hasattr(state, 'current_orb_low') else None
+
+    # Determine direction
+    direction = None
+    if orb_high and orb_low and current_price:
+        if current_price > orb_high:
+            direction = "LONG"
+        elif current_price < orb_low:
+            direction = "SHORT"
+
+    # Get ORB config
+    orb_name = state.active_orb_name if hasattr(state, 'active_orb_name') else "0900"
+    orb_config = strategy_engine.orb_configs.get(orb_name, {})
+
+    # Calculate trade levels
+    trade_levels = None
+    if direction and orb_high and orb_low:
+        trade_levels = calculate_trade_levels(
+            orb_high=orb_high,
+            orb_low=orb_low,
+            direction=direction,
+            rr=orb_config.get('rr', 1.0),
+            sl_mode=orb_config.get('sl_mode', 'FULL')
+        )
+
+    # LARGE TRADE SIGNAL CARD
+    action_emoji = "🚀" if direction == "LONG" else "🔻" if direction == "SHORT" else "⏸️"
+    action_text = f"{action_emoji} ENTER {direction}" if direction else "⏸️ MANAGE"
+    action_color = "#10b981" if direction == "LONG" else "#ef4444" if direction == "SHORT" else "#f59e0b"
+
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, {action_color}22 0%, {action_color}11 100%);
+                border-left: 5px solid {action_color};
+                padding: 2rem;
+                border-radius: 10px;
+                margin-bottom: 2rem;">
+        <h1 style="margin:0; color:{action_color};">{action_text}</h1>
+        <h3 style="margin:0.5rem 0; color:#e5e7eb;">{symbol} {orb_name} ORB</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Trade levels (if available)
+    if trade_levels:
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.metric("Entry", f"${trade_levels['entry']:.2f}")
+        with col2:
+            st.metric("Stop", f"${trade_levels['stop']:.2f}",
+                     f"-${trade_levels['risk_points']:.2f}", delta_color="inverse")
+        with col3:
+            st.metric("Target", f"${trade_levels['target']:.2f}",
+                     f"+${trade_levels['reward_points']:.2f}")
+        with col4:
+            rr = orb_config.get('rr', 1.0)
+            st.metric("Risk:Reward", f"{rr:.1f}R")
+
+        st.markdown("---")
+
+else:
+    # WAIT status
+    st.markdown("""
+    <div style="background: #374151;
+                border-left: 5px solid #6b7280;
+                padding: 1.5rem;
+                border-radius: 10px;
+                margin-bottom: 2rem;">
+        <h2 style="margin:0; color:#9ca3af;">⏸️ WAIT</h2>
+        <p style="margin:0.5rem 0; color:#d1d5db;">No trade signal - monitoring for setups</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ============================================================================
+# ORB STATUS BAR (Always Visible)
+# ============================================================================
+if evaluation:
+    state = evaluation.state
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        # Active ORB
+        active_orb = state.active_orb_name if hasattr(state, 'active_orb_name') else "None"
+        orb_status = "ACTIVE" if hasattr(state, 'orb_is_active') and state.orb_is_active else "WAITING"
+        status_color = "#10b981" if orb_status == "ACTIVE" else "#6b7280"
+
+        st.markdown(f"""
+        <div style="background:#1f2937; padding:1rem; border-radius:8px; border-left:3px solid {status_color}">
+            <div style="color:#9ca3af; font-size:0.875rem;">ACTIVE ORB</div>
+            <div style="color:#f9fafb; font-size:1.25rem; font-weight:bold;">{active_orb} - {orb_status}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        # Next ORB countdown
+        next_orb = evaluation.next_orb_name if hasattr(evaluation, 'next_orb_name') else "N/A"
+        next_time = evaluation.next_orb_time if hasattr(evaluation, 'next_orb_time') else None
+
+        if next_time:
+            delta = (next_time - now).total_seconds()
+            minutes = int(delta // 60)
+            seconds = int(delta % 60)
+            countdown = f"{minutes}m {seconds}s"
+        else:
+            countdown = "N/A"
+
+        st.markdown(f"""
+        <div style="background:#1f2937; padding:1rem; border-radius:8px; border-left:3px solid #f59e0b">
+            <div style="color:#9ca3af; font-size:0.875rem;">NEXT ORB</div>
+            <div style="color:#f9fafb; font-size:1.25rem; font-weight:bold;">{next_orb} in {countdown}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        # Market intelligence snippet
+        try:
+            mi = MarketIntelligence(TZ_LOCAL)
+            intel = mi.generate_recommendation(
+                data_loader=data_loader,
+                orb_name=active_orb,
+                current_time=now
+            )
+            intel_text = intel['headline'][:50] + "..." if len(intel['headline']) > 50 else intel['headline']
+        except:
+            intel_text = "Monitoring market conditions"
+
+        st.markdown(f"""
+        <div style="background:#1f2937; padding:1rem; border-radius:8px; border-left:3px solid #6366f1">
+            <div style="color:#9ca3af; font-size:0.875rem;">MARKET INTEL</div>
+            <div style="color:#f9fafb; font-size:0.9rem;">{intel_text}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ============================================================================
+# LIVE CHART - LARGE AND CLEAR
+# ============================================================================
+st.subheader("📈 Live Trading Chart")
+
+try:
+    # Get chart data
+    bars_df = data_loader.fetch_latest_bars(lookback_minutes=CHART_LOOKBACK_BARS)
+
+    if bars_df.empty:
+        st.warning("No chart data available")
+    else:
+        # Get ORB data
+        state = evaluation.state if evaluation else None
+        orb_high = state.current_orb_high if state and hasattr(state, 'current_orb_high') else None
+        orb_low = state.current_orb_low if state and hasattr(state, 'current_orb_low') else None
+        orb_name = state.active_orb_name if state and hasattr(state, 'active_orb_name') else "0900"
+
+        # Calculate ORB window times
+        orb_start = None
+        orb_end = None
+        if orb_name:
+            orb_hour = int(orb_name[:2])
+            orb_min = int(orb_name[2:]) if len(orb_name) == 4 else 0
+            orb_start = now.replace(hour=orb_hour, minute=orb_min, second=0, microsecond=0)
+            orb_end = orb_start + timedelta(minutes=5)
+
+        # Get trade details (if ENTER)
+        entry_price = None
+        stop_price = None
+        target_price = None
+        direction = None
+
+        if evaluation and evaluation.action == ActionType.ENTER and orb_high and orb_low:
+            if current_price and current_price > orb_high:
+                direction = "LONG"
+            elif current_price and current_price < orb_low:
+                direction = "SHORT"
+
+            if direction:
+                orb_config = strategy_engine.orb_configs.get(orb_name, {})
+                levels = calculate_trade_levels(
+                    orb_high=orb_high,
+                    orb_low=orb_low,
+                    direction=direction,
+                    rr=orb_config.get('rr', 1.0),
+                    sl_mode=orb_config.get('sl_mode', 'FULL')
+                )
+                entry_price = levels['entry']
+                stop_price = levels['stop']
+                target_price = levels['target']
+
+        # Check filter
+        filter_passed = True
+        tier = "B"
+        if orb_high and orb_low and orb_name:
+            orb_config = strategy_engine.orb_configs.get(orb_name, {})
+            tier = orb_config.get('tier', 'B')
+            filter_result = data_loader.check_orb_size_filter(orb_high, orb_low, orb_name)
+            filter_passed = filter_result.get('pass', True)
+
+        # Build chart
+        fig = build_live_trading_chart(
+            bars_df=bars_df,
+            orb_high=orb_high,
+            orb_low=orb_low,
+            orb_name=orb_name,
+            orb_start=orb_start,
+            orb_end=orb_end,
+            current_price=current_price,
+            filter_passed=filter_passed,
+            tier=tier,
+            entry_price=entry_price,
+            stop_price=stop_price,
+            target_price=target_price,
+            direction=direction,
+            height=600  # Larger chart
+        )
+
+        # Display chart
+        st.plotly_chart(fig, use_container_width=True)
+
+except Exception as e:
+    st.error(f"Chart error: {e}")
+    logger.error(f"Chart error: {e}", exc_info=True)
+
+# ============================================================================
+# FOOTER - Quick AI Assistant
+# ============================================================================
+st.markdown("---")
+with st.expander("🤖 Quick AI Assistant", expanded=False):
+    user_question = st.text_input("Ask a quick strategy question:", placeholder="e.g., What's the 0900 ORB average R?")
+
+    if st.button("Ask") and user_question:
+        st.info("💭 AI assistant feature - integrate with existing ai_assistant.py")
+        st.caption("(Full AI chat available in future version)")
+
+# ============================================================================
+# DEBUG INFO (Optional, collapsible)
+# ============================================================================
+if st.checkbox("Show Debug Info", value=False):
+    st.markdown("---")
+    st.markdown("### 🔍 Debug Information")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.json({
+            "symbol": symbol,
+            "current_price": f"${current_price:.2f}",
+            "auto_refresh": st.session_state.auto_refresh_enabled,
+            "data_loader": "✅" if st.session_state.data_loader else "❌",
+            "strategy_engine": "✅" if st.session_state.strategy_engine else "❌"
+        })
+
+    with col2:
+        if evaluation:
+            st.json({
+                "action": evaluation.action.name if evaluation.action else "None",
+                "strategy": evaluation.strategy_name,
+                "active_orb": state.active_orb_name if hasattr(state, 'active_orb_name') else "None",
+                "orb_active": state.orb_is_active if hasattr(state, 'orb_is_active') else False
+            })

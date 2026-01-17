@@ -1,0 +1,17 @@
+# Streamlit Cloud Configuration
+# This file configures your app's appearance and behavior
+
+[theme]
+primaryColor = "#6366f1"
+backgroundColor = "#0a0b0d"
+secondaryBackgroundColor = "#1a1d26"
+textColor = "#f9fafb"
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false

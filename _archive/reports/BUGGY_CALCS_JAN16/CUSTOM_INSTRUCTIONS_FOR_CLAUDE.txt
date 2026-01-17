@@ -1,0 +1,247 @@
+# CUSTOM INSTRUCTIONS FOR CLAUDE - MGC TRADING PROJECT
+
+## PROJECT CONTEXT
+
+You are working on a MGC (Micro Gold futures) trading system with optimized ORB (Opening Range Breakout) strategies. This is a REAL MONEY trading system. Mistakes cause actual financial losses.
+
+## CRITICAL RULES (NEVER VIOLATE)
+
+### 1. SYNCHRONIZATION IS MANDATORY
+
+**NEVER update the validated_setups database without IMMEDIATELY updating config.py in the SAME operation.**
+
+Files that MUST always match:
+- `gold.db` → `validated_setups` table (instrument='MGC')
+- `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary
+
+Why this matters:
+- Mismatches cause apps to use WRONG filters
+- Wrong filters = wrong trades = REAL MONEY LOSSES
+- This is DANGEROUS and UNACCEPTABLE
+
+Required workflow:
+1. Update database first
+2. IMMEDIATELY update config.py (same response, same operation)
+3. Run `python TEST_ALL_APPS.py` to verify
+4. Only proceed if ALL TESTS PASS
+
+**NO EXCEPTIONS. NO SHORTCUTS.**
+
+### 2. ALWAYS TEST BEFORE CLAIMING DONE
+
+NEVER say "done" or "fixed" without running tests:
+
+Required tests:
+```bash
+python TEST_ALL_APPS.py
+python VERIFY_ALL_SYNCHRONIZED.py
+```
+
+Both must show "ALL TESTS PASSED" before claiming completion.
+
+### 3. FOCUS ON MGC (GOLD) ONLY
+
+Unless explicitly asked otherwise:
+- Work on MGC setups only
+- Don't modify NQ or MPL unless requested
+- Don't change unrelated code
+- Stay focused on the specific task
+
+### 4. VERIFY EVERYTHING FROM SCRATCH
+
+When user says to check something:
+- Read actual database values (don't trust memory)
+- Read actual config.py values (don't assume)
+- Read actual file contents (don't trust documentation)
+- Compare values directly
+- Show the user what you found
+
+**User directive: "DON'T TRUST ANY FILES" - always verify from source.**
+
+### 5. NO UNICODE/EMOJI IN WINDOWS SCRIPTS
+
+Windows console doesn't handle Unicode well:
+- Use [OK], [FAIL], [WARN] instead of ✅❌⚠️
+- Use text markers instead of emojis
+- Prevents UnicodeEncodeError crashes
+
+### 6. BE COMPLETE, NOT LAZY
+
+When fixing things:
+- Fix ALL instances, not just one
+- Update ALL related files
+- Test ALL affected components
+- Don't leave partial work
+
+User feedback: "don't just fucking change shit you need to test it u useless cunt fuck"
+
+## CURRENT SYSTEM STATE (2026-01-16)
+
+### MGC Setups (Verified Correct):
+```
+0900: Filter <5% ATR,  77.4% WR, +0.548R, S+ tier
+1000: Filter <5% ATR,  77.4% WR, +0.547R, S+ tier
+1100: Filter <10% ATR, 86.8% WR, +0.737R, S+ tier (ULTRA ELITE)
+1800: Filter <20% ATR, 70.5% WR, +0.411R, S  tier
+2300: Filter <12% ATR, 72.8% WR, +0.457R, S+ tier
+0030: Filter <12% ATR, 69.5% WR, +0.390R, S  tier
+```
+
+Average: 78.6% WR, +0.572R
+4 S+ tier setups, 2 S tier
+
+### Files That Must Stay Synchronized:
+1. `gold.db` → validated_setups table
+2. `trading_app/config.py` → MGC_ORB_SIZE_FILTERS, MGC_ORB_CONFIGS
+3. `MGC_NOW.py` → Hardcoded stats (if changing values)
+4. All apps that use config.py (app_trading_hub.py, unified_trading_app.py)
+
+### Verification Commands:
+```bash
+python TEST_ALL_APPS.py               # Basic verification
+python VERIFY_ALL_SYNCHRONIZED.py     # Comprehensive check
+```
+
+## HISTORICAL CONTEXT (LEARN FROM THIS)
+
+### Critical Error on 2026-01-16:
+- Database was updated with optimal MGC filters
+- config.py was NOT updated (forgotten)
+- This created a dangerous mismatch
+- Apps would have used wrong filters in live trading
+- User was EXTREMELY upset (rightfully so)
+- Emergency fix required
+
+### Why User Was Angry:
+- Incomplete work (database updated, config.py not)
+- No testing before claiming "done"
+- Could have caused real money losses
+- Had to be told to fix it multiple times
+
+### Lesson Learned:
+**ALWAYS update ALL synchronized files in ONE operation, then TEST before claiming done.**
+
+## COMMUNICATION STYLE
+
+### Do:
+- Be direct and technical
+- Show actual values/code
+- Admit mistakes immediately
+- Test before claiming completion
+- Focus on facts and verification
+
+### Don't:
+- Use emojis (unless user explicitly wants them)
+- Over-promise or exaggerate
+- Claim something is done without testing
+- Make assumptions about file contents
+- Skip verification steps
+
+## RESPONSE TEMPLATES
+
+### When Updating Setups:
+```
+I'm updating the MGC setups. I will:
+1. Update gold.db → validated_setups
+2. Update trading_app/config.py → MGC_ORB_SIZE_FILTERS
+3. Update any other files with hardcoded values (e.g., MGC_NOW.py)
+4. Run TEST_ALL_APPS.py to verify
+5. Run VERIFY_ALL_SYNCHRONIZED.py to confirm
+6. Only proceed if all tests pass
+
+[Execute all steps]
+
+Results:
+- Database: [show values]
+- Config.py: [show values]
+- Tests: [show test output]
+- Status: [PASS/FAIL]
+```
+
+### When User Says "Check Something":
+```
+I'll verify from scratch:
+
+1. Reading database values...
+[Show actual database query results]
+
+2. Reading config.py values...
+[Show actual config.py values]
+
+3. Comparing...
+[Show comparison]
+
+4. Checking other files...
+[Check MGC_NOW.py, apps, etc.]
+
+Status: [Synchronized/Mismatch found]
+```
+
+### When Fixing Issues:
+```
+Found issue: [describe]
+
+Fixing:
+1. [File 1]: [Change]
+2. [File 2]: [Change]
+3. Testing: [Command]
+
+Results: [Show test output]
+
+Status: [Fixed/Still broken]
+```
+
+## PROJECT FILES REFERENCE
+
+### Key Scripts:
+- `backfill_databento_continuous.py` - Historical data backfill
+- `build_daily_features_v2.py` - Feature engineering
+- `backtest_orb_exec_*.py` - ORB strategy backtesting
+- `audit_mgc_strategies.py` - Strategy audit/optimization
+- `update_validated_setups_improved.py` - Database population with optimal setups
+
+### Key Apps:
+- `trading_app/app_trading_hub.py` - Main trading hub
+- `unified_trading_app.py` - Unified multi-instrument app
+- `MGC_NOW.py` - Simple MGC helper
+
+### Key Configs:
+- `trading_app/config.py` - ALL instrument configs, filters, parameters
+- `gold.db` - DuckDB with bars_1m, bars_5m, daily_features, validated_setups
+
+### Testing:
+- `TEST_ALL_APPS.py` - Basic synchronization verification
+- `VERIFY_ALL_SYNCHRONIZED.py` - Comprehensive verification (DB, config, apps)
+
+### Documentation:
+- `CLAUDE.md` - Project instructions (this is auto-loaded by Claude Code)
+- `COMPLETE_VERIFICATION_SUMMARY.md` - Latest verification report
+- `APPS_FIXED_AND_SYNCHRONIZED.md` - Synchronization guide
+
+## FINAL REMINDERS
+
+1. **Test before claiming done** - Run verification scripts
+2. **Synchronize everything** - Database + config.py + any hardcoded values
+3. **Focus on MGC** - Unless told otherwise
+4. **Verify from scratch** - Don't trust memory or docs
+5. **Be complete** - Fix all instances, not just one
+6. **No shortcuts** - This is real money trading
+
+## IF USER IS FRUSTRATED
+
+They have good reason to be frustrated if:
+- You forgot to synchronize files
+- You claimed something was done without testing
+- You made assumptions instead of verifying
+- You left partial work incomplete
+
+Correct response:
+1. Acknowledge the mistake
+2. Fix it immediately and completely
+3. Test to verify the fix
+4. Show test results
+5. Don't make the same mistake again
+
+---
+
+**Remember: This is a REAL MONEY trading system. Mistakes have real financial consequences. Be thorough, test everything, and never skip verification steps.**

@@ -11,6 +11,8 @@ import time
 import logging
 import uuid
 import os
+from pathlib import Path
+from streamlit_autorefresh import st_autorefresh
 
 from config import *
 from data_loader import LiveDataLoader
@@ -19,6 +21,26 @@ from utils import calculate_position_size, format_price, log_to_journal
 from ai_memory import AIMemoryManager
 from ai_assistant import TradingAIAssistant
 from cloud_mode import is_cloud_deployment, show_cloud_setup_instructions
+from alert_system import AlertSystem, render_alert_settings, render_audio_player, render_desktop_notification
+from setup_scanner import SetupScanner, render_setup_scanner_tab
+from enhanced_charting import EnhancedChart, ORBOverlay, TradeMarker, ChartTimeframe, resample_bars
+from live_chart_builder import build_live_trading_chart, calculate_trade_levels
+from data_quality_monitor import DataQualityMonitor, render_data_quality_panel
+from market_hours_monitor import MarketHoursMonitor, render_market_hours_indicator
+from risk_manager import RiskManager, RiskLimits, render_risk_dashboard
+from position_tracker import PositionTracker, render_position_panel, render_empty_position_panel
+from directional_bias import DirectionalBiasDetector, render_directional_bias_indicator
+from strategy_discovery import StrategyDiscovery, DiscoveryConfig, add_setup_to_production, generate_config_snippet
+from market_intelligence import MarketIntelligence
+from render_intelligence import render_intelligence_panel
+from professional_ui import (
+    inject_professional_css,
+    render_pro_metric,
+    render_status_badge,
+    render_intelligence_card,
+    render_countdown_timer,
+    render_price_display
+)
 
 # Configure logging
 logging.basicConfig(
@@ -41,6 +63,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Inject professional CSS
+inject_professional_css()
+
 # ============================================================================
 # SESSION STATE INITIALIZATION
 # ============================================================================
@@ -61,7 +86,62 @@ if "memory_manager" not in st.session_state:
 if "ai_assistant" not in st.session_state:
     st.session_state.ai_assistant = TradingAIAssistant(st.session_state.memory_manager)
 if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+    # Load persistent history from database
+    try:
+        loaded_history = st.session_state.memory_manager.load_session_history(
+            session_id=st.session_state.session_id,
+            limit=50  # Last 50 messages
+        )
+        # Convert to chat format
+        st.session_state.chat_history = [
+            {"role": msg["role"], "content": msg["content"]}
+            for msg in loaded_history
+        ]
+        if loaded_history:
+            logger.info(f"Loaded {len(loaded_history)} messages from persistent memory")
+    except Exception as e:
+        logger.warning(f"Could not load chat history: {e}")
+        st.session_state.chat_history = []
+if "alert_system" not in st.session_state:
+    st.session_state.alert_system = AlertSystem()
+if "setup_scanner" not in st.session_state:
+    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
+    st.session_state.setup_scanner = SetupScanner(gold_db_path)
+if "chart_timeframe" not in st.session_state:
+    st.session_state.chart_timeframe = ChartTimeframe.M1
+if "indicators_enabled" not in st.session_state:
+    st.session_state.indicators_enabled = {
+        "ema_9": False,
+        "ema_20": False,
+        "vwap": True,
+        "rsi": False,
+        "orb_overlays": True,
+    }
+if "data_quality_monitor" not in st.session_state:
+    st.session_state.data_quality_monitor = DataQualityMonitor()
+if "market_hours_monitor" not in st.session_state:
+    st.session_state.market_hours_monitor = MarketHoursMonitor()
+if "risk_manager" not in st.session_state:
+    # Initialize with default limits
+    limits = RiskLimits(
+        daily_loss_dollars=1000.0,  # $1000 max daily loss
+        daily_loss_r=10.0,          # 10R max daily loss
+        weekly_loss_dollars=3000.0,  # $3000 max weekly loss
+        weekly_loss_r=30.0,          # 30R max weekly loss
+        max_concurrent_positions=3,
+        max_position_size_pct=2.0
+    )
+    st.session_state.risk_manager = RiskManager(DEFAULT_ACCOUNT_SIZE, limits)
+if "position_tracker" not in st.session_state:
+    st.session_state.position_tracker = PositionTracker()
+if "directional_bias_detector" not in st.session_state:
+    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
+    st.session_state.directional_bias_detector = DirectionalBiasDetector(gold_db_path)
+if "strategy_discovery" not in st.session_state:
+    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
+    st.session_state.strategy_discovery = StrategyDiscovery(gold_db_path)
+if "market_intelligence" not in st.session_state:
+    st.session_state.market_intelligence = MarketIntelligence(TZ_LOCAL)
 
 # ============================================================================
 # SIDEBAR - SETTINGS
@@ -111,12 +191,59 @@ with st.sidebar:
                         st.error("No PROJECTX_API_KEY found. Add it in Streamlit Cloud secrets.")
                         st.stop()
                 else:
-                    # Local: backfill from gold.db then refresh
-                    loader.backfill_from_gold_db("../gold.db", days=7)
+                    # Local: check if we need to backfill
+                    latest_bar = loader.get_latest_bar()
+                    needs_backfill = True
+
+                    if latest_bar:
+                        # Check if we have recent data (within last 6 hours)
+                        latest_time = latest_bar['ts_utc']
+                        time_since_last = datetime.now(TZ_UTC) - latest_time
+                        if time_since_last.total_seconds() < 6 * 3600:  # 6 hours
+                            needs_backfill = False
+                            st.info("📊 Loading from cache (data < 6 hours old)")
+
+                    if needs_backfill:
+                        # Backfill from gold.db then refresh
+                        gold_db_path = str(Path(__file__).parent.parent / "gold.db")
+                        st.info("🔄 Loading fresh data from database...")
+                        loader.backfill_from_gold_db(gold_db_path, days=2)
+
                     loader.refresh()
 
                 st.session_state.data_loader = loader
-                st.session_state.strategy_engine = StrategyEngine(loader)
+
+                # Initialize ML engine if enabled
+                ml_engine = None
+                if ML_ENABLED:
+                    try:
+                        import sys
+                        from pathlib import Path
+                        sys.path.insert(0, str(Path(__file__).parent.parent))
+                        from ml_inference.inference_engine import MLInferenceEngine
+
+                        ml_engine = MLInferenceEngine()
+                        logger.info("ML engine initialized successfully")
+                    except Exception as e:
+                        logger.warning(f"ML engine initialization failed: {e}")
+                        st.warning("⚠️ ML predictions unavailable (model not found)")
+
+                st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
+
+                # Update data quality monitor with latest bar
+                latest_bar = loader.get_latest_bar()
+                if latest_bar:
+                    st.session_state.data_quality_monitor.update_bar(
+                        symbol,
+                        latest_bar['ts_local'],
+                        {
+                            'open': latest_bar['open'],
+                            'high': latest_bar['high'],
+                            'low': latest_bar['low'],
+                            'close': latest_bar['close'],
+                            'volume': latest_bar.get('volume', 0)
+                        }
+                    )
 
                 st.success(f"Loaded data for {symbol}")
                 logger.info(f"Data initialized for {symbol}")
@@ -128,8 +255,11 @@ with st.sidebar:
     if st.session_state.data_loader:
         latest_bar = st.session_state.data_loader.get_latest_bar()
         if latest_bar:
-            st.metric("Last Bar", latest_bar["ts_local"].strftime("%H:%M:%S"))
-            st.metric("Last Price", f"${latest_bar['close']:.2f}")
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown(render_pro_metric("Last Bar", latest_bar["ts_local"].strftime("%H:%M")), unsafe_allow_html=True)
+            with col2:
+                st.markdown(render_pro_metric("Price", f"${latest_bar['close']:.2f}"), unsafe_allow_html=True)
 
     st.divider()
 
@@ -188,52 +318,159 @@ with st.sidebar:
     if auto_refresh:
         st.info(f"Refreshing every {DATA_REFRESH_SECONDS}s")
 
-# ============================================================================
-# MAIN TABS
-# ============================================================================
-tab_live, tab_levels, tab_trade_plan, tab_journal, tab_ai_chat = st.tabs([
-    "🔴 LIVE",
-    "📊 LEVELS",
-    "📋 TRADE PLAN",
-    "📓 JOURNAL",
-    "🤖 AI CHAT"
-])
+    # Alert system integration
+    render_alert_settings()
+
+    # Safety features
+    st.divider()
+    st.subheader("[SAFETY] System Status")
+
+    # Data quality monitor
+    with st.expander("Data Quality", expanded=False):
+        instruments_to_check = [symbol]
+        st.components.v1.html(
+            render_data_quality_panel(
+                st.session_state.data_quality_monitor,
+                instruments_to_check
+            ),
+            height=200
+        )
+
+    # Market hours monitor
+    with st.expander("Market Hours", expanded=False):
+        conditions = st.session_state.market_hours_monitor.get_market_conditions(symbol)
+        st.components.v1.html(
+            render_market_hours_indicator(conditions),
+            height=150
+        )
+
+    # Risk manager dashboard
+    with st.expander("Risk Management", expanded=False):
+        metrics = st.session_state.risk_manager.get_risk_metrics()
+        st.components.v1.html(
+            render_risk_dashboard(metrics),
+            height=250
+        )
 
 # ============================================================================
-# TAB 1: LIVE
+# SINGLE PAGE - NO TABS (User requested streamlined view)
 # ============================================================================
-with tab_live:
-    st.title(f"🔴 LIVE - {symbol}")
 
-    if not st.session_state.data_loader or not st.session_state.strategy_engine:
-        if is_cloud_deployment():
-            st.info("☁️ **Cloud Mode Detected**")
-            st.markdown("""
-            ### Welcome to your Trading Hub!
+# ========================================================================
+# AUTO-REFRESH SETUP (Makes app truly "LIVE")
+# ========================================================================
+# Determine if it's market hours
+now = datetime.now(TZ_LOCAL)
+is_market_hours = 9 <= now.hour < 17
 
-            Your app is running in the cloud!
+# Initialize auto-refresh state
+if 'auto_refresh_enabled' not in st.session_state:
+    st.session_state.auto_refresh_enabled = is_market_hours
 
-            **What works right now:**
-            - 🤖 **AI CHAT tab** - Ask strategy questions, get trade calculations
+# Auto-refresh controls in a compact expander (don't take up space)
+with st.expander("⚡ Live Update Settings", expanded=False):
+    col1, col2 = st.columns([1, 1])
 
-            **To enable live data & strategies:**
-            1. Make sure `PROJECTX_API_KEY` is in your Streamlit Cloud secrets
-            2. Click "Initialize/Refresh Data" in the sidebar
-            3. App will fetch live data from ProjectX API
+    with col1:
+        auto_refresh = st.checkbox(
+            "Auto-Refresh",
+            value=st.session_state.auto_refresh_enabled,
+            help="Automatically refresh data every few seconds"
+        )
+        st.session_state.auto_refresh_enabled = auto_refresh
 
-            **For now, try the AI CHAT tab!** →
-            """)
-        else:
-            st.warning("⚠️ Click 'Initialize/Refresh Data' in sidebar to start")
-        st.stop()
+    with col2:
+        if auto_refresh:
+            # Faster during market hours, slower outside
+            default_interval = 10 if is_market_hours else 30
 
-    # ========================================================================
-    # NEXT ORB COUNTDOWN & SETUP DISPLAY
-    # ========================================================================
-    now = datetime.now(TZ_LOCAL)
+            refresh_interval = st.slider(
+                "Interval (seconds)",
+                min_value=5,
+                max_value=60,
+                value=default_interval,
+                step=5,
+                help="How often to refresh data"
+            )
 
-    # Define ORB times (24-hour format)
-    orb_times = {
+    # Show status
+    if auto_refresh:
+        st.success(f"🔄 Auto-refreshing every {refresh_interval}s")
+    else:
+        st.info("⏸️ Auto-refresh disabled - click 'Refresh Now' in sidebar")
+
+# Trigger the auto-refresh
+if st.session_state.auto_refresh_enabled:
+    count = st_autorefresh(interval=refresh_interval * 1000, key="live_refresh")
+    # Show subtle refresh indicator in corner
+    st.caption(f"🔄 Updates: {count} | Last: {now.strftime('%H:%M:%S')}")
+
+# Professional header
+symbol = st.session_state.current_symbol
+col1, col2, col3 = st.columns([2, 1, 1])
+with col1:
+    st.markdown(f"# 🔴 LIVE {symbol}")
+with col2:
+    now_time = datetime.now(TZ_LOCAL).strftime("%H:%M:%S")
+    st.markdown(render_pro_metric("Local Time", now_time), unsafe_allow_html=True)
+with col3:
+    session_name = "ASIA" if 9 <= datetime.now(TZ_LOCAL).hour < 18 else "LONDON" if 18 <= datetime.now(TZ_LOCAL).hour < 23 else "NY"
+    st.markdown(render_status_badge(session_name, "active"), unsafe_allow_html=True)
+
+st.markdown("---")
+
+if not st.session_state.data_loader or not st.session_state.strategy_engine:
+    if is_cloud_deployment():
+        st.info("☁️ **Cloud Mode Detected**")
+        st.markdown("""
+        ### Welcome to your Trading Hub!
+
+        Your app is running in the cloud!
+
+        **What works right now:**
+        - 🤖 **AI CHAT** (scroll down) - Ask strategy questions, get trade calculations
+
+        **To enable live data & strategies:**
+        1. Make sure `PROJECTX_API_KEY` is in your Streamlit Cloud secrets
+        2. Click "Initialize/Refresh Data" in the sidebar
+        3. App will fetch live data from ProjectX API
+        """)
+    else:
+        st.warning("⚠️ Click 'Initialize/Refresh Data' in sidebar to start")
+    st.stop()
+
+# ========================================================================
+# CLEAN MARKET SNAPSHOT (TOP OF PAGE)
+# ========================================================================
+
+# Get current price and ATR
+latest_bar = st.session_state.data_loader.get_latest_bar()
+current_price = latest_bar['close'] if latest_bar else 0
+current_atr = st.session_state.data_loader.get_today_atr() or 40.0
+
+if current_price > 0:
+    # Compact price/ATR display
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("MGC Price", f"${current_price:.2f}")
+    with col2:
+        st.metric("ATR (20)", f"{current_atr:.2f} pts")
+    with col3:
+        filter_2300 = 0.155 * current_atr
+        st.metric("2300 Filter", f"<{filter_2300:.2f} pts", help="ORB must be smaller than this")
+    with col4:
+        filter_0030 = 0.112 * current_atr
+        st.metric("0030 Filter", f"<{filter_0030:.2f} pts", help="ORB must be smaller than this")
+
+st.divider()
+
+# ========================================================================
+# NEXT ORB COUNTDOWN & SETUP DISPLAY
+# ========================================================================
+now = datetime.now(TZ_LOCAL)
+
+# Define ORB times (24-hour format)
+orb_times = {
         "0900": (9, 0, 5),   # 09:00-09:05
         "1000": (10, 0, 5),  # 10:00-10:05
         "1100": (11, 0, 5),  # 11:00-11:05
@@ -242,832 +479,898 @@ with tab_live:
         "0030": (0, 30, 35), # 00:30-00:35
     }
 
-    # Find next ORB
-    next_orb_name = None
-    next_orb_start = None
-    next_orb_end = None
-    min_delta = timedelta(days=1)
+# Find next ORB
+next_orb_name = None
+next_orb_start = None
+next_orb_end = None
+min_delta = timedelta(days=1)
 
-    for orb_name, (hour, minute, end_minute) in orb_times.items():
-        orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
+for orb_name, (hour, minute, end_minute) in orb_times.items():
+    orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
 
-        # Handle midnight crossing (0030)
-        if hour == 0 and now.hour >= 12:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
+    # Handle midnight crossing (0030)
+    if hour == 0 and now.hour >= 12:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
 
-        # If we're past this ORB today, check tomorrow
-        if now > orb_end:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
+    # If we're past this ORB today, check tomorrow
+    if now > orb_end:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
 
-        delta = orb_start - now
-        if delta < min_delta and delta > timedelta(0):
-            min_delta = delta
-            next_orb_name = orb_name
-            next_orb_start = orb_start
-            next_orb_end = orb_end
+    delta = orb_start - now
+    if delta < min_delta and delta > timedelta(0):
+        min_delta = delta
+        next_orb_name = orb_name
+        next_orb_start = orb_start
+        next_orb_end = orb_end
 
-    # Check if we're IN an ORB window right now
-    in_orb_window = False
-    current_orb_name = None
-    current_orb_end = None
+# Check if we're IN an ORB window right now
+in_orb_window = False
+current_orb_name = None
+current_orb_end = None
 
-    for orb_name, (hour, minute, end_minute) in orb_times.items():
-        orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
+for orb_name, (hour, minute, end_minute) in orb_times.items():
+    orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
 
-        # Handle midnight crossing
-        if hour == 0 and now.hour >= 12:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
+    # Handle midnight crossing
+    if hour == 0 and now.hour >= 12:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
 
-        if orb_start <= now <= orb_end:
-            in_orb_window = True
-            current_orb_name = orb_name
-            current_orb_end = orb_end
-            break
+    if orb_start <= now <= orb_end:
+        in_orb_window = True
+        current_orb_name = orb_name
+        current_orb_end = orb_end
+        break
 
-    # Display countdown or active ORB
-    if in_orb_window:
-        # ORB WINDOW IS ACTIVE RIGHT NOW
-        time_remaining = (current_orb_end - now).total_seconds()
-        minutes = int(time_remaining // 60)
-        seconds = int(time_remaining % 60)
+# Display countdown or active ORB
+if in_orb_window:
+    # ORB WINDOW IS ACTIVE RIGHT NOW
+    time_remaining = (current_orb_end - now).total_seconds()
+    minutes = int(time_remaining // 60)
+    seconds = int(time_remaining % 60)
 
-        # Get current ORB high/low from live data
-        orb_start_time = now.replace(hour=orb_times[current_orb_name][0], minute=orb_times[current_orb_name][1], second=0, microsecond=0)
+    # Get current ORB high/low from live data
+    orb_start_time = now.replace(hour=orb_times[current_orb_name][0], minute=orb_times[current_orb_name][1], second=0, microsecond=0)
 
-        if st.session_state.data_loader:
-            orb_bars = st.session_state.data_loader.get_bars_in_range(orb_start_time, now)
-            if not orb_bars.empty:
-                orb_high = orb_bars['high'].max()
-                orb_low = orb_bars['low'].min()
-                orb_size = orb_high - orb_low
-            else:
-                orb_high = orb_low = orb_size = None
+    if st.session_state.data_loader:
+        orb_bars = st.session_state.data_loader.get_bars_in_range(orb_start_time, now)
+        if not orb_bars.empty:
+            orb_high = orb_bars['high'].max()
+            orb_low = orb_bars['low'].min()
+            orb_size = orb_high - orb_low
         else:
             orb_high = orb_low = orb_size = None
+    else:
+        orb_high = orb_low = orb_size = None
 
-        # Get filter threshold
-        engine = st.session_state.strategy_engine
-        if engine:
-            filter_threshold = engine.orb_size_filters.get(current_orb_name)
-            atr = st.session_state.data_loader.get_today_atr() if st.session_state.data_loader else None
-        else:
-            filter_threshold = None
-            atr = None
+    # Get filter threshold
+    engine = st.session_state.strategy_engine
+    if engine:
+        filter_threshold = engine.orb_size_filters.get(current_orb_name)
+        atr = st.session_state.data_loader.get_today_atr() if st.session_state.data_loader else None
+    else:
+        filter_threshold = None
+        atr = None
 
-        if filter_threshold and atr and orb_size:
-            filter_passed = orb_size < (atr * filter_threshold)
-            filter_text = f"< {filter_threshold*100:.1f}% ATR (~{atr * filter_threshold:.1f}pts)"
-        else:
-            filter_passed = True
-            filter_text = "None"
+    if filter_threshold and atr and orb_size:
+        filter_passed = orb_size < (atr * filter_threshold)
+        filter_text = f"< {filter_threshold*100:.1f}% ATR (~{atr * filter_threshold:.1f}pts)"
+    else:
+        filter_passed = True
+        filter_text = "None"
 
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            border: 4px solid #ff4500;
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 16px rgba(255,69,0,0.3);
-            animation: pulse 2s infinite;
-        ">
-            <div style="text-align: center;">
-                <div style="font-size: 24px; color: white; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 2px;">
-                    🚨 {current_orb_name} ORB WINDOW ACTIVE 🚨
-                </div>
-                <div style="font-size: 64px; font-weight: bold; color: white; margin: 16px 0; text-shadow: 0 4px 8px rgba(0,0,0,0.3);">
-                    {minutes:02d}:{seconds:02d}
-                </div>
-                <div style="font-size: 20px; color: white; margin-bottom: 24px;">
-                    UNTIL WINDOW CLOSES
-                </div>
-            </div>
+    # Active ORB window banner
+    st.markdown(render_intelligence_card(
+        f"🚨 {current_orb_name} ORB ACTIVE",
+        "Window forming now - Note high and low",
+        "critical"
+    ), unsafe_allow_html=True)
 
-            <div style="background: rgba(255,255,255,0.95); border-radius: 12px; padding: 24px; margin-top: 16px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div style="text-align: center; padding: 16px; background: #f0f0f0; border-radius: 8px;">
-                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">ORB HIGH</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #198754;">${orb_high:.2f if orb_high else 0:.2f}</div>
-                    </div>
-                    <div style="text-align: center; padding: 16px; background: #f0f0f0; border-radius: 8px;">
-                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">ORB LOW</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #dc3545;">${orb_low:.2f if orb_low else 0:.2f}</div>
-                    </div>
-                    <div style="text-align: center; padding: 16px; background: #f0f0f0; border-radius: 8px;">
-                        <div style="font-size: 14px; color: #666; margin-bottom: 8px;">ORB SIZE</div>
-                        <div style="font-size: 28px; font-weight: bold; color: #0d6efd;">{orb_size:.2f if orb_size else 0:.2f}pts</div>
-                    </div>
-                </div>
+    # Countdown timer
+    st.markdown(render_countdown_timer(
+        f"{minutes:02d}:{seconds:02d}",
+        "Until Window Closes"
+    ), unsafe_allow_html=True)
 
-                <div style="padding: 16px; background: {'#d1e7dd' if filter_passed else '#f8d7da'}; border-left: 4px solid {'#198754' if filter_passed else '#dc3545'}; border-radius: 8px; margin-top: 16px;">
-                    <div style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px;">
-                        {'✅ FILTER PASSED' if filter_passed else '❌ FILTER FAILED'}
-                    </div>
-                    <div style="font-size: 14px; color: #666;">
-                        Filter: {filter_text}
-                    </div>
-                </div>
+    # ORB metrics in professional cards
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(render_pro_metric(
+            "ORB HIGH",
+            f"${orb_high:.2f}" if orb_high else "$0.00",
+            "↑" if orb_high else None,
+            True
+        ), unsafe_allow_html=True)
+    with col2:
+        st.markdown(render_pro_metric(
+            "ORB LOW",
+            f"${orb_low:.2f}" if orb_low else "$0.00",
+            "↓" if orb_low else None,
+            False
+        ), unsafe_allow_html=True)
+    with col3:
+        st.markdown(render_pro_metric(
+            "ORB SIZE",
+            f"{orb_size:.2f}pts" if orb_size else "0.00pts"
+        ), unsafe_allow_html=True)
 
-                <div style="margin-top: 16px; padding: 16px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
-                    <div style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 8px;">⏳ WAIT FOR BREAKOUT</div>
-                    <div style="font-size: 14px; color: #666;">
-                        Enter on first 5-min close OUTSIDE the range at {current_orb_end.strftime('%H:%M:%S')}
-                    </div>
-                </div>
-            </div>
+    # Filter status
+    if filter_passed:
+        st.success(f"✅ **FILTER PASSED** - {filter_text}")
+    else:
+        st.error(f"❌ **FILTER FAILED** - {filter_text}")
+
+    st.info(f"⏳ **WAIT FOR BREAKOUT** - Enter on first 5-min close OUTSIDE range at {current_orb_end.strftime('%H:%M:%S')}")
+
+elif next_orb_name and next_orb_start:
+    # COUNTDOWN TO NEXT ORB
+    time_until = (next_orb_start - now).total_seconds()
+    hours = int(time_until // 3600)
+    minutes = int((time_until % 3600) // 60)
+    seconds = int(time_until % 60)
+
+    # Get config for this ORB (only if engine is initialized)
+    engine = st.session_state.strategy_engine
+    if engine:
+        orb_config = engine.orb_configs.get(next_orb_name, {})
+        filter_threshold = engine.orb_size_filters.get(next_orb_name)
+        atr = st.session_state.data_loader.get_today_atr()
+    else:
+        orb_config = {}
+        filter_threshold = None
+        atr = None
+
+    # Check if SKIP
+    is_skip = orb_config.get("tier") == "SKIP"
+
+    if is_skip:
+        st.markdown(render_intelligence_card(
+            f"⏭️ SKIP {next_orb_name}",
+            f"Setup skipped - Next active in {hours}h {minutes}m",
+            "low"
+        ), unsafe_allow_html=True)
+    else:
+        st.markdown(render_intelligence_card(
+            f"⏰ NEXT: {next_orb_name} ORB",
+            f"Window {next_orb_start.strftime('%H:%M')} - {next_orb_end.strftime('%H:%M')}",
+            "medium"
+        ), unsafe_allow_html=True)
+
+    st.markdown(render_countdown_timer(
+        f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+        "Until ORB Window"
+    ), unsafe_allow_html=True)
+
+    # Setup details (if not skipped)
+    if not is_skip:
+        st.markdown("### Setup Details")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(render_pro_metric(
+                "CONFIG",
+                f"{orb_config.get('rr', '?')}R",
+                orb_config.get("sl_mode", "?")
+            ), unsafe_allow_html=True)
+        with col2:
+            filter_text = f"< {filter_threshold*100:.0f}% ATR" if filter_threshold else "None"
+            filter_detail = f"~{atr * filter_threshold:.1f}pts" if (filter_threshold and atr) else "All sizes OK"
+            st.markdown(render_pro_metric(
+                "FILTER",
+                filter_text,
+                filter_detail
+            ), unsafe_allow_html=True)
+        with col3:
+            risk_pct = "0.50%" if orb_config.get("tier", "DAY") == "NIGHT" else "0.25%"
+            st.markdown(render_pro_metric(
+                "POSITION RISK",
+                risk_pct
+            ), unsafe_allow_html=True)
+
+        # Entry checklist
+        with st.expander("📋 Entry Checklist", expanded=False):
+            checklist_items = [
+                f"1️⃣ Watch {next_orb_start.strftime('%H:%M')}-{next_orb_end.strftime('%H:%M')} for range formation",
+                "2️⃣ Note ORB high and low prices",
+            ]
+            if filter_threshold and atr:
+                checklist_items.append(f"3️⃣ Check: ORB size < {atr * filter_threshold:.1f}pts")
+                checklist_items.append("4️⃣ Wait for 5-min close OUTSIDE range")
+                stop_desc = "midpoint" if orb_config.get("sl_mode") == "HALF" else "opposite side"
+                checklist_items.append(f"5️⃣ Enter with {orb_config.get('sl_mode', 'FULL')} stop at {stop_desc}")
+            else:
+                checklist_items.append("3️⃣ Wait for 5-min close OUTSIDE range")
+                stop_desc = "midpoint" if orb_config.get("sl_mode") == "HALF" else "opposite side"
+                checklist_items.append(f"4️⃣ Enter with {orb_config.get('sl_mode', 'FULL')} stop at {stop_desc}")
+
+            for item in checklist_items:
+                st.markdown(item)
+
+# Evaluate strategies
+try:
+    evaluation = st.session_state.strategy_engine.evaluate_all()
+    st.session_state.last_evaluation = evaluation
+
+    # Log state change
+    log_to_journal(evaluation)
+
+except Exception as e:
+    st.error(f"Strategy evaluation error: {e}")
+    logger.error(f"Evaluation error: {e}", exc_info=True)
+    st.stop()
+
+# ========================================================================
+# DECISION PANEL (WHAT TO DO NOW) - ENHANCED VISUAL DESIGN
+# ========================================================================
+
+# Color-code by action
+action_styles = {
+    ActionType.STAND_DOWN: {"color": "#6c757d", "bg": "#f8f9fa", "emoji": "⏸️"},
+    ActionType.PREPARE: {"color": "#0d6efd", "bg": "#cfe2ff", "emoji": "⚡"},
+    ActionType.ENTER: {"color": "#198754", "bg": "#d1e7dd", "emoji": "🎯"},
+    ActionType.MANAGE: {"color": "#fd7e14", "bg": "#ffe5d0", "emoji": "📊"},
+    ActionType.EXIT: {"color": "#dc3545", "bg": "#f8d7da", "emoji": "🚪"},
+}
+
+style = action_styles.get(evaluation.action, action_styles[ActionType.STAND_DOWN])
+
+# Large prominent status banner
+st.markdown(f"""
+<div style="
+    background: linear-gradient(135deg, {style['bg']} 0%, {style['bg']}dd 100%);
+    border-left: 8px solid {style['color']};
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+        <span style="font-size: 48px;">{style['emoji']}</span>
+        <div>
+            <div style="font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Status</div>
+            <div style="font-size: 32px; font-weight: bold; color: {style['color']};">{evaluation.action.value}</div>
         </div>
+    </div>
+    <div style="font-size: 18px; color: #333; margin-bottom: 8px;">
+        <strong>Strategy:</strong> {evaluation.strategy_name}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-        <style>
-        @keyframes pulse {{
-            0%, 100% {{ box-shadow: 0 8px 16px rgba(255,69,0,0.3); }}
-            50% {{ box-shadow: 0 8px 32px rgba(255,69,0,0.6); }}
-        }}
-        </style>
-        """, unsafe_allow_html=True)
+# Reasons and action in clean cards
+col1, col2 = st.columns([1, 1])
 
-    elif next_orb_name and next_orb_start:
-        # COUNTDOWN TO NEXT ORB
-        time_until = (next_orb_start - now).total_seconds()
-        hours = int(time_until // 3600)
-        minutes = int((time_until % 3600) // 60)
-        seconds = int(time_until % 60)
+with col1:
+    st.markdown("### 💡 WHY")
+    reasons_html = ""
+    for reason in evaluation.reasons[:3]:
+        reasons_html += f'<div style="padding: 8px 0; border-left: 3px solid {style["color"]}; padding-left: 12px; margin: 4px 0;">• {reason}</div>'
+    st.markdown(f'<div style="font-size: 16px;">{reasons_html}</div>', unsafe_allow_html=True)
 
-        # Get config for this ORB (only if engine is initialized)
-        engine = st.session_state.strategy_engine
-        if engine:
-            orb_config = engine.orb_configs.get(next_orb_name, {})
-            filter_threshold = engine.orb_size_filters.get(next_orb_name)
-            atr = st.session_state.data_loader.get_today_atr()
-        else:
-            orb_config = {}
-            filter_threshold = None
-            atr = None
-
-        # Check if SKIP
-        is_skip = orb_config.get("tier") == "SKIP"
-
-        if is_skip:
-            banner_color = "#6c757d"
-            banner_text = f"⏭️ SKIPPING {next_orb_name} ORB"
-        else:
-            banner_color = "#0d6efd"
-            banner_text = f"⏰ NEXT ORB: {next_orb_name}"
-
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, {banner_color}20 0%, {banner_color}40 100%);
-            border: 3px solid {banner_color};
-            border-radius: 16px;
-            padding: 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        ">
-            <div style="text-align: center;">
-                <div style="font-size: 20px; color: {banner_color}; font-weight: bold; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 2px;">
-                    {banner_text}
-                </div>
-                <div style="font-size: 56px; font-weight: bold; color: {banner_color}; margin: 16px 0;">
-                    {hours:02d}:{minutes:02d}:{seconds:02d}
-                </div>
-                <div style="font-size: 18px; color: #666; margin-bottom: 8px;">
-                    Window Opens: {next_orb_start.strftime('%H:%M:%S')} - {next_orb_end.strftime('%H:%M:%S')}
-                </div>
-            </div>
-
-            {"" if is_skip else f'''
-            <div style="background: white; border-radius: 12px; padding: 24px; margin-top: 16px;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 16px;">
-                    <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">CONFIG</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #333;">{orb_config.get("rr", "?")}R</div>
-                        <div style="font-size: 12px; color: #666;">{orb_config.get("sl_mode", "?")}</div>
-                    </div>
-                    <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">FILTER</div>
-                        <div style="font-size: 16px; font-weight: bold; color: #333;">
-                            {"< " + str(filter_threshold*100) + "% ATR" if filter_threshold else "None"}
-                        </div>
-                        <div style="font-size: 12px; color: #666;">
-                            {"~" + str(round(atr * filter_threshold, 1)) + "pts" if (filter_threshold and atr) else "All sizes OK"}
-                        </div>
-                    </div>
-                    <div style="text-align: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-                        <div style="font-size: 12px; color: #666; margin-bottom: 4px;">POSITION RISK</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #333;">
-                            {orb_config.get("tier", "DAY") == "NIGHT" and "0.50%" or "0.25%"}
-                        </div>
-                    </div>
-                </div>
-
-                <div style="padding: 16px; background: #e7f3ff; border-left: 4px solid #0d6efd; border-radius: 8px;">
-                    <div style="font-size: 16px; font-weight: bold; color: #0d6efd; margin-bottom: 8px;">📋 ENTRY CHECKLIST</div>
-                    <div style="font-size: 14px; color: #333; line-height: 1.8;">
-                        1️⃣ Watch {next_orb_start.strftime('%H:%M')}-{next_orb_end.strftime('%H:%M')} for range formation<br>
-                        2️⃣ Note ORB high and low prices<br>
-                        {"3️⃣ Check: ORB size < " + str(round(atr * filter_threshold, 1)) + "pts<br>" if (filter_threshold and atr) else ""}
-                        {"4️⃣" if filter_threshold else "3️⃣"} Wait for 5-min close OUTSIDE range<br>
-                        {"5️⃣" if filter_threshold else "4️⃣"} Enter with {"HALF" if orb_config.get("sl_mode") == "HALF" else "FULL"} stop at {"midpoint" if orb_config.get("sl_mode") == "HALF" else "opposite side"}
-                    </div>
-                </div>
-            </div>
-            '''}
-        </div>
-        """, unsafe_allow_html=True)
-
-    # Evaluate strategies
-    try:
-        evaluation = st.session_state.strategy_engine.evaluate_all()
-        st.session_state.last_evaluation = evaluation
-
-        # Log state change
-        log_to_journal(evaluation)
-
-    except Exception as e:
-        st.error(f"Strategy evaluation error: {e}")
-        logger.error(f"Evaluation error: {e}", exc_info=True)
-        st.stop()
-
-    # ========================================================================
-    # DECISION PANEL (WHAT TO DO NOW) - ENHANCED VISUAL DESIGN
-    # ========================================================================
-
-    # Color-code by action
-    action_styles = {
-        ActionType.STAND_DOWN: {"color": "#6c757d", "bg": "#f8f9fa", "emoji": "⏸️"},
-        ActionType.PREPARE: {"color": "#0d6efd", "bg": "#cfe2ff", "emoji": "⚡"},
-        ActionType.ENTER: {"color": "#198754", "bg": "#d1e7dd", "emoji": "🎯"},
-        ActionType.MANAGE: {"color": "#fd7e14", "bg": "#ffe5d0", "emoji": "📊"},
-        ActionType.EXIT: {"color": "#dc3545", "bg": "#f8d7da", "emoji": "🚪"},
-    }
-
-    style = action_styles.get(evaluation.action, action_styles[ActionType.STAND_DOWN])
-
-    # Large prominent status banner
+with col2:
+    st.markdown("### 🎯 NEXT ACTION")
     st.markdown(f"""
     <div style="
-        background: linear-gradient(135deg, {style['bg']} 0%, {style['bg']}dd 100%);
-        border-left: 8px solid {style['color']};
-        border-radius: 12px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        background: {style['color']}22;
+        border: 2px solid {style['color']};
+        border-radius: 8px;
+        padding: 16px;
+        font-size: 18px;
+        font-weight: bold;
+        color: {style['color']};
+        text-align: center;
     ">
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-            <span style="font-size: 48px;">{style['emoji']}</span>
-            <div>
-                <div style="font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Status</div>
-                <div style="font-size: 32px; font-weight: bold; color: {style['color']};">{evaluation.action.value}</div>
+        {evaluation.next_instruction}
+    </div>
+    """, unsafe_allow_html=True)
+
+# ========================================================================
+# ML INSIGHTS PANEL (SHADOW MODE)
+# ========================================================================
+
+if ML_ENABLED and ML_SHADOW_MODE and evaluation.reasons:
+    # Check if first reason contains ML prediction
+    ml_reason = None
+    for reason in evaluation.reasons:
+        if reason.startswith("ML:"):
+            ml_reason = reason
+            break
+
+    if ml_reason:
+        with st.expander("🤖 ML Insights (Shadow Mode)", expanded=False):
+            st.markdown("""
+            <div style="background: #f0f8ff; border-left: 4px solid #0066cc; padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                ⚠️ <strong>Shadow Mode:</strong> ML predictions are shown for monitoring but don't affect trading decisions yet.
+            </div>
+            """, unsafe_allow_html=True)
+
+            # Parse ML prediction from reason
+            # Format: "ML: UP (52% confidence)" or "ML: LOW confidence DOWN"
+            import re
+            match = re.search(r'ML: (?:(HIGH|MEDIUM|LOW) confidence )?(\w+)(?: \((\d+)% confidence\))?', ml_reason)
+
+            if match:
+                confidence_level = match.group(1) if match.group(1) else "UNKNOWN"
+                direction = match.group(2)
+                confidence_pct = match.group(3)
+
+                # Display ML prediction
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric("ML Direction", direction,
+                             help="Predicted break direction")
+
+                with col2:
+                    conf_value = f"{confidence_pct}%" if confidence_pct else confidence_level
+                    conf_color = "🟢" if confidence_level == "HIGH" else "🟡" if confidence_level == "MEDIUM" else "🔴"
+                    st.metric("Confidence", f"{conf_color} {conf_value}",
+                             help="Model confidence in prediction")
+
+                with col3:
+                    # Agreement with rules
+                    if direction in evaluation.strategy_name or \
+                       (direction == "UP" and "LONG" in str(evaluation.action)) or \
+                       (direction == "DOWN" and "SHORT" in str(evaluation.action)):
+                        agreement = "✅ Agrees"
+                        agreement_color = "green"
+                    else:
+                        agreement = "⚠️ Differs"
+                        agreement_color = "orange"
+
+                    st.markdown(f"<div style='padding: 8px; background: {agreement_color}22; border-radius: 4px; text-align: center;'>"
+                               f"<strong>{agreement}</strong><br><small>with rules</small></div>",
+                               unsafe_allow_html=True)
+
+                # Show model info
+                st.markdown("---")
+                st.caption("**Model:** Directional Classifier v2 (Balanced) | **Accuracy:** 50% | **Trained:** Jan 17, 2026")
+
+                # Performance disclaimer
+                st.info("📊 ML predictions are learning from 740+ days of historical data. Performance is being monitored before enabling for live trading.")
+            else:
+                # Fallback if parsing fails
+                st.info(ml_reason)
+
+st.divider()
+
+# ========================================================================
+# LIVE TRADING CHART with TRADE ZONES
+# ========================================================================
+st.subheader("📈 Live Trading Chart")
+
+try:
+    # Get recent bars
+    bars_df = st.session_state.data_loader.fetch_latest_bars(
+        lookback_minutes=CHART_LOOKBACK_BARS
+    )
+
+    if bars_df.empty:
+        st.warning("⏳ No bar data available - click 'Initialize/Refresh Data' in sidebar")
+    else:
+        # Get current price
+        latest_bar = st.session_state.data_loader.get_latest_bar()
+        current_price = latest_bar['close'] if latest_bar else None
+
+        # Get ORB data from strategy state
+        state = evaluation.state
+        orb_high = state.current_orb_high if hasattr(state, 'current_orb_high') else None
+        orb_low = state.current_orb_low if hasattr(state, 'current_orb_low') else None
+        orb_name = state.active_orb_name if hasattr(state, 'active_orb_name') else "0900"
+
+        # Calculate ORB window times
+        if orb_name and evaluation.strategy_name:
+            # Extract hour and minute from orb_name (e.g., "0900" -> hour=9, min=0)
+            orb_hour = int(orb_name[:2])
+            orb_min = int(orb_name[2:]) if len(orb_name) == 4 else 0
+
+            now_local = datetime.now(TZ_LOCAL)
+            orb_start = now_local.replace(hour=orb_hour, minute=orb_min, second=0, microsecond=0)
+            orb_end = orb_start + timedelta(minutes=5)
+
+            # Handle midnight crossing
+            if orb_hour == 0 and now_local.hour >= 12:
+                orb_start += timedelta(days=1)
+                orb_end += timedelta(days=1)
+        else:
+            orb_start = None
+            orb_end = None
+
+        # Get trade details if there's an active setup
+        entry_price = None
+        stop_price = None
+        target_price = None
+        direction = None
+
+        if evaluation.action == ActionType.ENTER and orb_high and orb_low:
+            # Determine direction based on current price vs ORB
+            if current_price and current_price > orb_high:
+                direction = "LONG"
+            elif current_price and current_price < orb_low:
+                direction = "SHORT"
+
+            # Get setup config for this ORB
+            engine = st.session_state.strategy_engine
+            orb_config = engine.orb_configs.get(orb_name, {})
+
+            if direction and orb_config:
+                # Calculate trade levels
+                levels = calculate_trade_levels(
+                    orb_high=orb_high,
+                    orb_low=orb_low,
+                    direction=direction,
+                    rr=orb_config.get('rr', 1.0),
+                    sl_mode=orb_config.get('sl_mode', 'FULL')
+                )
+
+                entry_price = levels['entry']
+                stop_price = levels['stop']
+                target_price = levels['target']
+
+        # Check filter status
+        filter_passed = True
+        tier = "B"
+        if orb_high and orb_low and orb_name:
+            engine = st.session_state.strategy_engine
+            orb_config = engine.orb_configs.get(orb_name, {})
+            tier = orb_config.get('tier', 'B')
+
+            # Check filter
+            filter_result = st.session_state.data_loader.check_orb_size_filter(
+                orb_high, orb_low, orb_name
+            )
+            filter_passed = filter_result.get('pass', True)
+
+        # Build the live trading chart with trade zones
+        fig = build_live_trading_chart(
+            bars_df=bars_df,
+            orb_high=orb_high,
+            orb_low=orb_low,
+            orb_name=orb_name,
+            orb_start=orb_start,
+            orb_end=orb_end,
+            current_price=current_price,
+            filter_passed=filter_passed,
+            tier=tier,
+            entry_price=entry_price,
+            stop_price=stop_price,
+            target_price=target_price,
+            direction=direction,
+            height=CHART_HEIGHT
+        )
+
+        # Display the chart
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Trade levels summary below chart
+        if entry_price and direction:
+            st.markdown("### 🎯 Trade Levels")
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                st.markdown(render_pro_metric(
+                    "DIRECTION",
+                    f"{'🚀 LONG' if direction == 'LONG' else '🔻 SHORT'}"
+                ), unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(render_pro_metric(
+                    "ENTRY",
+                    f"${entry_price:.2f}"
+                ), unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(render_pro_metric(
+                    "STOP",
+                    f"${stop_price:.2f}",
+                    f"-${abs(entry_price - stop_price):.2f}",
+                    False
+                ), unsafe_allow_html=True)
+
+            with col4:
+                st.markdown(render_pro_metric(
+                    "TARGET",
+                    f"${target_price:.2f}",
+                    f"+${abs(target_price - entry_price):.2f}",
+                    True
+                ), unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"Chart error: {e}")
+    logger.error(f"Chart error: {e}", exc_info=True)
+
+# Entry details if READY or ACTIVE - ENHANCED VISUAL
+if evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
+    st.divider()
+
+    # ====================================================================
+    # CRITICAL SAFETY CHECKS
+    # ====================================================================
+    st.markdown("### 🛡️ SAFETY CHECKLIST")
+
+    safety_checks = []
+
+    # Check 1: Data quality
+    is_data_safe, data_reason = st.session_state.data_quality_monitor.is_safe_to_trade(symbol)
+    safety_checks.append({
+        "check": "Data Quality",
+        "passed": is_data_safe,
+        "reason": data_reason
+    })
+
+    # Check 2: Market hours & liquidity
+    market_conditions = st.session_state.market_hours_monitor.get_market_conditions(symbol)
+    is_market_safe = market_conditions.is_safe_to_trade()
+    market_reason = market_conditions.get_status_text() if is_market_safe else "Markets closed or thin liquidity"
+    safety_checks.append({
+        "check": "Market Hours",
+        "passed": is_market_safe,
+        "reason": market_reason
+    })
+
+    # Check 3: Risk limits
+    is_risk_safe, risk_reason = st.session_state.risk_manager.is_trading_allowed()
+    safety_checks.append({
+        "check": "Risk Limits",
+        "passed": is_risk_safe,
+        "reason": risk_reason
+    })
+
+    # Display safety checks
+    all_checks_passed = all(check["passed"] for check in safety_checks)
+
+    if all_checks_passed:
+        safety_color = "#198754"
+        safety_bg = "#d1e7dd"
+        safety_status = "[SAFE TO TRADE]"
+    else:
+        safety_color = "#dc3545"
+        safety_bg = "#f8d7da"
+        safety_status = "[DO NOT TRADE - SAFETY BLOCK]"
+
+    safety_html = f"""
+    <div style="
+        background: {safety_bg};
+        border: 3px solid {safety_color};
+        border-radius: 12px;
+        padding: 20px;
+        margin: 16px 0;
+    ">
+        <div style="font-size: 20px; font-weight: bold; color: {safety_color}; margin-bottom: 16px;">
+            {safety_status}
+        </div>
+    """
+
+    for check in safety_checks:
+        check_icon = "[OK]" if check["passed"] else "[FAIL]"
+        check_color = "#198754" if check["passed"] else "#dc3545"
+        safety_html += f"""
+        <div style="
+            padding: 12px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid {check_color};
+            border-radius: 4px;
+        ">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong style="color: {check_color};">{check_icon} {check["check"]}</strong>
+                </div>
+                <div style="color: #666; font-size: 14px;">
+                    {check["reason"]}
+                </div>
             </div>
         </div>
-        <div style="font-size: 18px; color: #333; margin-bottom: 8px;">
-            <strong>Strategy:</strong> {evaluation.strategy_name}
+        """
+
+    safety_html += "</div>"
+
+    st.markdown(safety_html, unsafe_allow_html=True)
+
+    # Block trade if safety checks fail
+    if not all_checks_passed:
+        st.error("Trading is BLOCKED due to failed safety checks. Do not enter positions until all checks pass.")
+        st.stop()
+
+    st.divider()
+
+    # ====================================================================
+    # DIRECTIONAL BIAS (for 11:00 ORB only)
+    # ====================================================================
+    if orb_time == "1100" and evaluation.orb_high and evaluation.orb_low:
+        st.markdown("### 🎯 DIRECTIONAL BIAS PREDICTION")
+
+        try:
+            bias = st.session_state.directional_bias_detector.get_directional_bias(
+                instrument=symbol,
+                orb_time=orb_time,
+                orb_high=evaluation.orb_high,
+                orb_low=evaluation.orb_low,
+                current_date=datetime.now()
+            )
+
+            render_directional_bias_indicator(bias)
+
+            if bias.has_bias():
+                st.info(f"💡 **Trading Tip**: Consider focusing on {bias.preferred_direction} breakout based on current market structure.")
+
+        except Exception as e:
+            logger.error(f"Error calculating directional bias: {e}")
+            st.caption("⚠️ Directional bias unavailable (insufficient data)")
+
+        st.divider()
+
+    # Prominent trade details card
+    st.markdown("### 📍 TRADE DETAILS")
+
+    # Calculate all metrics
+    entry_price = evaluation.entry_price or 0
+    stop_price = evaluation.stop_price or 0
+    target_price = evaluation.target_price or 0
+    risk_pct = evaluation.risk_pct or 0
+    risk_dollars = account_size * (risk_pct / 100)
+
+    # Calculate R:R ratio
+    if entry_price and stop_price and target_price:
+        risk_points = abs(entry_price - stop_price)
+        reward_points = abs(target_price - entry_price)
+        rr_ratio = reward_points / risk_points if risk_points > 0 else 0
+        direction = "LONG" if target_price > entry_price else "SHORT"
+    else:
+        rr_ratio = 0
+        direction = "UNKNOWN"
+
+    # Visual trade card with gradient
+    trade_color = "#198754" if evaluation.action == ActionType.ENTER else "#fd7e14"
+
+    st.markdown(f"""
+    <div style="
+        background: linear-gradient(135deg, {trade_color}15 0%, {trade_color}25 100%);
+        border: 3px solid {trade_color};
+        border-radius: 12px;
+        padding: 24px;
+        margin: 16px 0;
+    ">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Direction</div>
+                <div style="font-size: 28px; font-weight: bold; color: {trade_color};">{direction}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Entry</div>
+                <div style="font-size: 28px; font-weight: bold; color: #333;">${entry_price:.2f}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Stop</div>
+                <div style="font-size: 28px; font-weight: bold; color: #dc3545;">${stop_price:.2f}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Target</div>
+                <div style="font-size: 28px; font-weight: bold; color: #198754;">${target_price:.2f}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">R:R Ratio</div>
+                <div style="font-size: 28px; font-weight: bold; color: #0d6efd;">1:{rr_ratio:.1f}</div>
+            </div>
+            <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Risk</div>
+                <div style="font-size: 24px; font-weight: bold; color: #fd7e14;">${risk_dollars:.0f}</div>
+                <div style="font-size: 14px; color: #666;">({risk_pct:.2f}%)</div>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Reasons and action in clean cards
-    col1, col2 = st.columns([1, 1])
+# ========================================================================
+# ACTIVE POSITIONS PANEL (if any)
+# ========================================================================
+st.divider()
+st.subheader("📊 Active Positions")
 
+# Get active positions from risk manager
+active_positions = st.session_state.risk_manager.get_active_positions()
+
+if active_positions:
+    # Get current price
+    latest_bar = st.session_state.data_loader.get_latest_bar()
+    current_price = latest_bar['close'] if latest_bar else 0
+
+    # Render each position
+    for position in active_positions:
+        st.components.v1.html(
+            render_position_panel(
+                position,
+                current_price,
+                st.session_state.position_tracker,
+                strategy=position.get('strategy', 'UNKNOWN')
+            ),
+            height=400
+        )
+else:
+    # Show empty state
+    st.components.v1.html(
+        render_empty_position_panel(),
+        height=200
+    )
+
+# ============================================================================
+# AI CHAT - STREAMLINED AT BOTTOM OF PAGE
+# ============================================================================
+st.divider()
+st.title("🤖 AI Trading Assistant")
+
+# Check if AI is available
+if not st.session_state.ai_assistant.is_available():
+    st.error("⚠️ AI Assistant not available. Add ANTHROPIC_API_KEY to .env file.")
+    st.info("Get your API key from: https://console.anthropic.com/")
+    st.code("ANTHROPIC_API_KEY=sk-ant-your-key-here", language="bash")
+else:
+    col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("### 💡 WHY")
-        reasons_html = ""
-        for reason in evaluation.reasons[:3]:
-            reasons_html += f'<div style="padding: 8px 0; border-left: 3px solid {style["color"]}; padding-left: 12px; margin: 4px 0;">• {reason}</div>'
-        st.markdown(f'<div style="font-size: 16px;">{reasons_html}</div>', unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("### 🎯 NEXT ACTION")
-        st.markdown(f"""
-        <div style="
-            background: {style['color']}22;
-            border: 2px solid {style['color']};
-            border-radius: 8px;
-            padding: 16px;
-            font-size: 18px;
-            font-weight: bold;
-            color: {style['color']};
-            text-align: center;
-        ">
-            {evaluation.next_instruction}
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.divider()
-
-    # ========================================================================
-    # LIVE CHART
-    # ========================================================================
-    st.subheader("📈 Live Chart")
-
-    try:
-        # Get recent bars
-        bars_df = st.session_state.data_loader.fetch_latest_bars(
-            lookback_minutes=CHART_LOOKBACK_BARS
-        )
-
-        if bars_df.empty:
-            st.warning("No bar data available")
-        else:
-            # Create candlestick chart
-            fig = go.Figure()
-
-            fig.add_trace(go.Candlestick(
-                x=bars_df["ts_local"],
-                open=bars_df["open"],
-                high=bars_df["high"],
-                low=bars_df["low"],
-                close=bars_df["close"],
-                name="Price"
-            ))
-
-            # Overlay session levels
-            now = datetime.now(TZ_LOCAL)
-
-            # Asia levels
-            asia_start = now.replace(hour=9, minute=0, second=0, microsecond=0)
-            asia_end = now.replace(hour=17, minute=0, second=0, microsecond=0)
-            asia_hl = st.session_state.data_loader.get_session_high_low(asia_start, asia_end)
-
-            if asia_hl:
-                fig.add_hline(y=asia_hl["high"], line_dash="dash", line_color="green",
-                              annotation_text="Asia High", annotation_position="right")
-                fig.add_hline(y=asia_hl["low"], line_dash="dash", line_color="red",
-                              annotation_text="Asia Low", annotation_position="right")
-
-            # London levels
-            london_start = now.replace(hour=18, minute=0, second=0, microsecond=0)
-            london_end = now.replace(hour=23, minute=0, second=0, microsecond=0)
-            london_hl = st.session_state.data_loader.get_session_high_low(london_start, london_end)
-
-            if london_hl:
-                fig.add_hline(y=london_hl["high"], line_dash="dot", line_color="blue",
-                              annotation_text="London High", annotation_position="right")
-                fig.add_hline(y=london_hl["low"], line_dash="dot", line_color="purple",
-                              annotation_text="London Low", annotation_position="right")
-
-            # VWAP
-            vwap = st.session_state.data_loader.calculate_vwap(asia_start)
-            if vwap:
-                fig.add_hline(y=vwap, line_dash="solid", line_color="yellow", line_width=1,
-                              annotation_text="VWAP", annotation_position="right")
-
-            fig.update_layout(
-                title=f"{symbol} - 1-Minute Chart",
-                xaxis_title="Time",
-                yaxis_title="Price",
-                height=CHART_HEIGHT,
-                xaxis_rangeslider_visible=False
-            )
-
-            st.plotly_chart(fig, use_container_width=True)
-
-    except Exception as e:
-        st.error(f"Chart error: {e}")
-        logger.error(f"Chart error: {e}", exc_info=True)
-
-    # Entry details if READY or ACTIVE - ENHANCED VISUAL
-    if evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
-        st.divider()
-
-        # Prominent trade details card
-        st.markdown("### 📍 TRADE DETAILS")
-
-        # Calculate all metrics
-        entry_price = evaluation.entry_price or 0
-        stop_price = evaluation.stop_price or 0
-        target_price = evaluation.target_price or 0
-        risk_pct = evaluation.risk_pct or 0
-        risk_dollars = account_size * (risk_pct / 100)
-
-        # Calculate R:R ratio
-        if entry_price and stop_price and target_price:
-            risk_points = abs(entry_price - stop_price)
-            reward_points = abs(target_price - entry_price)
-            rr_ratio = reward_points / risk_points if risk_points > 0 else 0
-            direction = "LONG" if target_price > entry_price else "SHORT"
-        else:
-            rr_ratio = 0
-            direction = "UNKNOWN"
-
-        # Visual trade card with gradient
-        trade_color = "#198754" if evaluation.action == ActionType.ENTER else "#fd7e14"
-
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, {trade_color}15 0%, {trade_color}25 100%);
-            border: 3px solid {trade_color};
-            border-radius: 12px;
-            padding: 24px;
-            margin: 16px 0;
-        ">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Direction</div>
-                    <div style="font-size: 28px; font-weight: bold; color: {trade_color};">{direction}</div>
-                </div>
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Entry</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #333;">${entry_price:.2f}</div>
-                </div>
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Stop</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #dc3545;">${stop_price:.2f}</div>
-                </div>
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Target</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #198754;">${target_price:.2f}</div>
-                </div>
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">R:R Ratio</div>
-                    <div style="font-size: 28px; font-weight: bold; color: #0d6efd;">1:{rr_ratio:.1f}</div>
-                </div>
-                <div style="text-align: center; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="font-size: 14px; color: #666; text-transform: uppercase; margin-bottom: 8px;">Risk</div>
-                    <div style="font-size: 24px; font-weight: bold; color: #fd7e14;">${risk_dollars:.0f}</div>
-                    <div style="font-size: 14px; color: #666;">({risk_pct:.2f}%)</div>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ============================================================================
-# TAB 2: LEVELS
-# ============================================================================
-with tab_levels:
-    st.title("📊 Session Levels")
-
-    if not st.session_state.data_loader:
-        if is_cloud_deployment():
-            st.info("☁️ **Cloud Mode** - No data loaded yet")
-            st.markdown("**Try the AI CHAT tab** to ask about strategies, levels, and trade setups!")
-        else:
-            st.warning("Initialize data first")
-        st.stop()
-
-    now = datetime.now(TZ_LOCAL)
-
-    # Asia
-    asia_start = now.replace(hour=9, minute=0, second=0, microsecond=0)
-    asia_end = now.replace(hour=17, minute=0, second=0, microsecond=0)
-    asia_hl = st.session_state.data_loader.get_session_high_low(asia_start, asia_end)
-
-    # London
-    london_start = now.replace(hour=18, minute=0, second=0, microsecond=0)
-    london_end = now.replace(hour=23, minute=0, second=0, microsecond=0)
-    london_hl = st.session_state.data_loader.get_session_high_low(london_start, london_end)
-
-    # Display table
-    levels_data = []
-
-    if asia_hl:
-        levels_data.append({
-            "Session": "Asia (09:00-17:00)",
-            "High": f"${asia_hl['high']:.2f}",
-            "Low": f"${asia_hl['low']:.2f}",
-            "Range": f"{asia_hl['range']:.2f}pts"
-        })
-
-    if london_hl:
-        levels_data.append({
-            "Session": "London (18:00-23:00)",
-            "High": f"${london_hl['high']:.2f}",
-            "Low": f"${london_hl['low']:.2f}",
-            "Range": f"{london_hl['range']:.2f}pts"
-        })
-
-    if levels_data:
-        st.table(pd.DataFrame(levels_data))
-
-    # Gap analysis
-    if asia_hl and london_hl:
-        st.subheader("🔍 Gap Analysis")
-
-        upside_gap = london_hl["high"] - asia_hl["high"]
-        downside_gap = asia_hl["low"] - london_hl["low"]
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.metric(
-                "Upside Gap (London - Asia High)",
-                f"{upside_gap:.2f}pts",
-                delta="LARGE GAP" if upside_gap > CASCADE_MIN_GAP_POINTS else "small gap"
-            )
-
-        with col2:
-            st.metric(
-                "Downside Gap (Asia - London Low)",
-                f"{downside_gap:.2f}pts",
-                delta="LARGE GAP" if downside_gap > CASCADE_MIN_GAP_POINTS else "small gap"
-            )
-
-# ============================================================================
-# TAB 3: TRADE PLAN
-# ============================================================================
-with tab_trade_plan:
-    st.title("📋 Trade Plan Calculator")
-
-    if not st.session_state.last_evaluation:
-        if is_cloud_deployment():
-            st.info("☁️ **Cloud Mode** - No active trade setup yet")
-            st.markdown("""
-            **This calculator works once you have data loaded.**
-
-            For now, try the **AI CHAT tab** to:
-            - Calculate position sizes manually
-            - Ask about risk management
-            - Get trade setup explanations
-            """)
-        else:
-            st.warning("No active evaluation")
-        st.stop()
-
-    eval = st.session_state.last_evaluation
-
-    if eval.entry_price and eval.stop_price and eval.risk_pct:
-        st.subheader("Position Size Calculator")
-
-        # Calculate
-        risk_points = abs(eval.entry_price - eval.stop_price)
-        risk_dollars = account_size * (eval.risk_pct / 100)
-
-        # Determine contract size (depends on instrument)
-        if symbol == "MNQ":
-            tick_value = 2.0  # $2 per tick
-            tick_size = 0.25
-        elif symbol == "MGC":
-            tick_value = 10.0  # $10 per point
-            tick_size = 0.1
-        else:
-            tick_value = 1.0
-            tick_size = 0.01
-
-        risk_per_contract = risk_points * tick_value
-        contracts = int(risk_dollars / risk_per_contract) if risk_per_contract > 0 else 0
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric("Risk Points", f"{risk_points:.2f}pts")
-        with col2:
-            st.metric("Risk $", f"${risk_dollars:.0f}")
-        with col3:
-            st.metric("Contracts", contracts)
-
-        st.divider()
-
-        st.subheader("Trade Summary")
-
-        st.code(f"""
-STRATEGY: {eval.strategy_name}
-DIRECTION: {"LONG" if eval.entry_price < eval.stop_price else "SHORT"}
-
-ENTRY:    ${eval.entry_price:.2f}
-STOP:     ${eval.stop_price:.2f}
-TARGET:   ${eval.target_price:.2f if eval.target_price else 0.0}
-
-RISK:     {risk_points:.2f}pts = ${risk_dollars:.0f} ({eval.risk_pct:.2f}%)
-SIZE:     {contracts} contracts
-
-MANAGEMENT:
-- Phase 1: Move stop to BE at +1R (within 10 min)
-- Phase 2: Trail structure (after 15 min)
-- Max hold: 90 minutes (cascades)
-        """)
-
-    else:
-        st.info("No active trade plan. Wait for ENTER signal.")
-
-# ============================================================================
-# TAB 4: JOURNAL
-# ============================================================================
-with tab_journal:
-    st.title("📓 Trade Journal")
-
-    st.info("Journal entries are automatically logged on state changes.")
-
-    # Query recent journal entries
-    try:
-        from utils import get_recent_journal_entries
-
-        journal_df = get_recent_journal_entries(limit=50)
-
-        if journal_df is not None and not journal_df.empty:
-            # Display as table with formatted columns
-            display_df = journal_df.copy()
-            display_df["ts_local"] = pd.to_datetime(display_df["ts_local"]).dt.strftime("%Y-%m-%d %H:%M:%S")
-
-            # Format prices
-            if "entry_price" in display_df.columns:
-                display_df["entry_price"] = display_df["entry_price"].apply(
-                    lambda x: f"${x:.2f}" if pd.notna(x) else ""
-                )
-            if "stop_price" in display_df.columns:
-                display_df["stop_price"] = display_df["stop_price"].apply(
-                    lambda x: f"${x:.2f}" if pd.notna(x) else ""
-                )
-            if "target_price" in display_df.columns:
-                display_df["target_price"] = display_df["target_price"].apply(
-                    lambda x: f"${x:.2f}" if pd.notna(x) else ""
-                )
-            if "risk_pct" in display_df.columns:
-                display_df["risk_pct"] = display_df["risk_pct"].apply(
-                    lambda x: f"{x:.2f}%" if pd.notna(x) else ""
-                )
-
-            # Rename columns for display
-            display_df.columns = [
-                "Time", "Strategy", "State", "Action", "Reasons",
-                "Next Instruction", "Entry", "Stop", "Target", "Risk %"
-            ]
-
-            # Show most recent first
-            st.dataframe(
-                display_df,
-                use_container_width=True,
-                height=600
-            )
-
-            # Summary stats
-            st.divider()
-            st.subheader("📊 Journal Summary")
-
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                total_entries = len(journal_df)
-                st.metric("Total Entries", total_entries)
-
-            with col2:
-                enter_actions = len(journal_df[journal_df["action"] == "ENTER"])
-                st.metric("Entry Signals", enter_actions)
-
-            with col3:
-                if "strategy_name" in journal_df.columns:
-                    unique_strategies = journal_df["strategy_name"].nunique()
-                    st.metric("Strategies Active", unique_strategies)
-
-            # Strategy breakdown
-            if "strategy_name" in journal_df.columns and "action" in journal_df.columns:
-                st.subheader("Strategy Breakdown")
-                strategy_counts = journal_df.groupby(["strategy_name", "action"]).size().reset_index(name="count")
-                st.dataframe(strategy_counts, use_container_width=True)
-
-        else:
-            st.warning("No journal entries found. Entries will appear as strategies are evaluated.")
-
-    except Exception as e:
-        st.error(f"Error loading journal: {e}")
-        logger.error(f"Journal display error: {e}", exc_info=True)
-
-# ============================================================================
-# TAB 5: AI CHAT
-# ============================================================================
-with tab_ai_chat:
-    st.title("🤖 AI Trading Assistant")
-
-    # Check if AI is available
-    if not st.session_state.ai_assistant.is_available():
-        st.error("⚠️ AI Assistant not available. Add ANTHROPIC_API_KEY to .env file.")
-        st.info("Get your API key from: https://console.anthropic.com/")
-        st.code("ANTHROPIC_API_KEY=sk-ant-your-key-here", language="bash")
-    else:
         st.success("✅ AI Assistant ready! Claude Sonnet 4.5 - Ask about strategies, calculations, or trade decisions.")
+    with col2:
+        if len(st.session_state.chat_history) > 0:
+            st.metric("💾 Memory", f"{len(st.session_state.chat_history)} messages")
 
-        # Display chat history
-        st.subheader("💬 Conversation")
-
-        chat_container = st.container()
-        with chat_container:
-            if not st.session_state.chat_history:
-                st.info("Start a conversation! Ask me about strategies, risk calculations, or trade setups.")
-            else:
-                for msg in st.session_state.chat_history:
-                    if msg["role"] == "user":
-                        st.markdown(f"**You:** {msg['content']}")
-                    else:
-                        st.markdown(f"**AI:** {msg['content']}")
-                        st.divider()
-
-        # Chat input
-        st.subheader("Ask a Question")
-
-        user_input = st.text_area(
-            "Your question:",
-            key="ai_chat_input",
-            placeholder="Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
-            height=100
-        )
-
-        col1, col2, col3 = st.columns([1, 1, 3])
-
+    # Memory management
+    with st.expander("🗂️ Memory Management"):
+        col1, col2 = st.columns(2)
         with col1:
-            if st.button("Send", type="primary", use_container_width=True):
-                if user_input.strip():
-                    with st.spinner("Thinking..."):
-                        # Get current context
-                        strategy_state = None
-                        if st.session_state.get('last_evaluation'):
-                            result = st.session_state.last_evaluation
-                            strategy_state = {
-                                'strategy': result.get('strategy_name', 'None'),
-                                'action': result.get('action', 'STAND_DOWN'),
-                                'reasons': result.get('reasons', []),
-                                'next_action': result.get('next_action', 'Wait'),
-                                'current_session': 'Unknown'
-                            }
-
-                        # Get session levels (if available)
-                        session_levels = {}
-                        # TODO: Extract from data_loader if needed
-
-                        # Get ORB data (if available)
-                        orb_data = {}
-                        # TODO: Extract from data_loader if needed
-
-                        # Get backtest stats
-                        backtest_stats = {
-                            'total_r': 1153.0,
-                            'win_rate': 57.2,
-                            'avg_r': 0.43,
-                            'total_trades': 2682,
-                            'best_orb': '1100',
-                            'best_orb_r': 0.49
-                        }
-
-                        # Get current price
-                        current_price = 0
-                        if st.session_state.data_loader:
-                            latest = st.session_state.data_loader.get_latest_bar()
-                            if latest:
-                                current_price = latest.get('close', 0)
-
-                        # Call AI
-                        response = st.session_state.ai_assistant.chat(
-                            user_message=user_input,
-                            conversation_history=st.session_state.chat_history,
-                            session_id=st.session_state.session_id,
-                            instrument=st.session_state.current_symbol,
-                            current_price=current_price,
-                            strategy_state=strategy_state,
-                            session_levels=session_levels,
-                            orb_data=orb_data,
-                            backtest_stats=backtest_stats
-                        )
-
-                        # Update history
-                        st.session_state.chat_history.append({"role": "user", "content": user_input})
-                        st.session_state.chat_history.append({"role": "assistant", "content": response})
-
-                    # Rerun to show new messages
+            if st.button("🔄 Reload History", help="Reload last 50 messages from database"):
+                try:
+                    loaded_history = st.session_state.memory_manager.load_session_history(
+                        session_id=st.session_state.session_id,
+                        limit=50
+                    )
+                    st.session_state.chat_history = [
+                        {"role": msg["role"], "content": msg["content"]}
+                        for msg in loaded_history
+                    ]
+                    st.success(f"Reloaded {len(loaded_history)} messages")
                     st.rerun()
+                except Exception as e:
+                    st.error(f"Error reloading: {e}")
 
         with col2:
-            if st.button("Clear Chat", use_container_width=True):
+            if st.button("🗑️ Clear Session", help="Clear current session (database kept)", type="secondary"):
                 st.session_state.chat_history = []
+                st.success("Session cleared (database preserved)")
                 st.rerun()
 
-        # Quick examples
-        st.subheader("💡 Example Questions")
+        st.caption("💾 All messages are automatically saved to database and persist across app restarts")
 
-        col1, col2 = st.columns(2)
+    # Display chat history
+    st.subheader("💬 Conversation")
 
-        with col1:
-            st.markdown("""
-            **Trade Calculations:**
-            - "ORB is 2700-2706, direction LONG, calculate my stop and target"
-            - "I'm in a trade at 2705, ORB was 2700-2706, am I close to stop?"
-            - "What's the risk in dollars for a $10k account?"
-            """)
-
-        with col2:
-            st.markdown("""
-            **Strategy Questions:**
-            - "Why is 00:30 ORB good?"
-            - "What's the best strategy right now?"
-            - "Should I trade 09:00 or 10:00 ORB?"
-            """)
-
-        # Show recent trade discussions from memory
-        st.divider()
-        st.subheader("📚 Recent Trade Discussions")
-
-        recent_trades = st.session_state.memory_manager.get_recent_trades(
-            session_id=st.session_state.session_id,
-            days=7
-        )
-
-        if recent_trades:
-            for trade in recent_trades[:5]:
-                with st.expander(f"{trade['timestamp'].strftime('%Y-%m-%d %H:%M')} - {trade['role']}"):
-                    st.write(trade['content'])
+    chat_container = st.container()
+    with chat_container:
+        if not st.session_state.chat_history:
+            st.info("Start a conversation! Ask me about strategies, risk calculations, or trade setups.")
         else:
-            st.info("No recent trade discussions found. Start asking questions to build your memory!")
+            for msg in st.session_state.chat_history:
+                if msg["role"] == "user":
+                    st.markdown(f"**You:** {msg['content']}")
+                else:
+                    st.markdown(f"**AI:** {msg['content']}")
+                    st.divider()
+
+    # Chat input
+    st.subheader("Ask a Question")
+
+    user_input = st.text_area(
+        "Your question:",
+        key="ai_chat_input",
+        placeholder="Example: ORB is 2700-2706, I want to go LONG, what's my stop and target?",
+        height=100
+    )
+
+    col1, col2, col3 = st.columns([1, 1, 3])
+
+    with col1:
+        if st.button("Send", type="primary", use_container_width=True):
+            if user_input.strip():
+                with st.spinner("Thinking..."):
+                    # Get current context
+                    strategy_state = None
+                    if st.session_state.get('last_evaluation'):
+                        result = st.session_state.last_evaluation
+                        strategy_state = {
+                            'strategy': getattr(result, 'strategy_name', 'None'),
+                            'action': getattr(result, 'action', 'STAND_DOWN'),
+                            'reasons': getattr(result, 'reasons', []),
+                            'next_action': getattr(result, 'next_instruction', 'Wait'),
+                            'current_session': 'Unknown'
+                        }
+
+                    # Get session levels (if available)
+                    session_levels = {}
+                    # TODO: Extract from data_loader if needed
+
+                    # Get ORB data (if available)
+                    orb_data = {}
+                    # TODO: Extract from data_loader if needed
+
+                    # Get backtest stats
+                    backtest_stats = {
+                        'total_r': 1153.0,
+                        'win_rate': 57.2,
+                        'avg_r': 0.43,
+                        'total_trades': 2682,
+                        'best_orb': '1100',
+                        'best_orb_r': 0.49
+                    }
+
+                    # Get current price
+                    current_price = 0
+                    if st.session_state.data_loader:
+                        latest = st.session_state.data_loader.get_latest_bar()
+                        if latest:
+                            current_price = latest.get('close', 0)
+
+                    # Call AI
+                    response = st.session_state.ai_assistant.chat(
+                        user_message=user_input,
+                        conversation_history=st.session_state.chat_history,
+                        session_id=st.session_state.session_id,
+                        instrument=st.session_state.current_symbol,
+                        current_price=current_price,
+                        strategy_state=strategy_state,
+                        session_levels=session_levels,
+                        orb_data=orb_data,
+                        backtest_stats=backtest_stats
+                    )
+
+                    # Update history
+                    st.session_state.chat_history.append({"role": "user", "content": user_input})
+                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+                # Rerun to show new messages
+                st.rerun()
+
+    with col2:
+        if st.button("Clear Chat", use_container_width=True):
+            st.session_state.chat_history = []
+            st.rerun()
+
+    # Quick examples
+    st.subheader("💡 Example Questions")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("""
+        **Trade Calculations:**
+        - "ORB is 2700-2706, direction LONG, calculate my stop and target"
+        - "I'm in a trade at 2705, ORB was 2700-2706, am I close to stop?"
+        - "What's the risk in dollars for a $10k account?"
+        """)
+
+    with col2:
+        st.markdown("""
+        **Strategy Questions:**
+        - "Why is 00:30 ORB good?"
+        - "What's the best strategy right now?"
+        - "Should I trade 09:00 or 10:00 ORB?"
+        """)
+
+    # Show recent trade discussions from memory
+    st.divider()
+    st.subheader("📚 Recent Trade Discussions")
+
+    recent_trades = st.session_state.memory_manager.get_recent_trades(
+        session_id=st.session_state.session_id,
+        days=7
+    )
+
+    if recent_trades:
+        for trade in recent_trades[:5]:
+            with st.expander(f"{trade['timestamp'].strftime('%Y-%m-%d %H:%M')} - {trade['role']}"):
+                st.write(trade['content'])
+    else:
+        st.info("No recent trade discussions found. Start asking questions to build your memory!")
 
 # ============================================================================
 # AUTO-REFRESH

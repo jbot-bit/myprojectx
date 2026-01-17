@@ -1,0 +1,50 @@
+**VALIDATED MGC SETUPS (From Database):**
+
+**CASCADE ORB (S+ Tier):**
+- Win Rate: 19.0% | Avg R: +1.950R | RR: 4.0 | SL Mode: DYNAMIC
+- Trades: 69 total (~35/year) | Annual: ~+68R/year
+- Filter: , No filter
+- Notes: MULTI-LIQUIDITY CASCADE: London sweeps Asia -> NY sweeps London. 2 cascading acceptance failures. Gap-based targeting (4R effective). Rare but massive edge.
+
+**2300 ORB (S+ Tier):**
+- Win Rate: 56.1% | Avg R: +0.403R | RR: 1.5 | SL Mode: HALF
+- Trades: 522 total (~257/year) | Annual: ~+104R/year
+- Filter: , Filter<0.155×ATR
+- Notes: ⭐ BEST OVERALL - 56% WR with 1.5R targets, scan until 09:00 next day, ~+105R/year
+
+**1000 ORB (S+ Tier):**
+- Win Rate: 15.3% | Avg R: +0.378R | RR: 8.0 | SL Mode: FULL
+- Trades: 516 total (~254/year) | Annual: ~+96R/year
+- Filter: , No filter
+- Notes: 🦄 CROWN JEWEL - 15% WR but 8R targets! Scan until 09:00 next day, ~+98R/year
+
+**SINGLE_LIQ ORB (S Tier):**
+- Win Rate: 33.7% | Avg R: +1.440R | RR: 3.0 | SL Mode: DYNAMIC
+- Trades: 118 total (~59/year) | Annual: ~+85R/year
+- Filter: , No filter
+- Notes: SINGLE LIQUIDITY: Single London level swept at NY open (23:00). Simpler than CASCADE but still strong edge. Targets opposite London level.
+
+**1800 ORB (S Tier):**
+- Win Rate: 51.0% | Avg R: +0.274R | RR: 1.5 | SL Mode: FULL
+- Trades: 522 total (~257/year) | Annual: ~+70R/year
+- Filter: , No filter
+- Notes: London open - 51% WR with 1.5R targets, captures NY session moves, ~+72R/year
+
+**0030 ORB (S Tier):**
+- Win Rate: 31.3% | Avg R: +0.254R | RR: 3.0 | SL Mode: HALF
+- Trades: 520 total (~256/year) | Annual: ~+65R/year
+- Filter: , Filter<0.112×ATR
+- Notes: NY ORB - 31% WR with 3R targets, hits during Asia morning, ~+66R/year
+
+**1100 ORB (A Tier):**
+- Win Rate: 30.4% | Avg R: +0.215R | RR: 3.0 | SL Mode: FULL
+- Trades: 520 total (~256/year) | Annual: ~+55R/year
+- Filter: , No filter
+- Notes: Late Asia - 30% WR with 3R targets, scan until 09:00 next day, ~+56R/year
+
+**0900 ORB (A Tier):**
+- Win Rate: 17.1% | Avg R: +0.198R | RR: 6.0 | SL Mode: FULL
+- Trades: 514 total (~253/year) | Annual: ~+50R/year
+- Filter: , No filter
+- Notes: Asymmetric Asia ORB - 17% WR but 6R targets, hits overnight, ~+51R/year
+

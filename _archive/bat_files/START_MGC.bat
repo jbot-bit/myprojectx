@@ -1,0 +1,3 @@
+@echo off
+echo Starting MGC Trading Helper...
+streamlit run MGC_NOW.py --server.port 8503

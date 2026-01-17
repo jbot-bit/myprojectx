@@ -8,6 +8,11 @@ from datetime import timezone, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from dotenv import load_dotenv
+import sys
+
+# Add parent directory to path for config_generator import
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config_generator import load_instrument_configs
 
 # Load .env from parent directory
 env_path = Path(__file__).parent.parent / ".env"
@@ -22,10 +27,10 @@ TZ_UTC = ZoneInfo("UTC")
 # ============================================================================
 # INSTRUMENT CONFIGURATION
 # ============================================================================
-PRIMARY_INSTRUMENT = os.getenv("PRIMARY_INSTRUMENT", "MNQ")  # Default: Micro NQ
-SECONDARY_INSTRUMENT = "MGC"  # Micro Gold (optional)
-TERTIARY_INSTRUMENT = "MPL"  # Micro Platinum (optional)
-ENABLE_SECONDARY = False  # Toggle via UI
+PRIMARY_INSTRUMENT = os.getenv("PRIMARY_INSTRUMENT", "MGC")  # Default: Micro Gold (ONLY suitable instrument)
+SECONDARY_INSTRUMENT = None  # NQ not suitable for ORB strategy (RR=1.0 only, slippage kills edge)
+TERTIARY_INSTRUMENT = None   # MPL not suitable for ORB strategy (RR=1.0 only, slippage kills edge)
+ENABLE_SECONDARY = False  # No secondary instruments available
 
 # ============================================================================
 # SESSION DEFINITIONS (LOCAL TIME UTC+10)
@@ -81,67 +86,51 @@ PROXIMITY_TAG_WINDOW_MIN = 5  # Minutes to tag second level
 # ORB STRATEGY PARAMETERS (INSTRUMENT-SPECIFIC)
 # ============================================================================
 
-# MGC (Micro Gold) - CANONICAL Configuration
-# Source: Database verification (2026-01-14)
-# Note: Win rates are per TRADE (excluding no-breakout days)
-MGC_ORB_CONFIGS = {
-    "0900": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.3% days break, 71.5% WR, +0.431R avg, ~+111R/yr
-    "1000": {"rr": 3.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.7% days break, 67.1% WR, +0.342R avg, ~+88R/yr
-    "1100": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},  # 70.7% days break, 72.5% WR, +0.449R avg, ~+116R/yr
-    "1800": {"rr": 1.0, "sl_mode": "HALF", "tier": "DAY"},  # 70.5% days break, 71.3% WR, +0.425R avg, ~+110R/yr
-    "2300": {"rr": 1.0, "sl_mode": "HALF", "tier": "NIGHT"},  # 70.5% days break, 69.3% WR, +0.387R avg, ~+100R/yr
-    "0030": {"rr": 1.0, "sl_mode": "HALF", "tier": "NIGHT"},  # 70.7% days break, 61.6% WR, +0.231R avg, ~+60R/yr
-}
+# IMPORTANT: Configurations now AUTO-GENERATED from validated_setups database!
+# This eliminates manual sync errors between database and config.
+# Single source of truth: gold.db → validated_setups table
+# See: config_generator.py for implementation
 
-MGC_ORB_SIZE_FILTERS = {
-    "2300": 0.155,  # Skip if orb_size > 0.155 * ATR(20)
-    "0030": 0.112,  # Skip if orb_size > 0.112 * ATR(20)
-    "1100": 0.095,  # Skip if orb_size > 0.095 * ATR(20)
-    "1000": 0.088,  # Skip if orb_size > 0.088 * ATR(20)
-    "0900": None,   # No filter
-    "1800": None,   # No filter (session open, not exhaustion)
-}
+# MGC (Micro Gold) - DYNAMICALLY LOADED FROM DATABASE
+# Source: validated_setups table (automatically updated by populate_validated_setups.py)
+# History: CORRECTED Configuration (2026-01-16 SCAN WINDOW BUG FIX)
+# - Extended scan windows to 09:00 next day (was stopping too early!)
+# - OLD BUG: Night ORBs scanned only 85min, missed 30+ point moves
+# - NEW FIX: All ORBs scan until next Asia open - captures full overnight moves
+# - RESULT: System improved from +400R/year to +600R/year (+50%!)
+# Expected configs (auto-loaded):
+#   0900: RR=6.0, FULL SL (A TIER) ~+51R/year
+#   1000: RR=8.0, FULL SL (S+ TIER - CROWN JEWEL!) ~+98R/year
+#   1100: RR=3.0, FULL SL (A TIER) ~+56R/year
+#   1800: RR=1.5, FULL SL (S TIER) ~+72R/year
+#   2300: RR=1.5, HALF SL, Filter=0.155 (S+ TIER - BEST OVERALL!) ~+105R/year
+#   0030: RR=3.0, HALF SL, Filter=0.112 (S TIER) ~+66R/year
 
-# NQ (Micro Nasdaq) - Optimized configuration
-NQ_ORB_CONFIGS = {
-    "0900": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},     # +0.145R avg (with filter)
-    "1000": {"rr": 1.5, "sl_mode": "FULL", "tier": "DAY"},     # +0.174R avg
-    "1100": {"rr": 1.5, "sl_mode": "FULL", "tier": "DAY"},     # +0.260R avg
-    "1800": {"rr": 1.5, "sl_mode": "HALF", "tier": "DAY"},     # +0.257R avg
-    "2300": {"rr": None, "sl_mode": None, "tier": "SKIP"},     # SKIP (negative)
-    "0030": {"rr": 1.0, "sl_mode": "HALF", "tier": "NIGHT"},   # +0.292R avg
-}
+MGC_ORB_CONFIGS, MGC_ORB_SIZE_FILTERS = load_instrument_configs('MGC')
 
-NQ_ORB_SIZE_FILTERS = {
-    "0900": 0.050,  # Small ORBs only (+233% improvement!)
-    "1000": 0.100,  # Filter large ORBs
-    "1100": 0.100,  # Filter large ORBs
-    "1800": 0.120,  # Filter large ORBs
-    "2300": None,   # SKIP this ORB entirely
-    "0030": None,   # No filter (baseline best)
-}
+# NQ (Micro Nasdaq) - DYNAMICALLY LOADED FROM DATABASE
+# Source: validated_setups table (extended scan window validation 2024-01-01 to 2026-01-10)
+# History: NOT SUITABLE FOR ORB STRATEGY (2026-01-16 ANALYSIS)
+# - FINDING: Optimal RR=1.0 for all ORBs, but moves don't extend enough
+# - PROBLEM: Sharp dropoff in WR at RR=1.25+ (e.g., 62% → 32% for 1100 ORB)
+# - REALITY: Slippage (~0.2R per trade) makes RR=1.0 breakeven or negative in live trading
+# - CONCLUSION: NQ moves are too tight/choppy for this ORB strategy
+# - RECOMMENDATION: Focus on MGC which has RR=3.0-8.0 with huge slippage buffers
+# Note: Database may contain RR=1.0 configs for reference, but not recommended for live trading
 
-# MPL (Platinum) - VALIDATED CONFIGURATION (2026-01-15)
-# Backtest: 365 days (2025-01-13 to 2026-01-12), ALL 6 ORBs profitable
-# Total: +288R, Win rates: 55-67%, GREEN LIGHT for live trading
-# Note: Full-size PL contracts ($50/point), excellent diversification with MGC/NQ
-MPL_ORB_CONFIGS = {
-    "0900": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},      # 57.6% WR, +55R (Tier B)
-    "1000": {"rr": 1.0, "sl_mode": "FULL", "tier": "SWING"},    # 56.1% WR, +31R (Tier C)
-    "1100": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},      # 67.1% WR, +88R (Tier A - BEST)
-    "1800": {"rr": 1.0, "sl_mode": "FULL", "tier": "SWING"},    # 55.1% WR, +27R (Tier C)
-    "2300": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},      # 62.9% WR, +77R (Tier A - EXCELLENT)
-    "0030": {"rr": 1.0, "sl_mode": "FULL", "tier": "DAY"},      # 58.0% WR, +52R (Tier B)
-}
+NQ_ORB_CONFIGS, NQ_ORB_SIZE_FILTERS = load_instrument_configs('NQ')
 
-MPL_ORB_SIZE_FILTERS = {
-    "2300": None,  # No filter (strong baseline)
-    "0030": None,  # No filter (strong baseline)
-    "1100": None,  # No filter (BEST ORB - 67.1% WR)
-    "1000": None,  # No filter (baseline sufficient)
-    "0900": None,  # No filter (strong baseline)
-    "1800": None,  # No filter (baseline sufficient)
-}
+# MPL (Platinum) - DYNAMICALLY LOADED FROM DATABASE
+# Source: validated_setups table (extended scan window validation 2025-01-13 to 2026-01-12)
+# History: NOT SUITABLE FOR ORB STRATEGY (2026-01-16 ANALYSIS)
+# - FINDING: Optimal RR=1.0 for all ORBs, but moves don't extend enough
+# - PROBLEM: Sharp dropoff in WR at RR=1.25+ (e.g., 67% → 38% for 1100 ORB)
+# - REALITY: Slippage (~0.2R per trade) makes RR=1.0 breakeven or negative in live trading
+# - CONCLUSION: MPL moves are too tight/choppy for this ORB strategy
+# - RECOMMENDATION: Focus on MGC which has RR=3.0-8.0 with huge slippage buffers
+# Note: Database may contain RR=1.0 configs for reference, but not recommended for live trading
+
+MPL_ORB_CONFIGS, MPL_ORB_SIZE_FILTERS = load_instrument_configs('MPL')
 
 # Dynamic configs (loaded based on selected instrument)
 ORB_CONFIGS = MGC_ORB_CONFIGS  # Default to MGC
@@ -186,7 +175,7 @@ RISK_LIMITS = {
 # ============================================================================
 # DATABASE
 # ============================================================================
-DB_PATH = "trading_app.db"  # Separate from backtest DB
+DB_PATH = "live_data.db"  # Live market data (LiveDataLoader writes here)
 JOURNAL_TABLE = "live_journal"
 
 # ============================================================================
@@ -195,6 +184,38 @@ JOURNAL_TABLE = "live_journal"
 CHART_HEIGHT = 600
 CHART_LOOKBACK_BARS = 200
 UPDATE_INTERVAL_MS = 5000  # 5 seconds
+
+# ============================================================================
+# MOBILE UI CONFIGURATION
+# ============================================================================
+MOBILE_MODE = os.getenv("MOBILE_MODE", "false").lower() == "true"  # Toggle for mobile layout
+MOBILE_CHART_HEIGHT = 350  # Smaller chart for mobile (vs 600 desktop)
+MOBILE_BUTTON_SIZE = 48  # Minimum touch target (px) - iOS/Android standard
+MOBILE_FONT_SCALE = 1.2  # Scale fonts up for readability on small screens
+
+# Card configuration
+ENABLE_CARDS = ["dashboard", "chart", "trade", "positions", "ai"]  # All cards enabled
+DEFAULT_CARD = "dashboard"  # Start on dashboard card
+
+# Touch optimization
+ENABLE_SWIPE_GESTURES = True  # Enable swipe navigation between cards
+SNAP_TO_CARDS = True  # CSS scroll-snap for card alignment
+
+# ============================================================================
+# ML/AI CONFIGURATION
+# ============================================================================
+ML_ENABLED = os.getenv("ML_ENABLED", "true").lower() == "true"  # Enable ML predictions
+ML_CONFIDENCE_THRESHOLD = float(os.getenv("ML_CONFIDENCE_THRESHOLD", "0.55"))  # Minimum confidence to show
+ML_HIGH_CONFIDENCE = float(os.getenv("ML_HIGH_CONFIDENCE", "0.65"))  # High confidence threshold
+ML_CACHE_TTL = int(os.getenv("ML_CACHE_TTL", "300"))  # Cache TTL in seconds (5 minutes)
+ML_MAX_INFERENCE_TIME = float(os.getenv("ML_MAX_INFERENCE_TIME", "0.1"))  # Max inference time in seconds
+ML_SHADOW_MODE = os.getenv("ML_SHADOW_MODE", "true").lower() == "true"  # Shadow mode: log only, don't act
+ML_RISK_ADJUSTMENT_ENABLED = os.getenv("ML_RISK_ADJUSTMENT", "false").lower() == "true"  # Adjust position size based on ML confidence
+
+# ML Model versions (set to 'latest' to auto-load newest)
+ML_DIRECTIONAL_MODEL_VERSION = os.getenv("ML_DIRECTIONAL_VERSION", "latest")
+ML_ENTRY_QUALITY_MODEL_VERSION = os.getenv("ML_ENTRY_QUALITY_VERSION", "latest")
+ML_R_MULTIPLE_MODEL_VERSION = os.getenv("ML_R_MULTIPLE_VERSION", "latest")
 
 # ============================================================================
 # LOGGING

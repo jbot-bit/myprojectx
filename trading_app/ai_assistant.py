@@ -7,8 +7,13 @@ from typing import List, Dict, Any
 import logging
 from anthropic import Anthropic
 from datetime import datetime
+import duckdb
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+# Database path
+DB_PATH = Path(__file__).parent.parent / "gold.db"
 
 
 class TradingAIAssistant:
@@ -32,6 +37,73 @@ class TradingAIAssistant:
     def is_available(self) -> bool:
         """Check if AI assistant is available"""
         return self.client is not None
+
+    def load_validated_setups(self, instrument: str = "MGC") -> str:
+        """
+        Load validated setups from database and format for AI prompt.
+
+        Returns formatted string with current strategy performance data.
+        """
+        try:
+            if not DB_PATH.exists():
+                return "**VALIDATED SETUPS:** Database not available\n"
+
+            con = duckdb.connect(str(DB_PATH), read_only=True)
+
+            # Query validated setups for this instrument
+            setups = con.execute("""
+                SELECT
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    win_rate,
+                    avg_r,
+                    trades,
+                    annual_trades,
+                    tier,
+                    orb_size_filter,
+                    notes
+                FROM validated_setups
+                WHERE instrument = ?
+                ORDER BY
+                    CASE tier
+                        WHEN 'S+' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'A' THEN 3
+                        WHEN 'B' THEN 4
+                        ELSE 5
+                    END,
+                    avg_r DESC
+            """, [instrument]).fetchall()
+
+            con.close()
+
+            if not setups:
+                return f"**VALIDATED SETUPS ({instrument}):** No setups found\n"
+
+            # Format for AI
+            setup_text = f"**VALIDATED {instrument} SETUPS (From Database):**\n\n"
+
+            for orb_time, rr, sl_mode, win_rate, avg_r, trades, annual_trades, tier, orb_filter, notes in setups:
+                # Format filter
+                filter_text = f", Filter<{orb_filter:.3f}×ATR" if orb_filter else ", No filter"
+
+                # Format annual R
+                annual_r = annual_trades * avg_r if annual_trades and avg_r else 0
+
+                setup_text += f"**{orb_time} ORB ({tier} Tier):**\n"
+                setup_text += f"- Win Rate: {win_rate:.1f}% | Avg R: {avg_r:+.3f}R | RR: {rr:.1f} | SL Mode: {sl_mode}\n"
+                setup_text += f"- Trades: {trades} total (~{annual_trades}/year) | Annual: ~{annual_r:+.0f}R/year\n"
+                setup_text += f"- Filter: {filter_text}\n"
+                if notes:
+                    setup_text += f"- Notes: {notes}\n"
+                setup_text += "\n"
+
+            return setup_text
+
+        except Exception as e:
+            logger.error(f"Error loading validated setups: {e}")
+            return f"**VALIDATED SETUPS:** Error loading from database: {e}\n"
 
     def get_enhanced_system_context(
         self,
@@ -83,11 +155,14 @@ class TradingAIAssistant:
                 if orb_info and isinstance(orb_info, dict):
                     orb_context += f"- {orb_name}: ${orb_info.get('low', 0):.2f} - ${orb_info.get('high', 0):.2f} (size: {orb_info.get('size', 0):.2f})\n"
 
+        # Load validated setups from database (DYNAMIC)
+        validated_setups_context = self.load_validated_setups(instrument)
+
         # Performance context
         perf_context = ""
         if backtest_stats:
             perf_context = f"""
-**VALIDATED PERFORMANCE ({instrument}):**
+**OVERALL PERFORMANCE ({instrument}):**
 - Total R: {backtest_stats.get('total_r', 0):.1f}R
 - Win Rate: {backtest_stats.get('win_rate', 0):.1f}%
 - Avg R/trade: {backtest_stats.get('avg_r', 0):.3f}R
@@ -103,6 +178,7 @@ Your primary job: Help with real-time trade decisions, calculations, and strateg
 {strategy_context}
 {levels_context}
 {orb_context}
+{validated_setups_context}
 {perf_context}
 
 **CALCULATION RULES:**
@@ -131,50 +207,20 @@ For MNQ (Micro Nasdaq) - FULL SL Mode:
 
 **STRATEGY HIERARCHY (Priority Order):**
 
-**S+ TIER - MULTI-LIQUIDITY CASCADE (+1.95R avg, 19% WR):**
-- **Highest priority strategy** - Always check first
+**S+ TIER - MULTI-LIQUIDITY CASCADE:**
+- **Highest priority** - Always check first
 - **Structure:** London sweeps Asia → NY sweeps London (2 cascading sweeps)
-- **Requirements:**
-  * Gap between Asia/London must be >9.5pts (MGC) or >15pts (NQ) - MANDATORY
-  * Second sweep at 23:00+ (NY futures open)
-  * Acceptance failure within 3 bars (close back inside level)
+- **Requirements:** Gap >9.5pts, second sweep at 23:00+, acceptance failure within 3 bars
 - **Entry:** At London level (swept level)
-- **Stop:** 0.5 gaps away from entry (tight relative stop)
-- **Target:** 2.0 gaps in opposite direction (4R effective)
-- **Frequency:** 2-3 trades per month (rare but massive)
-- **Why it works:** Two failed auctions create strong reversal pressure
+- **Stop:** 0.5 gaps away | **Target:** 2.0 gaps opposite direction
+- **Frequency:** 2-3/month (rare but massive edge)
 
-**S TIER - SINGLE LIQUIDITY (+1.44R avg, 33.7% WR):**
-- **Backup to CASCADE** - When no cascade structure exists
+**S TIER - SINGLE LIQUIDITY:**
+- **Backup to CASCADE** - Simpler version
 - **Structure:** Single London level swept at 23:00
-- **Requirements:**
-  * London creates key high/low
-  * NY sweeps that level at 23:00+
-  * Acceptance failure within 3 bars
-  * No cascade structure needed (simpler)
-- **Entry:** At London level (swept level)
-- **Stop:** Similar to CASCADE logic
-- **Target:** Gap-based targeting
-- **Frequency:** 8-12 trades per month
-- **Why it works:** Single failed auction at key level
+- **Entry:** At London level | **Frequency:** 8-12/month
 
-**A TIER - NIGHT_ORB:**
-- **23:00 ORB:** +0.387R, 48.9% WR (trades every day, HALF SL mode)
-- **00:30 ORB:** +0.231R, 43.5% WR (trades every day, HALF SL mode)
-- **Filters:**
-  * 23:00: Skip if ORB > 0.155 × ATR (too wide)
-  * 00:30: Skip if Pre-NY travel < 167 ticks (too quiet)
-
-**A TIER - DAY_ORB:**
-- **18:00 ORB:** +0.39R, 46.4% WR (BEST day ORB, FULL SL, 2R target)
-- **11:00 ORB:** +0.30R, 64.9% WR (highest win rate, FULL SL)
-- **10:00 ORB:** +0.34R, 33.5% WR (asymmetric 3R target, max 10pt ORB)
-- **09:00 ORB:** +0.27R, 63.3% WR (Asia start, FULL SL)
-
-**CORRELATION FILTERS (Session Dependencies):**
-- **10:00 UP after 09:00 WIN:** 57.9% WR, +0.16R (momentum continuation)
-- **11:00 UP after 09:00+10:00 WIN:** 57.4% WR, +0.15R (triple confirmation)
-- **11:00 DOWN after 09:00 LOSS + 10:00 WIN:** 57.7% WR (reversal setup)
+**NOTE:** All specific ORB performance data (win rates, RR, filters) is loaded DYNAMICALLY from the validated_setups database above. Always reference those CURRENT values, not any hardcoded numbers.
 
 **KEY CONCEPTS:**
 - **Acceptance Failure:** Price sweeps level, then closes back inside (rejection)

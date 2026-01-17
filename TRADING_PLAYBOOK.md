@@ -8,6 +8,8 @@ This playbook contains ONLY edges that are 100% reproducible in live trading. Al
 
 **The V1 playbook (previous version) had lookahead bias and showed inflated win rates. This is the HONEST version.**
 
+**✨ NEW:** Mobile Trading Hub with ML predictions now available! See [Using the Mobile App](#using-the-mobile-app-for-playbook-execution) below.
+
 ---
 
 ## Quick Reference - Real Edges
@@ -425,6 +427,195 @@ python check_db.py
 
 ---
 
+## Using the Mobile App for Playbook Execution
+
+### Mobile Trading Hub (NEW - Jan 2026)
+
+The **Mobile Trading Hub** (`START_MOBILE_APP.bat`) provides a Tinder-style card interface optimized for executing this playbook in real-time.
+
+**Key Features:**
+
+1. **Dashboard Card** - Shows all critical info at a glance:
+   - Live price + ATR
+   - Next ORB countdown
+   - Filter status (PASS/SKIP)
+   - ML directional prediction with confidence
+   - Market intelligence (current session)
+   - Safety status (data quality + market hours + risk limits)
+   - Upcoming high-quality setups
+
+2. **Chart Card** - Enhanced visualization:
+   - Live chart with ORB zones
+   - Entry/stop/target levels when setup active
+   - Directional bias for 1100 ORB
+   - Mobile-optimized 350px height
+
+3. **Trade Calculator Card** - Quick level calculations:
+   - Enter ORB high/low
+   - Select direction (LONG/SHORT)
+   - Set RR ratio
+   - Get instant stop/target prices
+   - Position sizing based on account
+
+4. **Positions Card** - Monitor active trades:
+   - Live P&L tracking (dollars + R-multiples)
+   - Progress bar to target
+   - Color-coded gains/losses
+
+5. **AI Chat Card** - Trading assistant:
+   - Ask strategy questions
+   - Get trade calculations
+   - Learn why setups work
+   - Strategy knowledge base
+
+### ML Integration (Shadow Mode)
+
+**How ML Enhances the Playbook:**
+
+The mobile app includes ML predictions trained on 740 days of MGC data:
+- **Directional bias**: Predicts UP/DOWN/NONE with confidence (55-60% accuracy)
+- **Expected R**: Estimates expected R-multiple for the setup
+- **Shadow mode**: ML enhances confidence but doesn't override playbook rules
+
+**When to Use ML:**
+
+1. **10:00 ORB UP** - Check ML confidence:
+   - ML says UP with >60% confidence → Increase size to 1.5%
+   - ML says UP with 50-60% confidence → Standard size 1.0%
+   - ML says DOWN → Reduce size to 0.5% or skip
+
+2. **11:00 ORB** - Use ML for tie-breaking:
+   - Multiple setups valid → Follow ML direction
+   - Unclear correlation pattern → ML provides context
+
+3. **1100 ORB** - Directional Bias feature:
+   - Analyzes market structure
+   - Predicts which way ORB will break
+   - Shows confidence percentage
+   - Helps focus preparation
+
+**ML Limitations:**
+- Not perfect (55-60% accuracy)
+- Sometimes unavailable (no active setup)
+- Should enhance, not replace, playbook rules
+- Best used as confirmation, not primary signal
+
+### Playbook + Mobile App Workflow
+
+**Morning (08:00-09:00):**
+```
+1. Launch mobile app (START_MOBILE_APP.bat)
+2. Check Dashboard card:
+   - Current ATR
+   - Upcoming ORBs
+   - Setup Scanner results
+3. Review Safety Status (must be ✅ SAFE)
+4. Check ML predictions for today's setups
+5. Plan which ORBs to trade based on playbook rules
+```
+
+**During 10:00 ORB (Best Setup):**
+```
+1. Dashboard shows "PREPARE" at 09:55
+2. Check ML insights:
+   - Direction: 🚀 UP
+   - Confidence: 68%
+   - Expected R: +0.15
+3. Swipe to Chart → Watch ORB form (10:00-10:05)
+4. ORB forms → Swipe to Trade Calculator
+5. Enter ORB high/low → Calculate levels
+6. Check if 09:00 was WIN (correlation boost to 57.9% WR)
+7. Enter trade → Swipe to Positions → Monitor P&L
+```
+
+**Questions During Trading:**
+```
+1. Swipe to AI Chat card
+2. Ask: "Should I take this 10:00 DOWN setup?"
+3. AI responds with playbook context (47.3% WR, -0.07 R, avoid)
+4. Ask: "Why is 10:00 UP better than DOWN?"
+5. AI explains historical edge
+```
+
+### Mobile App Documentation
+
+**Complete Guide**: See `MOBILE_APP_README.md` for:
+- Full feature documentation
+- Card-by-card walkthrough
+- ML system details
+- Safety checks explanation
+- Troubleshooting guide
+- Technical architecture
+
+**Quick Start**:
+```bash
+# Launch mobile app
+START_MOBILE_APP.bat
+
+# Access from phone (same Wi-Fi)
+http://YOUR_PC_IP:8501
+```
+
+**ML User Guide**: See `ML_USER_GUIDE.md` for:
+- How ML predictions work
+- Training methodology
+- Accuracy metrics
+- When to trust predictions
+- Integration with strategy engine
+
+### Combining Playbook Rules + ML + Mobile App
+
+**Decision Framework:**
+
+1. **Start with Playbook Rules** (highest priority):
+   - Is this ORB time tradeable? (10:00, 18:00 yes; others conditional)
+   - Does PRE block filter pass?
+   - Do ORB correlations support this direction?
+
+2. **Check Safety Status** (must pass):
+   - Data quality ✓
+   - Market hours ✓
+   - Risk limits ✓
+
+3. **Use ML as Confidence Adjustment**:
+   - ML agrees with playbook → Increase size 20-50%
+   - ML neutral → Standard size
+   - ML disagrees → Reduce size 50% or skip
+
+4. **Execute via Mobile Interface**:
+   - Dashboard: Monitor countdown + filter
+   - Chart: Watch ORB formation
+   - Trade Calc: Get levels instantly
+   - Positions: Track P&L in real-time
+   - AI Chat: Ask questions anytime
+
+**Example Decision:**
+
+**Setup**: 10:00 ORB at 10:05
+- ORB: 2700-2706 (6pts)
+- ATR: 40pts
+- PRE_ASIA: 60 ticks (>50 ✓)
+- 09:00 outcome: WIN ✓
+- Breakout direction: UP
+
+**Playbook says:**
+- 10:00 UP baseline: 55.5% WR, +0.11 R
+- 10:00 UP after 09:00 WIN: 57.9% WR, +0.16 R
+- **Action**: TRADE with high confidence
+
+**ML says:**
+- Direction: 🚀 UP
+- Confidence: 72%
+- Expected R: +0.18
+
+**Final Decision:**
+- Playbook + ML both agree → **STRONG TRADE**
+- Position size: 1.5% (increased confidence)
+- Enter via Trade Calculator
+- Monitor via Positions card
+
+---
+
 ## Honesty Statement
 
 **This system will NOT make you rich quickly.**
@@ -445,7 +636,8 @@ python check_db.py
 
 ---
 
-**Last Updated:** 2026-01-11
+**Last Updated:** 2026-01-17 (Added Mobile App + ML Integration section)
 **Data Through:** 2026-01-10
 **Analysis Method:** Zero Lookahead V2
 **Total Days:** 739
+**Mobile App:** See MOBILE_APP_README.md for complete feature guide

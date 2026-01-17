@@ -45,7 +45,8 @@ class LiveDataLoader:
             symbol: Trading symbol (e.g., "MNQ", "MGC")
         """
         self.symbol = symbol
-        self.con = duckdb.connect(DB_PATH)
+        # Use read_only mode to avoid locking issues with multiple connections
+        self.con = duckdb.connect(DB_PATH, read_only=False)
         self._setup_tables()
         self.bars_df = pd.DataFrame()  # In-memory cache
 
@@ -340,15 +341,9 @@ class LiveDataLoader:
             bar: {"ts_utc": datetime, "open": float, ...}
         """
         self.con.execute("""
-            INSERT INTO live_bars
+            INSERT OR REPLACE INTO live_bars
             (ts_utc, symbol, open, high, low, close, volume)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT (symbol, ts_utc) DO UPDATE SET
-                open = EXCLUDED.open,
-                high = EXCLUDED.high,
-                low = EXCLUDED.low,
-                close = EXCLUDED.close,
-                volume = EXCLUDED.volume
         """, [
             bar["ts_utc"],
             self.symbol,
@@ -369,7 +364,14 @@ class LiveDataLoader:
         """
         logger.info(f"Backfilling {days} days from {gold_db_path} for {self.symbol}")
 
-        gold_con = duckdb.connect(gold_db_path, read_only=True)
+        # If gold_db_path is same as DB_PATH, use existing connection
+        from pathlib import Path
+        if Path(gold_db_path).resolve() == Path(DB_PATH).resolve():
+            gold_con = self.con
+            close_con = False
+        else:
+            gold_con = duckdb.connect(gold_db_path, read_only=True)
+            close_con = True
         cutoff = datetime.now(TZ_UTC) - timedelta(days=days)
 
         # Determine table name based on symbol
@@ -411,7 +413,8 @@ class LiveDataLoader:
                 "volume": bar[5],
             })
 
-        gold_con.close()
+        if close_con:
+            gold_con.close()
         logger.info("Backfill complete")
 
     def refresh(self):

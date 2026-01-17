@@ -1,1 +1,351 @@
 2026-01-14 11:54:44.803 Port 8506 is already in use
+2026-01-16 09:01:28,966 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 09:01:29,449 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:08:16,806 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:08:17,202 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:08:21,743 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:08:21,744 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:08:22,933 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:08:22,934 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:08:22,934 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:08:22,934 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 18:08:22,967 - __main__ - ERROR - Data load error: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 191, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 396, in backfill_from_gold_db
+    bars = gold_con.execute(query, params).fetchall()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+2026-01-16 18:08:28,636 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:08:28,636 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:08:29,825 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:08:29,825 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:08:29,825 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:08:29,826 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 18:08:29,827 - __main__ - ERROR - Data load error: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 191, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 396, in backfill_from_gold_db
+    bars = gold_con.execute(query, params).fetchall()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+2026-01-16 18:11:27,229 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:11:27,584 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:11:33,014 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:11:33,015 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:11:34,224 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:11:34,225 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:11:34,225 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:11:34,225 - data_loader - INFO - Backfilling 7 days from ../gold.db for MGC
+2026-01-16 18:11:34,237 - __main__ - ERROR - Data load error: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 191, in <module>
+    loader.backfill_from_gold_db("../gold.db", days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 396, in backfill_from_gold_db
+    bars = gold_con.execute(query, params).fetchall()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 3:                 FROM bars_1m
+                             ^
+2026-01-16 18:14:36,241 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:14:36,592 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:14:39,577 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:14:39,578 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:14:40,775 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:14:40,776 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:14:40,777 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:14:40,777 - data_loader - INFO - Backfilling 7 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:14:40,780 - __main__ - ERROR - Data load error: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 193, in <module>
+    loader.backfill_from_gold_db(gold_db_path, days=7)
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 367, in backfill_from_gold_db
+    gold_con = duckdb.connect(gold_db_path, read_only=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.ConnectionException: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+2026-01-16 18:16:04,774 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:16:05,144 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:16:08,661 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:16:08,662 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:16:09,850 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:16:09,851 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:16:09,852 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:16:09,852 - data_loader - INFO - Backfilling 7 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:16:09,980 - data_loader - INFO - Found 4510 bars to backfill from bars_1m
+2026-01-16 18:16:32,695 - data_loader - INFO - Backfill complete
+2026-01-16 18:16:33,907 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:16:45,329 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:16:45,330 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:16:45,333 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:16:45,372 - data_loader - WARNING - Could not get ATR from gold.db: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+2026-01-16 18:16:45,383 - __main__ - ERROR - Intelligence panel error: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 18:             FROM validated_setups
+                          ^
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 435, in <module>
+    render_intelligence_panel(
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\render_intelligence.py", line 161, in render_intelligence_panel
+    setups = detector.get_all_validated_setups(instrument)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\setup_detector.py", line 33, in get_all_validated_setups
+    result = con.execute("""
+             ^^^^^^^^^^^^^^^
+_duckdb.CatalogException: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 18:             FROM validated_setups
+                          ^
+2026-01-16 18:16:45,386 - data_loader - WARNING - Could not get ATR from gold.db: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+2026-01-16 18:16:46,597 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:16:47,346 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:19:45,593 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:19:46,020 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:19:52,037 - __main__ - ERROR - Data load error: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 182, in <module>
+    loader = LiveDataLoader(symbol)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\data_loader.py", line 49, in __init__
+    self.con = duckdb.connect(DB_PATH, read_only=False)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_duckdb.ConnectionException: Connection Error: Can't open a connection to same database file with a different configuration than existing connections
+2026-01-16 18:20:56,180 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:20:56,601 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:21:02,504 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:21:02,505 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:21:03,710 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:21:03,711 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:21:03,711 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:21:03,711 - data_loader - INFO - Backfilling 7 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:21:03,831 - data_loader - INFO - Found 4505 bars to backfill from bars_1m
+2026-01-16 18:21:33,119 - data_loader - INFO - Backfill complete
+2026-01-16 18:21:34,382 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:21:46,102 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:21:46,103 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:21:46,103 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:21:46,127 - __main__ - ERROR - Intelligence panel error: unsupported format string passed to NoneType.__format__
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_trading_hub.py", line 439, in <module>
+    render_intelligence_panel(
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\render_intelligence.py", line 175, in render_intelligence_panel
+    recommendation = market_intelligence.generate_recommendation(
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\market_intelligence.py", line 354, in generate_recommendation
+    return self._create_wait_recommendation(best, opportunities[1:3])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\market_intelligence.py", line 412, in _create_wait_recommendation
+    f"High: {setup.orb_high:.1f}, Low: {setup.orb_low:.1f}",
+            ^^^^^^^^^^^^^^^^^^^^
+TypeError: unsupported format string passed to NoneType.__format__
+2026-01-16 18:21:47,368 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:21:48,167 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:23:29,518 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:23:29,897 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:24:49,747 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:24:49,748 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:24:50,939 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:24:50,940 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:24:50,940 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:24:50,940 - data_loader - INFO - Backfilling 2 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:24:51,030 - data_loader - INFO - Found 362 bars to backfill from bars_1m
+2026-01-16 18:24:52,408 - data_loader - INFO - Backfill complete
+2026-01-16 18:24:53,603 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:25:02,813 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:26:02,416 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:26:02,759 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:26:07,136 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:26:07,137 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:26:08,392 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:26:08,393 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:26:08,393 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:26:08,394 - data_loader - INFO - Backfilling 2 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:26:08,399 - data_loader - INFO - Found 360 bars to backfill from bars_1m
+2026-01-16 18:26:08,984 - data_loader - INFO - Backfill complete
+2026-01-16 18:26:10,280 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:26:17,237 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:26:17,237 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:26:17,238 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:26:18,519 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:26:18,836 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:27:17,092 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:27:17,092 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:27:18,283 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:27:18,284 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:27:18,284 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:27:18,285 - data_loader - INFO - Backfilling 2 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:27:18,292 - data_loader - INFO - Found 359 bars to backfill from bars_1m
+2026-01-16 18:27:18,900 - data_loader - INFO - Backfill complete
+2026-01-16 18:27:20,152 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:27:27,150 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:27:27,151 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:27:27,152 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:27:28,417 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:27:28,738 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:30:29,155 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:30:29,610 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:31:54,977 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:31:55,305 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:31:58,623 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:31:58,624 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:31:59,829 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:31:59,830 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:31:59,830 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:31:59,831 - data_loader - INFO - Backfilling 2 days from C:\Users\sydne\OneDrive\myprojectx\gold.db for MGC
+2026-01-16 18:31:59,927 - data_loader - INFO - Found 355 bars to backfill from bars_1m
+2026-01-16 18:32:00,624 - data_loader - INFO - Backfill complete
+2026-01-16 18:32:01,828 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:32:08,609 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:32:08,610 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:32:08,611 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:32:09,878 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:32:10,255 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:32:38,921 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:32:39,340 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:33:45,459 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:33:45,844 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:33:51,870 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:33:51,871 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:33:53,067 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:33:53,068 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:33:53,069 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:33:54,305 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:01,660 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:34:02,883 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:10,529 - data_loader - INFO - Fetched 2759 bars from ProjectX for MGC
+2026-01-16 18:34:10,529 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:34:10,530 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:34:11,833 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:12,224 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:34:13,030 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^
+2026-01-16 18:34:31,726 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:34:31,727 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:34:32,937 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:34:32,938 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:34:32,938 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:34:34,144 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:41,028 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:34:42,254 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:49,021 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:34:49,022 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:34:49,023 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:34:50,246 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:34:50,580 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:34:50,686 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^
+2026-01-16 18:36:33,830 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:36:34,184 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:37:26,169 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 18:37:26,170 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 18:37:27,337 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 18:37:27,338 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 18:37:27,338 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 18:37:28,543 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:37:35,599 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:37:36,826 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:37:43,561 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 18:37:43,561 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 18:37:43,562 - __main__ - INFO - Data initialized for MGC
+2026-01-16 18:37:44,841 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 18:37:45,230 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 18:37:46,043 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^
+2026-01-16 18:45:07,386 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:45:07,807 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 18:50:19,427 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 18:50:19,813 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 19:06:52,168 - ai_memory - INFO - AI memory schema initialized
+2026-01-16 19:06:52,549 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-16 19:07:52,093 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-16 19:07:52,096 - data_loader - INFO - ProjectX authentication successful
+2026-01-16 19:07:53,276 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-16 19:07:53,277 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-16 19:07:53,278 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-16 19:07:54,516 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:08:01,899 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 19:08:03,123 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:08:09,769 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-16 19:08:09,770 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-16 19:08:09,772 - __main__ - INFO - Data initialized for MGC
+2026-01-16 19:08:11,088 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:08:11,525 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 19:08:11,877 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^
+2026-01-16 19:08:50,722 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:08:50,906 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:08:51,524 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 19:08:51,656 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 19:09:01,422 - httpx - INFO - HTTP Request: POST https://api.anthropic.com/v1/messages "HTTP/1.1 200 OK"
+2026-01-16 19:09:01,446 - ai_memory - ERROR - Error saving message to memory: Object of type ActionType is not JSON serializable
+2026-01-16 19:09:01,458 - ai_memory - ERROR - Error saving message to memory: Object of type ActionType is not JSON serializable
+2026-01-16 19:09:02,809 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-16 19:09:03,295 - data_loader - INFO - Fetched 200 bars from ProjectX for MGC
+2026-01-16 19:09:03,357 - ai_memory - ERROR - Error getting recent trades: Parser Error: syntax error at or near "?"
+
+LINE 4: ...               WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
+                                                                          ^
+2026-01-17 03:44:06,517 - ai_memory - INFO - AI memory schema initialized
+2026-01-17 03:44:06,925 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5
+2026-01-17 03:44:29,834 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Auth/loginKey "HTTP/1.1 200 OK"
+2026-01-17 03:44:29,836 - data_loader - INFO - ProjectX authentication successful
+2026-01-17 03:44:31,041 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/Contract/search "HTTP/1.1 200 OK"
+2026-01-17 03:44:31,041 - data_loader - INFO - Active contract: MGCG6 (ID: CON.F.US.MGC.G26)
+2026-01-17 03:44:31,042 - data_loader - INFO - ProjectX initialized for MGC: MGCG6
+2026-01-17 03:44:32,302 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-17 03:44:38,363 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-17 03:44:39,649 - httpx - INFO - HTTP Request: POST https://api.topstepx.com/api/History/retrieveBars "HTTP/1.1 200 OK"
+2026-01-17 03:44:45,127 - data_loader - INFO - Fetched 2760 bars from ProjectX for MGC
+2026-01-17 03:44:47,129 - ml_inference.inference_engine - INFO - Loading model from C:\Users\sydne\OneDrive\myprojectx\ml_models\registry\directional_v1\v_20260117_023515
+2026-01-17 03:44:47,156 - ml_inference.inference_engine - INFO - Loaded lightgbm model (version: v_20260117_023515)
+2026-01-17 03:44:47,157 - ml_inference.inference_engine - INFO - Features: 58
+2026-01-17 03:44:47,157 - ml_inference.inference_engine - INFO - Directional model loaded successfully
+2026-01-17 03:44:47,158 - ml_inference.inference_engine - INFO - ML Inference Engine initialized
+2026-01-17 03:44:47,158 - __main__ - INFO - ML engine initialized successfully
+2026-01-17 03:44:47,158 - strategy_engine - INFO - Loaded MGC-specific configs: CASCADE gap=9.5pts
+2026-01-17 03:44:47,159 - strategy_engine - INFO - ML engine enabled for strategy evaluation
+2026-01-17 03:44:47,159 - __main__ - INFO - Data initialized for MGC
+2026-01-17 03:44:47,273 - strategy_engine - ERROR - ML inference failed: unsupported operand type(s) for /: 'NoneType' and 'float'
+2026-01-17 03:44:47,283 - __main__ - ERROR - Card render error: cannot access local variable 'datetime' where it is not associated with a value
+Traceback (most recent call last):
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\app_mobile.py", line 292, in <module>
+    render_dashboard_card(
+  File "C:\Users\sydne\OneDrive\myprojectx\trading_app\mobile_ui.py", line 605, in render_dashboard_card
+    <div class="mobile-metric-subtitle">{datetime.now(TZ_LOCAL).strftime('%H:%M:%S')}</div>
+                                         ^^^^^^^^
+UnboundLocalError: cannot access local variable 'datetime' where it is not associated with a value
+2026-01-17 03:58:52,079 - ai_memory - INFO - AI memory schema initialized
+2026-01-17 03:58:52,513 - ai_assistant - INFO - AI assistant initialized with Claude Sonnet 4.5

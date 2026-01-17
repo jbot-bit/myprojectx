@@ -1,0 +1,231 @@
+
+================================================================================
+COMPLETE DATA ACCURACY AND CALCULATION AUDIT
+================================================================================
+
+This will verify all calculations and data integrity in your trading system.
+
+Press any key to start the audit...
+
+
+================================================================================
+COMPLETE DATA ACCURACY & CALCULATION AUDIT
+================================================================================
+
+This audit will verify:
+  1. Database schema and integrity
+  2. Config vs database synchronization
+  3. ORB calculation accuracy
+  4. Session statistics calculations
+  5. Trade level calculations (entry/stop/target)
+  6. Filter logic correctness
+  7. Data completeness and gaps
+  8. Timezone handling
+  9. Validated setups completeness
+  10. Risk/Reward mathematics
+
+Press Enter to start the audit...
+
+
+================================================================================
+←[94mCOMPLETE DATA ACCURACY & CALCULATION AUDIT←[0m
+================================================================================
+
+Started: 2026-01-16 13:07:02
+
+
+================================================================================
+←[94mAUDIT 1: Database Schema & Integrity←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: Table 'bars_1m' missing
+←[91m✗ FAIL←[0m: Table 'bars_5m' missing
+←[91m✗ FAIL←[0m: Table 'daily_features' missing
+←[91m✗ FAIL←[0m: Table 'validated_setups' missing
+←[91m✗ FAIL←[0m: Database schema audit failed: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 1: DESCRIBE bars_1m
+                 ^
+
+================================================================================
+←[94mAUDIT 2: Config vs Database Synchronization←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: Config sync audit failed: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 3:                 FROM validated_setups
+                             ^
+
+================================================================================
+←[94mAUDIT 3: ORB Calculation Accuracy←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: ORB calculation audit failed: Catalog Error: Table with name daily_features does not exist!
+Did you mean "sqlite_master"?
+
+LINE 7:                 FROM daily_features
+                             ^
+
+================================================================================
+←[94mAUDIT 4: Session Statistics Calculations←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: Session statistics audit failed: Catalog Error: Table with name daily_features does not exist!
+Did you mean "sqlite_master"?
+
+LINE 7:                 FROM daily_features
+                             ^
+
+================================================================================
+←[94mAUDIT 5: Trade Level Calculations←[0m
+================================================================================
+
+←[94mℹ INFO←[0m: Testing trade calculation formulas...
+
+  Test: LONG trade, FULL stop, 1.0 RR
+    entry: 100.00 ✓
+    stop: 99.00 ✓
+    target: 101.00 ✓
+    risk: 1.00 ✓
+    reward: 1.00 ✓
+
+  Test: LONG trade, HALF stop, 2.0 RR
+    entry: 100.00 ✓
+    stop: 99.50 ✓
+    target: 101.00 ✓
+    risk: 0.50 ✓
+    reward: 1.00 ✓
+
+  Test: SHORT trade, FULL stop, 1.5 RR
+    entry: 99.00 ✓
+    stop: 100.00 ✓
+    target: 97.50 ✓
+    risk: 1.00 ✓
+    reward: 1.50 ✓
+
+  Test: SHORT trade, HALF stop, 3.0 RR
+    entry: 99.00 ✓
+    stop: 99.50 ✓
+    target: 97.50 ✓
+    risk: 0.50 ✓
+    reward: 1.50 ✓
+
+←[92m✓ PASS←[0m: All trade calculation formulas are correct!
+
+================================================================================
+←[94mAUDIT 6: Filter Logic Accuracy←[0m
+================================================================================
+
+←[94mℹ INFO←[0m: Testing filter logic...
+
+←[92m✓ PASS←[0m: 2300 ORB: size=0.160, filter=0.155, pass=True (0.160 > 0.155) ✓
+←[92m✓ PASS←[0m: 2300 ORB: size=0.150, filter=0.155, pass=False (0.150 < 0.155) ✓
+←[92m✓ PASS←[0m: 0030 ORB: size=0.120, filter=0.112, pass=True (0.120 > 0.112) ✓
+←[92m✓ PASS←[0m: 0900 ORB: size=0.050, filter=None, pass=True (No filter (always pass)) ✓
+←[92m✓ PASS←[0m:
+All filter logic tests passed!
+
+================================================================================
+←[94mAUDIT 7: Data Completeness & Gaps←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: Data completeness audit failed: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 6:                 FROM bars_1m
+                             ^
+
+================================================================================
+←[94mAUDIT 8: Timezone Handling←[0m
+================================================================================
+
+←[94mℹ INFO←[0m: Configured local timezone: Australia/Brisbane
+
+←[92m✓ PASS←[0m: Timezone 'Australia/Brisbane' is valid
+←[94mℹ INFO←[0m: Current offset: +1000
+←[92m✓ PASS←[0m: Using Australia/Brisbane (UTC+10, no DST) - correct for trading
+
+================================================================================
+←[94mAUDIT 9: Validated Setups Database←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: Validated setups audit failed: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 5:                     FROM validated_setups
+                                 ^
+
+================================================================================
+←[94mAUDIT 10: Risk/Reward Mathematics←[0m
+================================================================================
+
+←[91m✗ FAIL←[0m: R:R math audit failed: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 8:                 FROM validated_setups
+                             ^
+
+================================================================================
+←[94mAUDIT SUMMARY←[0m
+================================================================================
+
+←[92mPASSES:    10←[0m
+←[93mWARNINGS:   0←[0m
+←[91mERRORS:    11←[0m
+────────────────────
+TOTAL:     21
+
+←[91m✗ FAIL←[0m: AUDIT FAILED - Critical errors found:
+  1. Schema: bars_1m missing
+  2. Schema: bars_5m missing
+  3. Schema: daily_features missing
+  4. Schema: validated_setups missing
+  5. Schema audit exception: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 1: DESCRIBE bars_1m
+                 ^
+  6. Config sync exception: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 3:                 FROM validated_setups
+                             ^
+  7. ORB calc exception: Catalog Error: Table with name daily_features does not exist!
+Did you mean "sqlite_master"?
+
+LINE 7:                 FROM daily_features
+                             ^
+  8. Session stats exception: Catalog Error: Table with name daily_features does not exist!
+Did you mean "sqlite_master"?
+
+LINE 7:                 FROM daily_features
+                             ^
+  9. Data completeness exception: Catalog Error: Table with name bars_1m does not exist!
+Did you mean "pg_am"?
+
+LINE 6:                 FROM bars_1m
+                             ^
+  10. Setups exception: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 5:                     FROM validated_setups
+                                 ^
+  11. R:R exception: Catalog Error: Table with name validated_setups does not exist!
+Did you mean "sqlite_temp_schema"?
+
+LINE 8:                 FROM validated_setups
+                             ^
+
+
+←[91m================================================================================
+✗✗✗ AUDIT FAILED - FIX ERRORS BEFORE TRADING ✗✗✗
+================================================================================←[0m
+
+Completed: 2026-01-16 13:07:03
+
+
+Audit complete! Review results above.
+
+Press any key to continue . . .

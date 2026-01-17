@@ -1,0 +1,650 @@
+"""
+UNIFIED TRADING APP
+Combines all features into one professional-grade trading system.
+
+Per UNIFIED_APP_ARCHITECTURE.md:
+- All 3 instruments (MGC, NQ, MPL)
+- Setup detection & unicorn alerts
+- AI assistant with context
+- Time-aware dashboard
+- Complete strategy inventory
+"""
+
+import streamlit as st
+import pandas as pd
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+import pytz
+import sys
+import os
+
+# Add trading_app to path
+sys.path.append('trading_app')
+
+from setup_detector import SetupDetector
+from config import *
+from ai_memory import AIMemoryManager
+from ai_assistant import TradingAIAssistant
+
+st.set_page_config(
+    page_title="Unified Trading Hub",
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Initialize
+if 'setup_detector' not in st.session_state:
+    st.session_state.setup_detector = SetupDetector('gold.db')
+if "memory_manager" not in st.session_state:
+    st.session_state.memory_manager = AIMemoryManager("trading_app.db")
+if "ai_assistant" not in st.session_state:
+    st.session_state.ai_assistant = TradingAIAssistant(st.session_state.memory_manager)
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+detector = st.session_state.setup_detector
+
+# Brisbane timezone
+TZ = pytz.timezone('Australia/Brisbane')
+now = datetime.now(TZ)
+
+# ============================================================================
+# SIDEBAR
+# ============================================================================
+
+with st.sidebar:
+    st.header("🎯 UNIFIED TRADING HUB")
+
+    # Instrument selector
+    instrument = st.selectbox(
+        "Select Instrument",
+        ["MGC", "NQ", "MPL"],
+        index=0
+    )
+
+    st.markdown("---")
+
+    # Live market data
+    st.subheader("📊 Live Market Data")
+    current_price = st.number_input(
+        f"{instrument} Current Price",
+        value=2650.0 if instrument == "MGC" else (21000.0 if instrument == "NQ" else 1000.0),
+        step=0.1 if instrument != "NQ" else 0.25,
+        format="%.1f" if instrument != "NQ" else "%.2f"
+    )
+
+    atr_20 = st.number_input(
+        "ATR(20)",
+        value=40.0 if instrument == "MGC" else (400.0 if instrument == "NQ" else 20.0),
+        step=0.1,
+        format="%.1f"
+    )
+
+    account_size = st.number_input(
+        "Account Size ($)",
+        value=25000,
+        step=1000,
+        format="%d",
+        help="Your total trading account size"
+    )
+
+    st.markdown("---")
+
+    # Quick stats
+    st.subheader("📈 Quick Stats")
+
+    # Get all setups for instrument
+    all_setups = detector.get_all_validated_setups(instrument)
+    elite_setups = detector.get_elite_setups(instrument)
+
+    st.metric("Total Setups", len(all_setups))
+    st.metric("Elite (S+/S)", len(elite_setups))
+
+    total_trades = sum(s['annual_trades'] for s in all_setups)
+    st.metric("Annual Trades", f"~{total_trades}")
+
+    st.markdown("---")
+
+    # Current time
+    st.write(f"**Time**: {now.strftime('%H:%M:%S')}")
+    st.write(f"**Date**: {now.strftime('%Y-%m-%d')}")
+
+# ============================================================================
+# MAIN CONTENT - TABS
+# ============================================================================
+
+tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    "🎯 LIVE TRADING",
+    "📊 INSTRUMENTS",
+    "🔍 STRATEGY DISCOVERY",
+    "📈 PERFORMANCE",
+    "🏆 STRATEGY INVENTORY",
+    "🤖 AI CHAT",
+    "📚 HOW TO USE"
+])
+
+# ============================================================================
+# TAB 1: LIVE TRADING
+# ============================================================================
+
+with tab1:
+    st.title(f"🎯 LIVE TRADING - {instrument}")
+
+    current_hour = now.hour
+    current_minute = now.minute
+
+    # Determine which ORB is active/upcoming
+    orb_times = {
+        "0900": (9, 0),
+        "1000": (10, 0),
+        "1100": (11, 0),
+        "1800": (18, 0),
+        "2300": (23, 0),
+        "0030": (0, 30)
+    }
+
+    active_orb = None
+    upcoming_orb = None
+
+    for orb_name, (hour, minute) in orb_times.items():
+        if current_hour == hour and current_minute >= minute and current_minute < minute + 30:
+            active_orb = orb_name
+            break
+
+    # Find next upcoming ORB
+    for orb_name, (hour, minute) in orb_times.items():
+        if hour > current_hour or (hour == 0 and current_hour >= 23):
+            upcoming_orb = orb_name
+            break
+
+    if not upcoming_orb:
+        upcoming_orb = "0900"
+
+    # WHAT TO DO RIGHT NOW
+    st.header("🔥 WHAT TO DO RIGHT NOW")
+
+    if active_orb:
+        st.success(f"### ⚡ {active_orb} ORB - ACTIVE!")
+
+        # Check if setup exists for this instrument
+        matches = detector.check_orb_setup(instrument, active_orb, 0, atr_20, now)
+
+        if matches:
+            best_setup = matches[0]
+
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Tier", best_setup['tier'])
+            with col2:
+                st.metric("Win Rate", f"{best_setup['win_rate']:.1f}%")
+            with col3:
+                st.metric("Avg R", f"+{best_setup['avg_r']:.3f}R")
+            with col4:
+                st.metric("SL Mode", best_setup['sl_mode'])
+
+            st.info(f"📋 {best_setup['notes']}")
+
+            # ORB input
+            st.subheader("📝 Enter ORB Details")
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                orb_high = st.number_input("ORB High", value=current_price + 2.0, step=0.1, format="%.1f")
+            with col2:
+                orb_low = st.number_input("ORB Low", value=current_price - 2.0, step=0.1, format="%.1f")
+            with col3:
+                live_price = st.number_input("Live Price", value=current_price, step=0.1, format="%.1f")
+
+            orb_size = orb_high - orb_low
+            orb_mid = (orb_high + orb_low) / 2
+
+            # Check filter
+            if best_setup.get('orb_size_filter'):
+                orb_size_pct = orb_size / atr_20 if atr_20 > 0 else 0
+                filter_passes = orb_size_pct <= best_setup['orb_size_filter']
+
+                if filter_passes:
+                    st.success(f"✅ Filter PASSES: ORB {orb_size_pct*100:.1f}% of ATR (limit: {best_setup['orb_size_filter']*100:.1f}%)")
+                else:
+                    st.error(f"❌ FILTER FAILS - SKIP THIS SETUP!")
+                    st.warning(f"⚠️ ORB is {orb_size_pct*100:.1f}% of ATR (limit: {best_setup['orb_size_filter']*100:.1f}%). ORB too large - historically performs poorly. Wait for next opportunity.")
+                    filter_passes = False
+            else:
+                st.info("✅ No filter - all sizes OK")
+
+            # Initialize variables
+            direction = None
+            entry = None
+            stop = None
+            target = None
+
+            # Only show trade details if filter passes
+            if filter_passes and live_price > orb_high:
+                st.success("### 🚀 LONG SETUP")
+                direction = "LONG"
+                entry = live_price
+                stop = orb_mid if best_setup['sl_mode'] == 'HALF' else orb_low
+                risk_points = entry - stop
+                target = entry + (risk_points * best_setup['rr'])  # FIX: Use actual RR target!
+            elif filter_passes and live_price < orb_low:
+                st.error("### 📉 SHORT SETUP")
+                direction = "SHORT"
+                entry = live_price
+                stop = orb_mid if best_setup['sl_mode'] == 'HALF' else orb_high
+                risk_points = stop - entry
+                target = entry - (risk_points * best_setup['rr'])  # FIX: Use actual RR target!
+            elif filter_passes:
+                st.warning("### ⏳ INSIDE RANGE - Wait for break")
+                # Variables already initialized above
+
+            if direction:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write(f"**Entry**: {entry:.1f}")
+                    st.write(f"**Stop**: {stop:.1f}")
+                    st.write(f"**Target**: {target:.1f}")
+                    st.write(f"**Risk**: {abs(entry - stop):.1f} points")
+
+                with col2:
+                    # Position sizing with tier-based risk
+                    risk_pct_map = {
+                        "S+": 0.25,  # Elite - lower risk, they're rare!
+                        "S": 0.50,   # Excellent
+                        "A": 0.50,   # Strong
+                        "B": 0.25,   # Good but lower conviction
+                        "C": 0.25    # Marginal
+                    }
+                    risk_pct = risk_pct_map.get(best_setup['tier'], 0.25)
+                    risk_dollars = account_size * (risk_pct / 100)
+
+                    point_values = {"MGC": 10, "NQ": 2, "MPL": 5}
+                    point_value = point_values[instrument]
+
+                    risk_points = abs(entry - stop)
+                    risk_per_contract = risk_points * point_value
+                    contracts = int(risk_dollars / risk_per_contract) if risk_per_contract > 0 else 0
+
+                    st.write(f"**Account**: ${account_size:,}")
+                    st.info(f"💡 **Risk**: {risk_pct}% (recommended for {best_setup['tier']} tier)")
+                    st.write(f"**Risk Amount**: ${risk_dollars:.0f}")
+                    st.write(f"**Contracts**: {contracts}")
+                    if contracts > 0:
+                        potential_profit = contracts * abs(target - entry) * point_value
+                        st.write(f"**Potential Profit**: ${potential_profit:.0f}")
+        else:
+            st.warning(f"No validated setup found for {instrument} {active_orb} ORB")
+            st.write("This ORB may not be profitable for this instrument.")
+    else:
+        st.info(f"### ⏰ No ORB active right now - Next: {upcoming_orb}")
+
+        # Show next ORB details
+        st.subheader(f"📅 Upcoming: {upcoming_orb} ORB")
+
+        matches = detector.check_orb_setup(instrument, upcoming_orb, 0, atr_20, now)
+        if matches:
+            setup = matches[0]
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Tier", setup['tier'])
+            with col2:
+                st.metric("Win Rate", f"{setup['win_rate']:.1f}%")
+            with col3:
+                st.metric("Avg R", f"+{setup['avg_r']:.3f}R")
+
+            st.info(f"📋 {setup['notes']}")
+
+# ============================================================================
+# TAB 2: INSTRUMENTS
+# ============================================================================
+
+with tab2:
+    st.title("📊 INSTRUMENTS")
+
+    inst_tab1, inst_tab2, inst_tab3 = st.tabs(["MGC - Micro Gold", "NQ - Nasdaq", "MPL - Platinum"])
+
+    # MGC Sub-tab
+    with inst_tab1:
+        st.header("🥇 MGC - MICRO GOLD")
+
+        mgc_setups = detector.get_all_validated_setups("MGC")
+
+        st.subheader("All MGC Setups")
+        for setup in mgc_setups:
+            tier_color = {"S+": "🔥", "S": "⭐", "A": "✅", "B": "📊", "C": "📈"}
+            icon = tier_color.get(setup['tier'], "📊")
+
+            with st.expander(f"{icon} {setup['orb_time']} ORB - {setup['tier']} Tier"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Win Rate", f"{setup['win_rate']:.1f}%")
+                with col2:
+                    st.metric("Avg R", f"+{setup['avg_r']:.3f}R")
+                with col3:
+                    st.metric("Annual Trades", f"~{setup['annual_trades']}")
+
+                st.write(f"**SL Mode**: {setup['sl_mode']}")
+                st.write(f"**RR Target**: {setup['rr']}R")
+
+                if setup.get('orb_size_filter'):
+                    st.write(f"**Filter**: ORB < {setup['orb_size_filter']*100:.1f}% of ATR")
+                else:
+                    st.write("**Filter**: None (all sizes OK)")
+
+                st.info(f"📋 {setup['notes']}")
+
+        st.subheader("MGC Contract Specs")
+        st.write("- **Tick Size**: 0.1 points")
+        st.write("- **Tick Value**: $1.00")
+        st.write("- **Point Value**: $10.00")
+        st.write("- **Exchange**: COMEX")
+
+    # NQ Sub-tab
+    with inst_tab2:
+        st.header("💻 NQ - MICRO NASDAQ")
+
+        nq_setups = detector.get_all_validated_setups("NQ")
+
+        st.warning("⚠️ **Note**: NQ 2300 ORB is SKIPPED (no edge: 0.018R)")
+
+        st.subheader("All NQ Setups")
+        for setup in nq_setups:
+            tier_color = {"S+": "🔥", "S": "⭐", "A": "✅", "B": "📊", "C": "📈"}
+            icon = tier_color.get(setup['tier'], "📊")
+
+            with st.expander(f"{icon} {setup['orb_time']} ORB - {setup['tier']} Tier"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Win Rate", f"{setup['win_rate']:.1f}%")
+                with col2:
+                    st.metric("Avg R", f"+{setup['avg_r']:.3f}R")
+                with col3:
+                    st.metric("Annual Trades", f"~{setup['annual_trades']}")
+
+                st.write(f"**SL Mode**: {setup['sl_mode']}")
+                st.write(f"**RR Target**: {setup['rr']}R")
+
+                st.info(f"📋 {setup['notes']}")
+
+        st.subheader("NQ Contract Specs")
+        st.write("- **Tick Size**: 0.25 points")
+        st.write("- **Tick Value**: $0.50")
+        st.write("- **Point Value**: $2.00")
+        st.write("- **Exchange**: CME")
+
+    # MPL Sub-tab
+    with inst_tab3:
+        st.header("💎 MPL - MICRO PLATINUM")
+
+        mpl_setups = detector.get_all_validated_setups("MPL")
+
+        st.success("✅ **ALL MPL SETUPS PROFITABLE** - 6 out of 6!")
+
+        st.subheader("All MPL Setups")
+        for setup in mpl_setups:
+            tier_color = {"S+": "🔥", "S": "⭐", "A": "✅", "B": "📊", "C": "📈"}
+            icon = tier_color.get(setup['tier'], "📊")
+
+            with st.expander(f"{icon} {setup['orb_time']} ORB - {setup['tier']} Tier"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Win Rate", f"{setup['win_rate']:.1f}%")
+                with col2:
+                    st.metric("Avg R", f"+{setup['avg_r']:.3f}R")
+                with col3:
+                    st.metric("Annual Trades", f"~{setup['annual_trades']}")
+
+                st.write(f"**SL Mode**: {setup['sl_mode']}")
+                st.write(f"**RR Target**: {setup['rr']}R")
+
+                st.info(f"📋 {setup['notes']}")
+
+        st.subheader("MPL Contract Specs")
+        st.warning("⚠️ **FULL-SIZE CONTRACT** (not micro)")
+        st.write("- **Micro Tick Size**: 0.1 points")
+        st.write("- **Micro Tick Value**: $0.50")
+        st.write("- **Micro Point Value**: $5.00")
+        st.write("- **Full-Size Point Value**: $50.00")
+        st.write("- **Exchange**: NYMEX")
+
+# ============================================================================
+# TAB 3: STRATEGY DISCOVERY
+# ============================================================================
+
+with tab3:
+    st.title("🔍 STRATEGY DISCOVERY")
+
+    st.info("🚧 Coming Soon: Advanced edge discovery with custom filters")
+
+    st.write("**Features planned:**")
+    st.write("- Filter by min win rate")
+    st.write("- Filter by min avg R")
+    st.write("- Filter by min trades")
+    st.write("- Correlation analysis")
+    st.write("- Custom parameter testing")
+
+# ============================================================================
+# TAB 4: PERFORMANCE & ANALYSIS
+# ============================================================================
+
+with tab4:
+    st.title("📈 PERFORMANCE & ANALYSIS")
+
+    # Summary by instrument
+    st.header("Overall Performance")
+
+    summary_data = []
+    for inst in ["MGC", "NQ", "MPL"]:
+        setups = detector.get_all_validated_setups(inst)
+        if setups:
+            avg_wr = sum(s['win_rate'] for s in setups) / len(setups)
+            avg_r = sum(s['avg_r'] for s in setups) / len(setups)
+            total_trades = sum(s['annual_trades'] for s in setups)
+
+            summary_data.append({
+                "Instrument": inst,
+                "Setups": len(setups),
+                "Avg Win Rate": f"{avg_wr:.1f}%",
+                "Avg R": f"+{avg_r:.3f}R",
+                "Annual Trades": total_trades
+            })
+
+    st.dataframe(pd.DataFrame(summary_data), use_container_width=True)
+
+    # Win rate comparison chart
+    st.header("Win Rate by ORB")
+
+    chart_data = []
+    for inst in ["MGC", "NQ", "MPL"]:
+        setups = detector.get_all_validated_setups(inst)
+        for setup in setups:
+            chart_data.append({
+                "ORB": f"{inst} {setup['orb_time']}",
+                "Win Rate": setup['win_rate'],
+                "Instrument": inst
+            })
+
+    df_chart = pd.DataFrame(chart_data)
+
+    fig = go.Figure()
+    for inst in ["MGC", "NQ", "MPL"]:
+        inst_data = df_chart[df_chart['Instrument'] == inst]
+        fig.add_trace(go.Bar(
+            name=inst,
+            x=inst_data['ORB'],
+            y=inst_data['Win Rate']
+        ))
+
+    fig.update_layout(
+        title="Win Rate Comparison",
+        xaxis_title="ORB",
+        yaxis_title="Win Rate (%)",
+        barmode='group',
+        height=500
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+# ============================================================================
+# TAB 5: STRATEGY INVENTORY
+# ============================================================================
+
+with tab5:
+    st.title("🏆 COMPLETE STRATEGY INVENTORY")
+
+    st.header("All Validated Setups")
+
+    # Tier filter
+    tier_filter = st.multiselect(
+        "Filter by Tier",
+        ["S+", "S", "A", "B", "C"],
+        default=["S+", "S", "A", "B", "C"]
+    )
+
+    inst_filter = st.multiselect(
+        "Filter by Instrument",
+        ["MGC", "NQ", "MPL"],
+        default=["MGC", "NQ", "MPL"]
+    )
+
+    # Build inventory
+    all_inventory = []
+    for inst in inst_filter:
+        setups = detector.get_all_validated_setups(inst)
+        for setup in setups:
+            if setup['tier'] in tier_filter:
+                all_inventory.append({
+                    "Instrument": inst,
+                    "ORB": setup['orb_time'],
+                    "Tier": setup['tier'],
+                    "Win Rate": f"{setup['win_rate']:.1f}%",
+                    "Avg R": f"+{setup['avg_r']:.3f}R",
+                    "Annual Trades": setup['annual_trades'],
+                    "SL Mode": setup['sl_mode'],
+                    "RR": setup['rr']
+                })
+
+    df_inventory = pd.DataFrame(all_inventory)
+    st.dataframe(df_inventory, use_container_width=True)
+
+    st.metric("Total Setups", len(df_inventory))
+
+# ============================================================================
+# TAB 6: AI CHAT
+# ============================================================================
+
+with tab6:
+    st.title("🤖 AI Trading Assistant")
+
+    st.info("""
+    Ask me anything about:
+    - Strategy explanations and setup details
+    - Trade calculations (entry, stop, target, position size)
+    - Risk management and position sizing
+    - Historical performance and win rates
+    - Best practices and trading rules
+    """)
+
+    # Display chat history
+    for msg in st.session_state.chat_history:
+        if msg["role"] == "user":
+            st.chat_message("user").write(msg["content"])
+        else:
+            st.chat_message("assistant").write(msg["content"])
+
+    # Chat input
+    if prompt := st.chat_input("Ask a question about your trading strategies..."):
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": prompt})
+        st.chat_message("user").write(prompt)
+
+        # Get AI response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    # Get current context for AI
+                    context = {
+                        "instrument": instrument,
+                        "current_time": now.strftime("%Y-%m-%d %H:%M"),
+                        "available_setups": len(detector.get_all_validated_setups(instrument))
+                    }
+
+                    response = st.session_state.ai_assistant.chat(
+                        prompt,
+                        context=context,
+                        session_id=st.session_state.get("session_id", "default")
+                    )
+
+                    st.write(response)
+                    st.session_state.chat_history.append({"role": "assistant", "content": response})
+
+                except Exception as e:
+                    error_msg = f"Error: {str(e)}"
+                    st.error(error_msg)
+                    st.session_state.chat_history.append({"role": "assistant", "content": error_msg})
+
+# ============================================================================
+# TAB 7: HOW TO USE
+# ============================================================================
+
+with tab7:
+    st.title("📚 HOW TO USE THIS APP")
+
+    st.header("Quick Start Guide")
+    st.write("""
+    1. **Select your instrument** (MGC, NQ, or MPL) in the sidebar
+    2. **Check LIVE TRADING tab** to see what's active right now
+    3. **Enter ORB details** when range forms (XX:00-XX:05)
+    4. **Follow the entry/stop/target** shown
+    5. **Risk 0.25-0.5%** per trade based on setup tier
+    """)
+
+    st.header("Understanding ORBs")
+    st.write("""
+    **ORB = Opening Range Breakout**
+
+    - Wait for 5-minute range to form (e.g., 09:00-09:05)
+    - Note the high and low of that range
+    - Enter on first CLOSE outside range (not touch)
+    - Stop at midpoint (HALF) or opposite edge (FULL)
+    - Target at 1R (same distance as risk)
+    """)
+
+    st.header("Tier System")
+    st.write("""
+    - **S+ Tier**: Elite (>65% WR or >0.30R avg) - BEST setups
+    - **S Tier**: Excellent (>63% WR or >0.25R avg)
+    - **A Tier**: Strong (>60% WR or >0.15R avg)
+    - **B Tier**: Good (>55% WR or >0.05R avg)
+    - **C Tier**: Marginal but profitable
+    """)
+
+    st.header("Risk Management")
+    st.write("""
+    - **Elite setups (S+)**: Risk 0.10-0.25% (they're rare!)
+    - **Strong setups (S/A)**: Risk 0.25-0.50%
+    - **Standard setups (B/C)**: Risk 0.10-0.25%
+    - **Never risk more than 0.5%** on a single trade
+    - **Total exposure**: Max 2% across all open trades
+    """)
+
+    st.header("Contract Specifications")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write("**MGC (Micro Gold)**")
+        st.write("- $10/point")
+        st.write("- $1/tick (0.1)")
+    with col2:
+        st.write("**NQ (Micro Nasdaq)**")
+        st.write("- $2/point")
+        st.write("- $0.50/tick (0.25)")
+    with col3:
+        st.write("**MPL (Platinum)**")
+        st.write("- $5/point (micro)")
+        st.write("- $50/point (full-size)")
+
+# ============================================================================
+# FOOTER
+# ============================================================================
+
+st.markdown("---")
+st.caption(f"Unified Trading Hub v1.0 | {len(detector.get_all_validated_setups('MGC')) + len(detector.get_all_validated_setups('NQ')) + len(detector.get_all_validated_setups('MPL'))} validated setups | Built per UNIFIED_APP_ARCHITECTURE.md")

@@ -9,6 +9,31 @@ Gold (MGC) Data Pipeline for building a clean, replayable local dataset of Micro
 **Primary Focus**: 09:00, 10:00, 11:00 ORBs
 **Secondary**: 18:00, 23:00, 00:30 ORBs
 
+---
+
+## ⚠️ CRITICAL REMINDER - ALWAYS DO THIS AFTER CHANGES
+
+**After ANY changes to strategies, database, or config files, ALWAYS run:**
+
+```bash
+python test_app_sync.py
+```
+
+This validates that `trading_app/config.py` matches `gold.db` → `validated_setups` table.
+
+**DO NOT PROCEED if this test fails.** Fix the mismatch immediately.
+
+**When to run this test:**
+- After updating validated_setups database
+- After modifying trading_app/config.py
+- After running populate_validated_setups.py
+- After adding new MGC/NQ/MPL setups
+- After changing ORB filters or RR values
+
+See full details in section: "CRITICAL: Database and Config Synchronization"
+
+---
+
 ## Key Commands
 
 ### Backfilling Data
@@ -208,3 +233,111 @@ Required environment variables:
 9. **Trading day change**: All backfill scripts now use 09:00→09:00 trading days (previously 00:00→00:00). This aligns with ORB strategy and session analysis. Old data will be incorrect.
 
 10. **Project structure**: The codebase was comprehensively cleaned on Jan 15, 2026. See `PROJECT_STRUCTURE.md` for current file organization. All test/experiment files are in `_archive/` - the root directory contains only production-ready code (29 Python files, 11 markdown docs).
+
+## ⚠️ CRITICAL: Database and Config Synchronization (NEVER VIOLATE THIS)
+
+**MANDATORY RULE: NEVER update validated_setups database without IMMEDIATELY updating config.py in the same operation.**
+
+### ⚠️ ALWAYS RUN THIS TEST AFTER ANY CHANGES:
+
+```bash
+python test_app_sync.py
+```
+
+**Run this test EVERY TIME after:**
+- Updating `validated_setups` database
+- Modifying `trading_app/config.py`
+- Adding new MGC/NQ/MPL setups
+- Changing ORB filters
+- Running `populate_validated_setups.py`
+- Updating RR values or SL modes
+
+**If you forget to run this test, the apps will use WRONG values and cause REAL MONEY LOSSES in live trading.**
+
+### Why This Is Critical
+
+Mismatches between database and config.py cause:
+- Apps use WRONG filters
+- Accept trades that should be rejected
+- Reject trades that should be accepted
+- **REAL MONEY LOSSES in live trading**
+- Dangerous and unacceptable
+
+### Synchronization Protocol
+
+When updating MGC setups in validated_setups table:
+
+1. **FIRST**: Update `gold.db` → `validated_setups` table
+2. **IMMEDIATELY AFTER**: Update `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary
+3. **VERIFY**: Run `python test_app_sync.py` to confirm synchronization
+4. **ONLY PROCEED**: If ALL TESTS PASS
+
+**NEVER skip step 2. NEVER skip step 3. NEVER proceed if tests fail.**
+
+### Files That Must Always Match Exactly
+
+- `gold.db` → `validated_setups.orb_size_filter` (for MGC rows)
+- `trading_app/config.py` → `MGC_ORB_SIZE_FILTERS` dictionary values
+
+For each ORB time (0900, 1000, 1100, 1800, 2300, 0030):
+- Database filter value MUST equal config.py filter value (within 0.001 tolerance)
+- If database has NULL filter, config.py must have None
+- If database has 0.05, config.py must have 0.05
+- Zero tolerance for mismatches
+
+### Verification Command
+
+```bash
+python test_app_sync.py
+```
+
+Expected output:
+```
+ALL TESTS PASSED!
+
+Your apps are now synchronized:
+- config.py has optimized MGC filters
+- validated_setups database has 17 setups (6 MGC, 5 NQ, 6 MPL)
+- setup_detector.py works with all instruments
+- data_loader.py filter checking works
+- All components load without errors
+
+Your apps are SAFE TO USE!
+```
+
+**If this fails: STOP ALL WORK and fix the mismatch before proceeding.**
+
+**REMINDER: This test is your safety net. Always run it after changes to database or config.**
+
+### Other Synchronized Components
+
+These files also depend on config.py and must be tested:
+- `trading_app/setup_detector.py` - Reads validated_setups
+- `trading_app/data_loader.py` - Uses config.py filters
+- `trading_app/strategy_engine.py` - Uses config.py
+- `trading_app/app_trading_hub.py` - Main app
+- `unified_trading_app.py` - Unified app
+- `MGC_NOW.py` - Quick helper
+
+All must work with synchronized data.
+
+### When Updating Any Instrument (MGC, NQ, MPL)
+
+Same rules apply:
+- Update database first
+- Update corresponding config section immediately (MGC_ORB_SIZE_FILTERS, NQ_ORB_SIZE_FILTERS, or MPL_ORB_SIZE_FILTERS)
+- **Run `python test_app_sync.py`**
+- Verify all tests pass
+- **Do NOT skip this step**
+
+### Historical Context
+
+On 2026-01-16, a critical error was discovered:
+- `validated_setups` was updated with CORRECTED MGC values (after scan window bug fix)
+- `config.py` was NOT updated (still had OLD audit values)
+- This created a dangerous mismatch
+- Apps would have used wrong RR values and filters in live trading (e.g., 1000 ORB RR=1.0 instead of 8.0!)
+- Emergency fix required updating config.py and creating test_app_sync.py
+- **System now has test_app_sync.py to prevent this from ever happening again**
+
+**Lesson learned:** ALWAYS run `python test_app_sync.py` after ANY changes to strategies, filters, or configs.

@@ -1,0 +1,3 @@
+@echo off
+echo Starting Unified Trading Hub...
+streamlit run unified_trading_app.py --server.port 8504

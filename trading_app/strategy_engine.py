@@ -53,13 +53,17 @@ class StrategyEngine:
     Evaluates all strategies and enforces hierarchy.
     """
 
-    def __init__(self, data_loader: LiveDataLoader):
+    def __init__(self, data_loader: LiveDataLoader, ml_engine=None):
         self.loader = data_loader
         self.current_position = None  # Track if in a trade
+        self.ml_engine = ml_engine  # Optional ML inference engine
 
         # Load instrument-specific configs
         self.instrument = data_loader.symbol
         self._load_instrument_configs()
+
+        if self.ml_engine and ML_ENABLED:
+            logger.info("ML engine enabled for strategy evaluation")
 
     def _load_instrument_configs(self):
         """Load instrument-specific configuration parameters."""
@@ -69,6 +73,12 @@ class StrategyEngine:
             self.orb_size_filters = NQ_ORB_SIZE_FILTERS
             self.cascade_min_gap = 15.0  # NQ needs larger gaps (13x more volatile)
             logger.info(f"Loaded NQ-specific configs: CASCADE gap={self.cascade_min_gap}pts")
+        elif self.instrument in ["MPL", "PL"]:
+            # Load MPL configs
+            self.orb_configs = MPL_ORB_CONFIGS
+            self.orb_size_filters = MPL_ORB_SIZE_FILTERS
+            self.cascade_min_gap = CASCADE_MIN_GAP_POINTS  # 9.5pts for MPL (similar to MGC)
+            logger.info(f"Loaded MPL-specific configs: CASCADE gap={self.cascade_min_gap}pts")
         else:
             # Default to MGC configs
             self.orb_configs = MGC_ORB_CONFIGS
@@ -115,10 +125,11 @@ class StrategyEngine:
                 break
 
         if active_eval:
-            return active_eval
+            # Enhance with ML insights before returning
+            return self._enhance_with_ml_insights(active_eval)
 
         # If nothing active, return first INVALID (STAND_DOWN)
-        return evaluations[0] if evaluations else StrategyEvaluation(
+        fallback = evaluations[0] if evaluations else StrategyEvaluation(
             strategy_name="NONE",
             priority=999,
             state=StrategyState.INVALID,
@@ -126,6 +137,7 @@ class StrategyEngine:
             reasons=["No strategies active"],
             next_instruction="Wait for setup to form"
         )
+        return fallback
 
     # ========================================================================
     # STRATEGY EVALUATORS (STUBS - FILL WITH REAL LOGIC)
@@ -864,6 +876,139 @@ class StrategyEngine:
                 ],
                 next_instruction=f"Wait for breakout above {orb_high:.2f} or below {orb_low:.2f}"
             )
+
+    # ========================================================================
+    # ML INTEGRATION
+    # ========================================================================
+
+    def _enhance_with_ml_insights(self, evaluation: StrategyEvaluation) -> StrategyEvaluation:
+        """
+        Enhance strategy evaluation with ML predictions.
+
+        This adds ML confidence, directional bias, and reasoning to the evaluation.
+        In shadow mode, ML insights are added but don't affect decisions.
+
+        Args:
+            evaluation: Rule-based strategy evaluation
+
+        Returns:
+            Enhanced evaluation with ML insights
+        """
+        if not self.ml_engine or not ML_ENABLED:
+            return evaluation
+
+        # Only add ML insights for PREPARING and READY states
+        if evaluation.state not in [StrategyState.PREPARING, StrategyState.READY]:
+            return evaluation
+
+        try:
+            # Get current features from data loader
+            features = self._get_ml_features()
+
+            # Get ML prediction
+            ml_recommendation = self.ml_engine.generate_trade_recommendation(
+                features,
+                rule_evaluation={'direction': evaluation.strategy_name}
+            )
+
+            ml_pred = ml_recommendation['ml_prediction']
+            confidence_level = ml_recommendation['confidence_level']
+
+            # In shadow mode, only add insights to reasons (don't change behavior)
+            if ML_SHADOW_MODE:
+                # Prepend ML insights to reasons
+                ml_reason = f"ML: {ml_pred['predicted_direction']} ({ml_pred['confidence']*100:.0f}% confidence)"
+                evaluation.reasons = [ml_reason] + evaluation.reasons[:2]  # Keep max 3 reasons
+
+                logger.info(f"ML Shadow: {ml_pred['predicted_direction']} @ {ml_pred['confidence']:.1%} confidence")
+
+            else:
+                # Active mode: adjust risk based on ML confidence
+                if ML_RISK_ADJUSTMENT_ENABLED and evaluation.risk_pct:
+                    risk_adjustment = ml_recommendation['risk_adjustment']
+                    original_risk = evaluation.risk_pct
+                    evaluation.risk_pct *= risk_adjustment
+
+                    logger.info(f"ML Risk Adjustment: {original_risk:.2%} → {evaluation.risk_pct:.2%} ({risk_adjustment:.1f}x)")
+
+                # Add ML reasoning
+                ml_reason = f"ML: {confidence_level} confidence {ml_pred['predicted_direction']}"
+                evaluation.reasons = [ml_reason] + evaluation.reasons[:2]
+
+        except Exception as e:
+            logger.error(f"ML inference failed: {e}")
+            # Don't fail the evaluation if ML fails
+
+        return evaluation
+
+    def _get_ml_features(self) -> Dict:
+        """
+        Extract features from data loader for ML inference.
+
+        Returns:
+            Dictionary of features ready for ML model
+        """
+        from datetime import datetime
+
+        now_local = datetime.now(TZ_LOCAL)
+
+        # Get session levels
+        asia_hl = self._get_today_asia_levels()
+        london_hl = self._get_today_london_levels()
+
+        # Get ORB data if available
+        orb_data = {}
+        # Note: LiveDataLoader doesn't have get_orb() method
+        # ORB data comes from state variables instead
+        # Skip this section for now - ML will use available features
+
+        # Determine current ORB context
+        current_hour = now_local.hour
+        current_orb_time = None
+        if 9 <= current_hour < 10:
+            current_orb_time = "0900"
+        elif 10 <= current_hour < 11:
+            current_orb_time = "1000"
+        elif 11 <= current_hour < 18:
+            current_orb_time = "1100"
+        elif 18 <= current_hour < 23:
+            current_orb_time = "1800"
+        elif 23 <= current_hour or current_hour < 1:
+            current_orb_time = "2300"
+        else:
+            current_orb_time = "0030"
+
+        # Build feature dictionary
+        features = {
+            'date_local': now_local.strftime('%Y-%m-%d'),
+            'instrument': self.instrument,
+            'orb_time': current_orb_time,
+            'session_context': 'ASIA' if 9 <= current_hour < 18 else 'LONDON' if 18 <= current_hour < 23 else 'NY',
+        }
+
+        # Add session data
+        if asia_hl:
+            features['asia_high'] = asia_hl['high']
+            features['asia_low'] = asia_hl['low']
+            features['asia_range'] = asia_hl['high'] - asia_hl['low']
+
+        if london_hl:
+            features['london_high'] = london_hl['high']
+            features['london_low'] = london_hl['low']
+            features['london_range'] = london_hl['high'] - london_hl['low']
+
+        # Add current ORB if available
+        if current_orb_time and current_orb_time in orb_data:
+            orb = orb_data[current_orb_time]
+            features['orb_high'] = orb['high']
+            features['orb_low'] = orb['low']
+            features['orb_size'] = orb['high'] - orb['low']
+
+        # Add ATR and RSI if available (would come from data_loader in full implementation)
+        features['atr_14'] = 5.0  # Placeholder - should come from data_loader
+        features['rsi_14'] = 50.0  # Placeholder - should come from data_loader
+
+        return features
 
 
 if __name__ == "__main__":

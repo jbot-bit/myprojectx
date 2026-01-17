@@ -423,12 +423,17 @@ class FeatureBuilderV2:
         london_session = self.get_london_session(trade_date)
         ny_session = self.get_ny_cash_session(trade_date)
 
-        orb_0900 = self.calculate_orb_1m_exec(_dt_local(trade_date, 9, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
-        orb_1000 = self.calculate_orb_1m_exec(_dt_local(trade_date, 10, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
-        orb_1100 = self.calculate_orb_1m_exec(_dt_local(trade_date, 11, 0), _dt_local(trade_date, 17, 0), sl_mode=self.sl_mode)
-        orb_1800 = self.calculate_orb_1m_exec(_dt_local(trade_date, 18, 0), _dt_local(trade_date, 23, 0), sl_mode=self.sl_mode)
-        orb_2300 = self.calculate_orb_1m_exec(_dt_local(trade_date, 23, 0), _dt_local(trade_date + timedelta(days=1), 0, 30), sl_mode=self.sl_mode)
-        orb_0030 = self.calculate_orb_1m_exec(_dt_local(trade_date + timedelta(days=1), 0, 30), _dt_local(trade_date + timedelta(days=1), 2, 0), sl_mode=self.sl_mode)
+        # EXTENDED SCAN WINDOWS (CORRECTED 2026-01-16):
+        # All ORBs scan until next Asia open (09:00 next day) to capture full overnight moves
+        # This matches the fix applied to execution_engine.py for MGC
+        next_asia_open = _dt_local(trade_date + timedelta(days=1), 9, 0)
+
+        orb_0900 = self.calculate_orb_1m_exec(_dt_local(trade_date, 9, 0), next_asia_open, sl_mode=self.sl_mode)
+        orb_1000 = self.calculate_orb_1m_exec(_dt_local(trade_date, 10, 0), next_asia_open, sl_mode=self.sl_mode)
+        orb_1100 = self.calculate_orb_1m_exec(_dt_local(trade_date, 11, 0), next_asia_open, sl_mode=self.sl_mode)
+        orb_1800 = self.calculate_orb_1m_exec(_dt_local(trade_date, 18, 0), next_asia_open, sl_mode=self.sl_mode)
+        orb_2300 = self.calculate_orb_1m_exec(_dt_local(trade_date, 23, 0), next_asia_open, sl_mode=self.sl_mode)
+        orb_0030 = self.calculate_orb_1m_exec(_dt_local(trade_date + timedelta(days=1), 0, 30), next_asia_open, sl_mode=self.sl_mode)
 
         rsi_at_0030 = self.calculate_rsi_at(_dt_local(trade_date + timedelta(days=1), 0, 30))
         atr_20 = self.calculate_atr(trade_date)

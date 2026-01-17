@@ -1,0 +1,471 @@
+"""
+DECISION-FOCUSED TRADING APP
+Helps you understand WHAT TO DO RIGHT NOW and make the best trading decisions.
+
+Focus:
+- Clear visibility of CURRENT and UPCOMING strategies
+- Visual countdown timers
+- Tier-based prioritization
+- Clear action guidance
+- Decision support, not just information
+"""
+
+import streamlit as st
+import pandas as pd
+from datetime import datetime, timedelta
+import pytz
+import sys
+
+sys.path.append('trading_app')
+from setup_detector import SetupDetector
+
+st.set_page_config(
+    page_title="Trading Decision Hub",
+    page_icon="🎯",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Initialize
+if 'setup_detector' not in st.session_state:
+    st.session_state.setup_detector = SetupDetector('gold.db')
+
+detector = st.session_state.setup_detector
+TZ = pytz.timezone('Australia/Brisbane')
+now = datetime.now(TZ)
+
+# ============================================================================
+# HELPER FUNCTIONS
+# ============================================================================
+
+def get_time_until_orb(orb_hour, orb_minute):
+    """Calculate time until next ORB"""
+    target = now.replace(hour=orb_hour, minute=orb_minute, second=0, microsecond=0)
+
+    # If time has passed today, get tomorrow's time
+    if target < now:
+        target += timedelta(days=1)
+
+    delta = target - now
+    minutes = int(delta.total_seconds() / 60)
+    hours = minutes // 60
+    mins = minutes % 60
+
+    return hours, mins, minutes
+
+def get_orb_status(orb_hour, orb_minute):
+    """Check if ORB is active, upcoming, or past"""
+    current_hour = now.hour
+    current_minute = now.minute
+
+    # Active (in 5-30 minute window after ORB)
+    if current_hour == orb_hour and current_minute >= orb_minute and current_minute < orb_minute + 30:
+        elapsed = current_minute - orb_minute
+        return "ACTIVE", f"{elapsed} min in"
+
+    # Check if passed today
+    orb_time = now.replace(hour=orb_hour, minute=orb_minute, second=0, microsecond=0)
+    if orb_time < now:
+        return "PASSED", "Done for today"
+
+    # Upcoming
+    hours, mins, total_mins = get_time_until_orb(orb_hour, orb_minute)
+    if total_mins < 60:
+        return "SOON", f"in {total_mins} min"
+    else:
+        return "UPCOMING", f"in {hours}h {mins}m"
+
+def get_tier_color(tier):
+    """Get color for tier"""
+    colors = {
+        "S+": "#FF4B4B",  # Red
+        "S": "#FFA500",   # Orange
+        "A": "#4CAF50",   # Green
+        "B": "#2196F3",   # Blue
+        "C": "#9E9E9E"    # Gray
+    }
+    return colors.get(tier, "#9E9E9E")
+
+def get_tier_emoji(tier):
+    """Get emoji for tier"""
+    emojis = {
+        "S+": "🔥",
+        "S": "⭐",
+        "A": "✅",
+        "B": "📊",
+        "C": "📈"
+    }
+    return emojis.get(tier, "📊")
+
+# ============================================================================
+# MAIN LAYOUT
+# ============================================================================
+
+# Title with current time
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.title("🎯 TRADING DECISION HUB")
+with col2:
+    st.metric("Current Time", now.strftime('%H:%M:%S'))
+    st.caption(now.strftime('%Y-%m-%d'))
+
+st.markdown("---")
+
+# ============================================================================
+# INSTRUMENT SELECTOR & MARKET DATA
+# ============================================================================
+
+col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+
+with col1:
+    instrument = st.selectbox("📈 Instrument", ["MGC", "NQ", "MPL"], label_visibility="collapsed")
+
+with col2:
+    if instrument == "MGC":
+        current_price = st.number_input("Current Price", value=2650.0, step=0.1, format="%.1f")
+    elif instrument == "NQ":
+        current_price = st.number_input("Current Price", value=21000.0, step=0.25, format="%.2f")
+    else:
+        current_price = st.number_input("Current Price", value=1000.0, step=0.1, format="%.1f")
+
+with col3:
+    if instrument == "MGC":
+        atr_20 = st.number_input("ATR(20)", value=40.0, step=0.1, format="%.1f")
+    elif instrument == "NQ":
+        atr_20 = st.number_input("ATR(20)", value=400.0, step=1.0, format="%.1f")
+    else:
+        atr_20 = st.number_input("ATR(20)", value=20.0, step=0.1, format="%.1f")
+
+with col4:
+    account = st.number_input("Account Size", value=25000, step=1000, format="%d")
+
+st.markdown("---")
+
+# ============================================================================
+# ALL ORBS STATUS - WHAT'S HAPPENING NOW
+# ============================================================================
+
+st.header("🔥 WHAT'S HAPPENING NOW")
+
+orb_times = {
+    "0900": (9, 0, "Asia Open"),
+    "1000": (10, 0, "Mid Asia"),
+    "1100": (11, 0, "Asia Close"),
+    "1800": (18, 0, "London Open"),
+    "2300": (23, 0, "NY Open"),
+    "0030": (0, 30, "NY Early")
+}
+
+# Get all setups for instrument
+all_setups = detector.get_all_validated_setups(instrument)
+setup_dict = {s['orb_time']: s for s in all_setups}
+
+# Categorize ORBs
+active_orbs = []
+soon_orbs = []
+upcoming_orbs = []
+passed_orbs = []
+
+for orb_name, (hour, minute, description) in orb_times.items():
+    status, time_info = get_orb_status(hour, minute)
+    setup = setup_dict.get(orb_name)
+
+    if setup:
+        orb_data = {
+            'name': orb_name,
+            'description': description,
+            'status': status,
+            'time_info': time_info,
+            'setup': setup,
+            'hour': hour,
+            'minute': minute
+        }
+
+        if status == "ACTIVE":
+            active_orbs.append(orb_data)
+        elif status == "SOON":
+            soon_orbs.append(orb_data)
+        elif status == "UPCOMING":
+            upcoming_orbs.append(orb_data)
+        else:
+            passed_orbs.append(orb_data)
+
+# ============================================================================
+# ACTIVE ORB - HIGHEST PRIORITY
+# ============================================================================
+
+if active_orbs:
+    for orb in active_orbs:
+        setup = orb['setup']
+        tier_color = get_tier_color(setup['tier'])
+        tier_emoji = get_tier_emoji(setup['tier'])
+
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, {tier_color}22 0%, {tier_color}11 100%);
+            border-left: 8px solid {tier_color};
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        ">
+            <h2 style="margin: 0; color: {tier_color};">
+                ⚡ {orb['name']} ORB - ACTIVE NOW! {tier_emoji}
+            </h2>
+            <p style="font-size: 18px; margin: 8px 0; color: #666;">
+                {orb['description']} | {orb['time_info']}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Setup quality metrics
+        col1, col2, col3, col4, col5 = st.columns(5)
+        with col1:
+            st.metric("🏆 Tier", setup['tier'], help="S+ = Elite, S = Excellent, A = Strong")
+        with col2:
+            st.metric("📈 Win Rate", f"{setup['win_rate']:.1f}%")
+        with col3:
+            st.metric("💰 Avg Return", f"+{setup['avg_r']:.3f}R")
+        with col4:
+            st.metric("🎯 Target", f"{setup['rr']}R")
+        with col5:
+            st.metric("🛡️ Stop Mode", setup['sl_mode'])
+
+        st.info(f"📋 **Why This Works**: {setup['notes']}")
+
+        # ORB Entry Form
+        st.subheader("📝 Enter Your ORB Levels")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            orb_high = st.number_input(
+                "ORB High",
+                value=current_price + 2.0,
+                step=0.1 if instrument != "NQ" else 0.25,
+                format="%.1f" if instrument != "NQ" else "%.2f",
+                key=f"high_{orb['name']}"
+            )
+        with col2:
+            orb_low = st.number_input(
+                "ORB Low",
+                value=current_price - 2.0,
+                step=0.1 if instrument != "NQ" else 0.25,
+                format="%.1f" if instrument != "NQ" else "%.2f",
+                key=f"low_{orb['name']}"
+            )
+        with col3:
+            live_price = st.number_input(
+                "Live Price Now",
+                value=current_price,
+                step=0.1 if instrument != "NQ" else 0.25,
+                format="%.1f" if instrument != "NQ" else "%.2f",
+                key=f"live_{orb['name']}"
+            )
+
+        orb_size = orb_high - orb_low
+        orb_mid = (orb_high + orb_low) / 2
+
+        # Check filter
+        filter_passes = True
+        if setup.get('orb_size_filter') and atr_20 > 0:
+            orb_size_pct = orb_size / atr_20
+            filter_passes = orb_size_pct <= setup['orb_size_filter']
+
+            if filter_passes:
+                st.success(f"✅ **Filter PASSES**: ORB is {orb_size_pct*100:.1f}% of ATR (limit: {setup['orb_size_filter']*100:.1f}%)")
+            else:
+                st.error(f"❌ **Filter FAILS**: ORB is {orb_size_pct*100:.1f}% of ATR (limit: {setup['orb_size_filter']*100:.1f}%)")
+                st.warning("⚠️ **SKIP THIS SETUP** - Filter criteria not met. ORB too large for optimal results.")
+                filter_passes = False
+
+        if filter_passes:
+            # Determine trade direction
+            if live_price > orb_high:
+                direction = "LONG"
+                bg_color = "#d4edda"
+                border_color = "#28a745"
+                entry = live_price
+                stop = orb_mid if setup['sl_mode'] == 'HALF' else orb_low
+                risk_points = entry - stop
+                target = entry + (risk_points * setup['rr'])
+
+                st.markdown(f"""
+                <div style="background: {bg_color}; border: 3px solid {border_color}; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h2 style="color: {border_color}; margin: 0;">🚀 LONG SETUP - GO!</h2>
+                </div>
+                """, unsafe_allow_html=True)
+
+            elif live_price < orb_low:
+                direction = "SHORT"
+                bg_color = "#f8d7da"
+                border_color = "#dc3545"
+                entry = live_price
+                stop = orb_mid if setup['sl_mode'] == 'HALF' else orb_high
+                risk_points = stop - entry
+                target = entry - (risk_points * setup['rr'])
+
+                st.markdown(f"""
+                <div style="background: {bg_color}; border: 3px solid {border_color}; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <h2 style="color: {border_color}; margin: 0;">📉 SHORT SETUP - GO!</h2>
+                </div>
+                """, unsafe_allow_html=True)
+
+            else:
+                direction = None
+                st.warning(f"""
+                ### ⏳ INSIDE RANGE - WAIT FOR BREAKOUT
+
+                **What to do**: Set alerts and wait
+                - 🔔 Alert above {orb_high:.1f} for LONG
+                - 🔔 Alert below {orb_low:.1f} for SHORT
+                - ⚠️ Only enter on CLOSE outside range (not just touch)
+                """)
+
+            # Show trade details if broken out
+            if direction:
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    st.subheader("📍 Trade Levels")
+                    st.write(f"**Entry**: {entry:.2f}")
+                    st.write(f"**Stop**: {stop:.2f}")
+                    st.write(f"**Target**: {target:.2f}")
+                    st.write(f"**Risk**: {risk_points:.2f} points")
+                    st.write(f"**Reward**: {abs(target - entry):.2f} points")
+
+                with col2:
+                    st.subheader("💵 Position Sizing")
+
+                    # Calculate position size
+                    point_values = {"MGC": 10, "NQ": 2, "MPL": 5}
+                    point_value = point_values[instrument]
+
+                    # Risk based on tier
+                    risk_pct_map = {"S+": 0.25, "S": 0.5, "A": 0.5, "B": 0.25, "C": 0.25}
+                    recommended_risk_pct = risk_pct_map.get(setup['tier'], 0.25)
+
+                    risk_dollars = account * (recommended_risk_pct / 100)
+                    risk_per_contract = risk_points * point_value
+                    contracts = int(risk_dollars / risk_per_contract) if risk_per_contract > 0 else 0
+
+                    st.write(f"**Recommended Risk**: {recommended_risk_pct}% (based on {setup['tier']} tier)")
+                    st.write(f"**Risk Amount**: ${risk_dollars:.0f}")
+                    st.write(f"**Contracts**: {contracts}")
+
+                    if contracts > 0:
+                        potential_profit = contracts * abs(target - entry) * point_value
+                        potential_loss = contracts * risk_points * point_value
+                        st.write(f"**Potential Profit**: ${potential_profit:.0f}")
+                        st.write(f"**Potential Loss**: ${potential_loss:.0f}")
+                        st.write(f"**R:R Ratio**: 1:{setup['rr']}")
+
+                # Action button
+                st.markdown("""
+                ### ✅ READY TO TRADE?
+                1. Set your stop loss at the calculated level
+                2. Enter {contracts} contract(s) at current price
+                3. Set profit target
+                4. Monitor position until exit
+                """.format(contracts=contracts if direction else 0))
+
+st.markdown("---")
+
+# ============================================================================
+# UPCOMING ORBS - NEXT OPPORTUNITIES
+# ============================================================================
+
+if soon_orbs or upcoming_orbs:
+    st.header("⏰ UPCOMING OPPORTUNITIES")
+
+    # Show SOON ORBs first (< 60 minutes)
+    if soon_orbs:
+        st.subheader("🔜 VERY SOON (< 60 min)")
+
+        for orb in sorted(soon_orbs, key=lambda x: get_time_until_orb(x['hour'], x['minute'])[2]):
+            setup = orb['setup']
+            tier_emoji = get_tier_emoji(setup['tier'])
+            tier_color = get_tier_color(setup['tier'])
+
+            hours, mins, total_mins = get_time_until_orb(orb['hour'], orb['minute'])
+
+            with st.expander(f"{tier_emoji} {orb['name']} ORB - {orb['description']} | **{orb['time_info']}**", expanded=True):
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Tier", setup['tier'])
+                with col2:
+                    st.metric("Win Rate", f"{setup['win_rate']:.1f}%")
+                with col3:
+                    st.metric("Avg R", f"+{setup['avg_r']:.3f}R")
+                with col4:
+                    st.metric("Annual Trades", f"~{setup['annual_trades']}")
+
+                st.info(f"📋 {setup['notes']}")
+
+                # Preparation checklist
+                st.markdown(f"""
+                **📝 Preparation**:
+                - ✅ Be at your desk at {orb['hour']:02d}:{orb['minute']:02d}
+                - ✅ Note the high/low in first 5 minutes
+                - ✅ Set alerts above high and below low
+                - ✅ Wait for CLOSE outside range
+                """)
+
+    # Show UPCOMING ORBs (> 60 minutes)
+    if upcoming_orbs:
+        st.subheader("📅 TODAY'S SCHEDULE")
+
+        schedule_data = []
+        for orb in sorted(upcoming_orbs, key=lambda x: get_time_until_orb(x['hour'], x['minute'])[2]):
+            setup = orb['setup']
+            hours, mins, total_mins = get_time_until_orb(orb['hour'], orb['minute'])
+
+            schedule_data.append({
+                "Time": f"{orb['hour']:02d}:{orb['minute']:02d}",
+                "ORB": orb['name'],
+                "Session": orb['description'],
+                "In": orb['time_info'],
+                "Tier": f"{get_tier_emoji(setup['tier'])} {setup['tier']}",
+                "Win Rate": f"{setup['win_rate']:.1f}%",
+                "Avg R": f"+{setup['avg_r']:.3f}R"
+            })
+
+        st.dataframe(pd.DataFrame(schedule_data), use_container_width=True, hide_index=True)
+
+# ============================================================================
+# COMPLETED ORBS TODAY
+# ============================================================================
+
+if passed_orbs:
+    with st.expander(f"✅ Completed Today ({len(passed_orbs)} ORBs)"):
+        for orb in passed_orbs:
+            setup = orb['setup']
+            st.write(f"- {orb['name']} ORB ({orb['description']}) - {setup['tier']} tier")
+
+# ============================================================================
+# QUICK REFERENCE
+# ============================================================================
+
+st.markdown("---")
+with st.expander("📚 QUICK REFERENCE"):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Tier Guide")
+        st.write("""
+        - 🔥 **S+**: Elite (Best of the best - rare!)
+        - ⭐ **S**: Excellent (High confidence)
+        - ✅ **A**: Strong (Solid edge)
+        - 📊 **B**: Good (Profitable)
+        - 📈 **C**: Marginal (Small edge)
+        """)
+
+    with col2:
+        st.subheader("Risk Guidelines")
+        st.write("""
+        - **S+ setups**: 0.25% (they're rare, treat them special)
+        - **S/A setups**: 0.50% (bread and butter)
+        - **B/C setups**: 0.25% (lower conviction)
+        - **Max total exposure**: 2% across all trades
+        """)
+
+st.markdown("---")
+st.caption(f"Decision Hub v2.0 | {instrument}: {len(all_setups)} validated setups | Time: {now.strftime('%H:%M:%S')}")

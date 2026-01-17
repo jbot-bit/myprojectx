@@ -1,0 +1,34 @@
+Machine learning 
+ww
+You are an expert AI & machine learning engineer specializing in financial market pattern recognition and real-time predictive systems.
+
+I have an existing app. I want you to generate all the code, architecture, models, and integration needed to implement an **AI/ML engine** that:
+- Learns from historical market data and live market feeds.
+- Tracks all market sessions including ORB and non-ORB periods.
+- Identifies patterns, edge setups, and probabilistic plays outside ORB based on historical behaviours.
+- Continuously updates and retrains itself with new data as it arrives.
+- Suggests **live actionable market suggestions** based on learned patterns.
+- Includes a reasoning/explanation system that outputs the logic behind each suggestion, including confidence scores and statistical backing.
+ 	
+The system must also:
+- Audit its own suggestions and update model weights based on outcome accuracy.
+- Maintain honesty, true research findings, and avoid hallucinations.
+- Log decisions, outcomes, and pattern activations for further analytics.
+- Be modular, testable, and scalable.
+- Include unit tests and backtest results.
+
+Deliverables:
+1. **Overall system architecture** diagram and explanation.
+2. **Data pipeline code** to ingest, clean, normalize, and store market data (historical + live).
+3. **Model training code** using appropriate ML/Deep learning frameworks (PyTorch, TensorFlow, or XGBoost as applicable).
+4. **Feature engineering logic** specifically for financial time series (session tagging, range metrics, momentum, volatility, ORB/non-ORB flags).
+5. **Real-time inference engine code** that can run within the app backend (or edge compute) and generate suggestions.
+6. **Explanation/interpretation module** that provides reasoning and confidence for each suggestion.
+7. **Model update and retraining scheduler** that automatically incorporates new data without manual intervention.
+8. **APIs and integration code** to connect this ML engine to my existing app frontend/backend.
+9. **Automated tests, validation code, and evaluation metrics** to ensure the model remains honest, accurate, and robust.
+10. **Security and performance considerations** for production deployment.
+
+Output complete source code, configs, and step-by-step instructions to build this into my existing app. 
+
+Do not omit any details. Prioritize clarity, correctness, and practical buildability.
