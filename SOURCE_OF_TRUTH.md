@@ -5,25 +5,26 @@
 
 ---
 
-## ⚠️ CRITICAL: ONE APP ONLY
+## ⚠️ CRITICAL: TWO VALID APPS (Desktop + Mobile)
 
-**THE ONLY PRODUCTION APP:**
+**DESKTOP APP (Tabs Interface):**
 ```
 trading_app/app_trading_hub.py
 ```
+- Launch: `START_TRADING_APP.bat` or `streamlit run trading_app/app_trading_hub.py`
+- URL: http://localhost:8501
+- Best for: Desktop/laptop screens
 
-**Launch it with:**
-```bash
-START_TRADING_APP.bat
+**MOBILE APP (Tinder Cards Interface):**
 ```
-
-Or manually:
-```bash
-cd trading_app
-streamlit run app_trading_hub.py
+trading_app/app_mobile.py
 ```
+- Launch: `START_MOBILE_APP.bat` or `streamlit run trading_app/app_mobile.py`
+- URL: http://localhost:8501
+- Best for: Phones (swipeable cards)
+- Android APK: `app-debug.apk` (wraps this URL)
 
-**URL**: http://localhost:8501
+**Choose based on your device. Both apps access the same database and logic.**
 
 ---
 

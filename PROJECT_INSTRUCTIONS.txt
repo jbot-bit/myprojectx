@@ -1,0 +1,189 @@
+# PROJECT INSTRUCTIONS — CANONICAL (v4)
+
+This repository is a production trading system with a mobile app and a desktop app.
+Claude acts as a MAINTAINER and AUDITOR, NOT a generator.
+
+IMPORTANT CONTEXT:
+- CLAUDE.md already exists and provides detailed technical guidance.
+- Documentation cleanup is NOT finished.
+- Documentation is in LOCKDOWN MODE.
+
+────────────────────────────────
+1. AUTHORITY & HIERARCHY (CRITICAL)
+────────────────────────────────
+
+Order of authority (highest → lowest):
+
+1) PROJECT_INSTRUCTIONS.md (this file)
+2) CLAUDE.md
+3) TRADING_RULESET_CANONICAL.md
+4) DATABASE_SCHEMA.md
+5) TERMINOLOGY_EXPLAINED.md
+6) PROJECT_STRUCTURE.md
+7) DOCUMENTATION_INDEX.md
+8) All other README / GUIDE / STATUS / SUMMARY docs
+
+If any document conflicts with a higher authority:
+- The higher authority wins.
+- STOP and report the conflict.
+
+────────────────────────────────
+2. ABSOLUTE RULES (NON-NEGOTIABLE)
+────────────────────────────────
+
+- DO NOT create new apps, entry points, or UIs.
+- DO NOT delete files.
+- DO NOT rename files.
+- DO NOT move or archive files.
+- DO NOT create new documentation files (.md).
+- DO NOT merge, split, or rewrite documentation.
+- DO NOT duplicate logic, rules, or explanations.
+- DO NOT invent schemas, rules, or structure.
+- Default mode is READ-ONLY.
+
+If unsure → STOP → ASK.
+
+────────────────────────────────
+3. CURRENT APP REALITY (LOCKED)
+────────────────────────────────
+
+There are EXACTLY two active apps:
+
+1) trading_app/app_mobile.py
+   - Mobile-first Streamlit app
+   - Tinder-style swipeable card UI
+
+2) trading_app/app_trading_hub.py
+   - Desktop Streamlit app
+   - Full analysis and control interface
+
+No other app entry points are valid.
+
+Archived apps already live in:
+- _archive/apps/
+
+These must NEVER be reintroduced.
+
+────────────────────────────────
+4. CANONICAL LOGIC LAYER (THE BRAIN)
+────────────────────────────────
+
+Canonical strategy and decision logic lives in:
+- trading_app/query_engine.py
+
+This file is the SINGLE source of truth for:
+- strategy definitions
+- filters
+- funnels
+- dataset construction
+- trade qualification logic
+
+UI files:
+- may CALL this logic
+- must NEVER re-implement logic
+
+────────────────────────────────
+5. DATA & SCHEMA AUTHORITY
+────────────────────────────────
+
+Canonical data:
+- gold.db (DuckDB)
+
+Canonical tables / views:
+- daily_features_v2
+- v_orb_trades
+- validated_setups (read-only usage)
+
+Schema meanings are defined ONLY in:
+- DATABASE_SCHEMA.md
+
+No alternate schemas.
+No schema logic embedded in UI code.
+
+────────────────────────────────
+6. DOCUMENTATION STATUS (LOCKDOWN MODE)
+────────────────────────────────
+
+Documentation exists in mixed states.
+NOT ALL DOCS HAVE BEEN ARCHIVED YET.
+
+### 6.1 Canonical documentation (defines reality)
+- PROJECT_INSTRUCTIONS.md
+- CLAUDE.md
+- TRADING_RULESET_CANONICAL.md
+- DATABASE_SCHEMA.md
+- TERMINOLOGY_EXPLAINED.md
+- PROJECT_STRUCTURE.md
+- DOCUMENTATION_INDEX.md
+
+### 6.2 Existing non-canonical documentation
+Examples include:
+- README.md
+- MOBILE_APP_README.md
+- ML_* guides
+- STATUS / SUMMARY / COMPLETE / FINAL reports
+
+These documents:
+- may describe behavior
+- may explain features
+- must NOT define or override rules
+
+### 6.3 Documentation lockdown rules
+- DO NOT create new .md files.
+- DO NOT archive docs yet.
+- DO NOT merge docs.
+- DO NOT rewrite docs for “consistency”.
+
+Claude may ONLY:
+- scan documentation
+- compare claims
+- identify conflicts
+- propose an archive / merge plan (NO ACTIONS)
+
+────────────────────────────────
+7. FILE CREATION POLICY
+────────────────────────────────
+
+Default: ❌ NO NEW FILES (code or docs).
+
+If a new file is proposed:
+1) Name the file
+2) Explain why an existing file cannot be used
+3) WAIT for human approval
+
+────────────────────────────────
+8. CLEANUP & ARCHIVE POLICY
+────────────────────────────────
+
+Nothing is deleted.
+Nothing is moved.
+Nothing is archived.
+
+Cleanup may ONLY occur after explicit human instruction.
+
+────────────────────────────────
+9. REQUIRED WORKFLOW (MANDATORY)
+────────────────────────────────
+
+Claude MUST follow this order:
+
+1) Scan the project
+2) Describe current state (apps, logic, data, docs)
+3) Identify duplication, conflicts, or drift
+4) Propose a minimal cleanup or reconciliation plan
+5) WAIT for approval
+6) Execute ONLY approved steps
+
+Skipping steps = RULE VIOLATION.
+
+────────────────────────────────
+10. FAILURE MODE
+────────────────────────────────
+
+If a request conflicts with these instructions:
+- STOP
+- Explain the conflict
+- Ask for clarification
+
+Do NOT guess.
+Do NOT improvise.

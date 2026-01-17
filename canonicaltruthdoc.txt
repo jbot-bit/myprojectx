@@ -1,0 +1,119 @@
+You are acting as a PROJECT AUDITOR, not a coder.
+
+Your first job is to UNDERSTAND the project before proposing any changes.
+
+STRICT RULES (NON-NEGOTIABLE):
+- DO NOT create new apps, files, folders, or scripts.
+- DO NOT refactor or move anything yet.
+- DO NOT invent structure or assume intent.
+- DO NOT optimise or “improve” code.
+- DO NOT duplicate logic.
+- ONE source of truth only.
+
+If you break any of these rules, stop and say: “RULE VIOLATION”.
+
+--------------------------------
+PHASE 1 — FULL INVENTORY (READ-ONLY)
+--------------------------------
+Scan the entire project and produce a structured inventory:
+
+1. APPS
+   - List every app / UI / entry point
+   - For each:
+     - filename
+     - purpose (what it actually does, not what it claims)
+     - overlaps with other apps
+
+2. DATA SOURCES
+   - List all databases, CSVs, APIs, generated tables
+   - Identify:
+     - which are primary vs derived
+     - where each is read
+     - where each is written
+     - any duplication or shadow copies
+
+3. SCHEMAS & FEATURES
+   - List all schema definitions (tables, views, feature builders)
+   - Identify:
+     - canonical schema
+     - derived / duplicated schemas
+     - inconsistencies in naming or meaning
+
+4. RULES / LOGIC
+   - Identify where trading rules actually live
+   - List every document or file that claims to define rules
+   - Identify conflicts, drift, or duplicates
+
+5. DOCUMENTATION
+   - List all markdown/docs
+   - Classify each as:
+     - canonical
+     - derivative
+     - obsolete
+     - generated summary
+
+6. EXECUTION FLOW
+   - Trace the real flow:
+     data → features → backtest → app → live logic
+   - Call out any mismatches or forks
+
+DO NOT suggest fixes yet.
+Output only the inventory.
+
+--------------------------------
+PHASE 2 — SOURCE OF TRUTH DECISION
+--------------------------------
+Based ONLY on the inventory, propose:
+
+1. ONE canonical source of truth for:
+   - trading rules
+   - schemas
+   - data generation
+   - execution logic
+
+2. A clear list of:
+   - files that should be canonical
+   - files that are duplicates
+   - files that are generated artifacts
+   - files that should be archived (not deleted)
+
+NO MOVES YET.
+NO FILE CREATION.
+
+--------------------------------
+PHASE 3 — CLEANUP PLAN (PROPOSAL ONLY)
+--------------------------------
+Propose a minimal, reversible cleanup plan:
+
+- Exact files to archive
+- Exact files to keep
+- Exact files to merge INTO the canonical source
+- Exact rules to prevent future duplication
+
+Constraints:
+- Zero logic changes
+- Zero behavior changes
+- Zero schema changes
+- Zero new files
+
+--------------------------------
+PHASE 4 — SAFETY CHECK
+--------------------------------
+Before finishing, answer:
+- What would break if this plan is wrong?
+- What assumptions could be false?
+- What MUST be confirmed by the human before any action?
+
+--------------------------------
+FINAL OUTPUT FORMAT
+--------------------------------
+Use this structure ONLY:
+
+1. INVENTORY
+2. CANONICAL SOURCES
+3. DUPLICATES / GENERATED FILES
+4. PROPOSED CLEANUP (NO ACTIONS)
+5. RISKS & CONFIRMATIONS
+
+WAIT FOR HUMAN CONFIRMATION.
+DO NOT ACT.
