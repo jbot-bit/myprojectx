@@ -45,8 +45,18 @@ class LiveDataLoader:
             symbol: Trading symbol (e.g., "MNQ", "MGC")
         """
         self.symbol = symbol
-        # Use read_only mode to avoid locking issues with multiple connections
-        self.con = duckdb.connect(DB_PATH, read_only=False)
+
+        # Use cloud_mode connection in cloud, local DB_PATH otherwise
+        from cloud_mode import get_database_connection, is_cloud_deployment
+        if is_cloud_deployment():
+            # Cloud mode - use MotherDuck
+            self.con = get_database_connection()
+            logger.info(f"Cloud mode: Connected to MotherDuck for {symbol}")
+        else:
+            # Local mode - use gold.db
+            self.con = duckdb.connect(DB_PATH, read_only=False)
+            logger.info(f"Local mode: Connected to {DB_PATH} for {symbol}")
+
         self._setup_tables()
         self.bars_df = pd.DataFrame()  # In-memory cache
 

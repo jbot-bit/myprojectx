@@ -280,13 +280,13 @@ if current_card >= len(CARDS):
     st.session_state.mobile_current_card = 0
     current_card = 0
 
-# Navigation
-render_card_navigation(current_card, len(CARDS), card_names)
-
-# Render current card
-st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)  # Spacer
-
+# WRAP ENTIRE CARD SECTION IN TRY-EXCEPT
 try:
+    # Navigation
+    render_card_navigation(current_card, len(CARDS), card_names)
+
+    # Render current card
+    st.markdown("<div style='height: 16px;'></div>", unsafe_allow_html=True)  # Spacer
     # Debug: Log which card we're rendering
     card_name = CARDS[current_card]['name']
     logger.info(f"Rendering card: {card_name}")
