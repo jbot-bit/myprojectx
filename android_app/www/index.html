@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Trading Hub Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0b0d;
+            color: #f9fafb;
+            overflow: hidden;
+        }
+        #loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        #loading h1 {
+            font-size: 28px;
+            margin-bottom: 16px;
+        }
+        #loading p {
+            color: #9ca3af;
+            font-size: 16px;
+            margin-bottom: 24px;
+        }
+        #loading input {
+            width: 100%;
+            max-width: 400px;
+            padding: 16px;
+            font-size: 16px;
+            border: 2px solid #6366f1;
+            border-radius: 12px;
+            background: #1a1d26;
+            color: #f9fafb;
+            margin-bottom: 16px;
+        }
+        #loading button {
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            min-width: 200px;
+        }
+        #loading button:active {
+            transform: scale(0.98);
+        }
+        #app-frame {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+        .error {
+            color: #ef4444;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h1>📱 Trading Hub Mobile</h1>
+        <p>Enter your Streamlit server URL:</p>
+        <input
+            type="text"
+            id="server-url"
+            placeholder="https://yourapp.streamlit.app"
+            value="https://myprojectx-4uh3okcgzcdlcweor45kmq.streamlit.app"
+        />
+        <button onclick="loadApp()">🚀 Connect to Server</button>
+        <p class="error" id="error" style="display: none;"></p>
+        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">
+            <strong>Local PC:</strong> http://192.168.0.XXX:8501<br>
+            <strong>Cloud:</strong> https://myprojectx-4uh3okcgzcdlcweor45kmq.streamlit.app<br>
+            <br>
+            <span style="font-size: 11px;">After cloud deployment, update this URL in<br>android_app/www/index.html and rebuild APK</span>
+        </p>
+    </div>
+    <iframe id="app-frame"></iframe>
+
+    <script>
+        // Load saved URL from localStorage
+        const savedUrl = localStorage.getItem('streamlit_url');
+        if (savedUrl) {
+            document.getElementById('server-url').value = savedUrl;
+        }
+
+        function loadApp() {
+            const input = document.getElementById('server-url');
+            const url = input.value.trim();
+            const errorDiv = document.getElementById('error');
+
+            // Validate URL
+            if (!url) {
+                errorDiv.textContent = 'Please enter a URL';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                new URL(url);
+            } catch (e) {
+                errorDiv.textContent = 'Invalid URL format';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Save URL
+            localStorage.setItem('streamlit_url', url);
+
+            // Load app in iframe
+            const iframe = document.getElementById('app-frame');
+            const loading = document.getElementById('loading');
+
+            iframe.src = url;
+            iframe.style.display = 'block';
+            loading.style.display = 'none';
+
+            // Handle iframe load error
+            iframe.onerror = function() {
+                errorDiv.textContent = 'Failed to connect. Is the server running?';
+                errorDiv.style.display = 'block';
+                iframe.style.display = 'none';
+                loading.style.display = 'flex';
+            };
+        }
+
+        // Auto-load if URL is saved and valid
+        window.addEventListener('load', function() {
+            const savedUrl = localStorage.getItem('streamlit_url');
+            if (savedUrl) {
+                const urlInput = document.getElementById('server-url');
+                if (urlInput.value) {
+                    // Uncomment to auto-connect on launch:
+                    // loadApp();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
