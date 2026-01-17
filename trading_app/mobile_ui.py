@@ -735,7 +735,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
         </div>
         """, unsafe_allow_html=True)
 
-        # ML Insights (if available)
+        # ML Insights (if available) - only when we have evaluation
         from config import ML_ENABLED, ML_SHADOW_MODE
         if ML_ENABLED and ML_SHADOW_MODE and reasons:
             ml_reason = None
@@ -773,6 +773,23 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
                         """, unsafe_allow_html=True)
 
                     st.caption("⚠️ Shadow Mode: ML predictions shown for monitoring only")
+
+    else:
+        # No evaluation available (market closed, weekend, or error)
+        st.markdown("### 🎯 Status")
+        st.markdown(f"""
+        <div class="mobile-status">
+            <div class="mobile-status-header">STANDBY</div>
+            <ul class="mobile-status-reasons">
+                <li>• Market closed or no evaluation available</li>
+                <li>• Historical data accessible for analysis</li>
+                <li>• Use Trade Calculator for manual setups</li>
+            </ul>
+            <div class="mobile-status-action">
+                Check back during market hours (09:00-02:00 AEST)
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
     # Session Info (Basic - not full Market Intelligence)
     st.markdown("### 📊 Session & Time")
@@ -897,7 +914,7 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
                 current_price = latest_bar['close'] if latest_bar else None
 
                 # Calculate ORB times
-                if orb_name and latest_evaluation.strategy_name:
+                if orb_name and latest_evaluation and hasattr(latest_evaluation, 'strategy_name') and latest_evaluation.strategy_name:
                     orb_hour = int(orb_name[:2])
                     orb_min = int(orb_name[2:]) if len(orb_name) == 4 else 0
                     from datetime import datetime
@@ -917,7 +934,7 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
                 target_price = None
                 direction = None
 
-                if latest_evaluation.action.value == "ENTER" and orb_high and orb_low:
+                if latest_evaluation and hasattr(latest_evaluation, 'action') and latest_evaluation.action.value == "ENTER" and orb_high and orb_low:
                     if current_price and current_price > orb_high:
                         direction = "LONG"
                     elif current_price and current_price < orb_low:
