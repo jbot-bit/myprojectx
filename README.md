@@ -109,6 +109,11 @@ python wipe_mgc.py
 python check_db.py
 python validate_data.py                 # Comprehensive validation
 python validate_data.py --report         # Save JSON report
+
+# System audit (run after major changes)
+python audit_master.py                  # Complete 38-test audit (100% pass rate)
+python audit_master.py --quick          # Quick validation check
+python test_app_sync.py                 # Verify app synchronization
 ```
 
 ### Analysis & Research
@@ -224,6 +229,41 @@ python visualize.py --text               # Text-based (no matplotlib)
 
 ---
 
+## System Audit & Validation
+
+### Complete Audit Framework (38 Tests)
+
+Comprehensive audit system validates all aspects of the trading system:
+
+```bash
+# Run complete audit (all 38 tests)
+python audit_master.py
+
+# Quick validation check
+python audit_master.py --quick
+
+# Run specific step
+python audit_master.py --step 1     # Data integrity
+python audit_master.py --step 2     # Feature verification
+python audit_master.py --step 3     # Strategy validation
+
+# Verify app synchronization (CRITICAL)
+python test_app_sync.py
+```
+
+**Audit Coverage:**
+- **Step 1: Data Integrity** (12 tests) - Validates raw data, ORBs, sessions
+- **Step 1.5: Gap & Transition** (5 tests) - Weekend/holiday behavior
+- **Step 2: Feature Verification** (11 tests) - Deterministic calculations
+- **Step 2.4: Time-Safety** (5 tests) - Zero-lookahead enforcement
+- **Step 3: Strategy Validation** (5 tests) - Strategy correctness
+
+**Current Status**: 38/38 tests passed (100%)
+
+All reports saved to `audit_reports/` directory. See `MASTER_AUDIT_PLAN.md` for details.
+
+---
+
 ## File Structure
 
 ```
@@ -260,6 +300,19 @@ myprojectx/
 │   ├── check_db.py                       # Quick DB check
 │   ├── wipe_mgc.py                       # Wipe all data
 │   └── dump_contracts.py                 # List contracts
+│
+├── Audit System
+│   ├── audit_master.py                   # Main audit runner ⭐
+│   ├── audits/step1_data_integrity.py    # Data integrity tests
+│   ├── audits/step1a_gaps_transitions.py # Gap/transition tests
+│   ├── audits/step2_feature_verification.py # Feature tests
+│   ├── audits/step2a_time_assertions.py  # Time-safety tests
+│   ├── audits/step3_strategy_validation.py # Strategy tests
+│   ├── audits/attack_harness.py          # Attack testing framework
+│   ├── test_app_sync.py                  # App sync verification ⭐
+│   ├── MASTER_AUDIT_PLAN.md              # Audit specification
+│   ├── AUDIT_STATUS_JAN17.md             # Latest status report
+│   └── audit_reports/                    # JSON/CSV reports
 │
 └── charts/                          # Generated visualizations
     ├── win_rates.png
