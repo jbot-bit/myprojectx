@@ -128,8 +128,8 @@ if "risk_manager" not in st.session_state:
 if "position_tracker" not in st.session_state:
     st.session_state.position_tracker = PositionTracker()
 if "setup_scanner" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.setup_scanner = SetupScanner(gold_db_path)
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.setup_scanner = SetupScanner(None)
 if "chart_timeframe" not in st.session_state:
     st.session_state.chart_timeframe = ChartTimeframe.M1
 if "indicators_enabled" not in st.session_state:
@@ -141,11 +141,11 @@ if "indicators_enabled" not in st.session_state:
         "orb_overlays": True,
     }
 if "directional_bias_detector" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.directional_bias_detector = DirectionalBiasDetector(gold_db_path)
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.directional_bias_detector = DirectionalBiasDetector(None)
 if "strategy_discovery" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.strategy_discovery = StrategyDiscovery(gold_db_path)
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.strategy_discovery = StrategyDiscovery(None)
 # MarketIntelligence removed - was skeleton code (initialized but never used)
 if "mobile_current_card" not in st.session_state:
     st.session_state.mobile_current_card = 0  # Start at Dashboard

@@ -30,7 +30,8 @@ class SetupScanner:
     Monitors all 17 validated setups (6 MGC + 5 NQ + 6 MPL) simultaneously.
     """
 
-    def __init__(self, db_path: str = "gold.db"):
+    def __init__(self, db_path: Optional[str] = None):
+        # Pass None for cloud-aware path detection
         self.detector = SetupDetector(db_path)
         self.tz = ZoneInfo("Australia/Brisbane")
 
