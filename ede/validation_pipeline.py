@@ -22,7 +22,7 @@ import logging
 import random
 from datetime import datetime
 
-from backtest_engine import BacktestEngine, BacktestResult
+from backtest_engine import BacktestEngine, BacktestResult, DB_PATH
 from lifecycle_manager import LifecycleManager, EdgeStatus
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ class ValidationPipeline:
     Runs all attacks and tests on edge candidates.
     """
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: str = DB_PATH):
         self.engine = BacktestEngine(db_path)
         self.lifecycle_manager = LifecycleManager(db_path)
 

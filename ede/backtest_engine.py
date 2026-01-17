@@ -363,7 +363,7 @@ class BacktestEngine:
             orb_cols = [col for col in day_features.index if col.endswith('_size')]
             if not orb_cols:
                 return False
-            orb_sizes = [day_features[col] for col in orb_cols if pd.notna(day_features[col])]
+            orb_sizes = [float(day_features[col]) for col in orb_cols if pd.notna(day_features[col])]
             if not orb_sizes or max(orb_sizes) < filters['orb_size_min']:
                 return False
 
