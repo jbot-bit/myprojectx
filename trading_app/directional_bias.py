@@ -15,6 +15,7 @@ import duckdb
 from typing import Optional, Dict, Tuple
 from datetime import datetime, timedelta
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +60,16 @@ class DirectionalBiasDetector:
     to other ORB times.
     """
 
-    def __init__(self, db_path: str = "../gold.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        # Use cloud-aware path if not provided
+        if db_path is None:
+            from cloud_mode import get_database_path
+            self.db_path = get_database_path()
+        else:
+            self.db_path = db_path
+        
+        # Lazy connection - only connect when needed
+        self._con = None
 
     def get_directional_bias(
         self,
@@ -106,11 +115,31 @@ class DirectionalBiasDetector:
         # Make prediction
         return self._predict_direction(signals)
 
+    def _get_connection(self):
+        """Get database connection, creating it if needed"""
+        if self._con is None:
+            try:
+                # Check if database exists
+                db_path_obj = Path(self.db_path)
+                if not db_path_obj.exists():
+                    logger.warning(f"Database not found at {self.db_path}. Directional bias unavailable.")
+                    return None
+                
+                self._con = duckdb.connect(self.db_path, read_only=True)
+                logger.info(f"Connected to database: {self.db_path}")
+            except Exception as e:
+                logger.error(f"Error connecting to database {self.db_path}: {e}")
+                return None
+        
+        return self._con
+
     def _get_orb_context(self, instrument: str, current_date: datetime) -> Optional[Dict]:
         """Get ORB context from database (Asia session, prior ORBs)"""
 
         try:
-            con = duckdb.connect(self.db_path, read_only=True)
+            con = self._get_connection()
+            if con is None:
+                return None
 
             # Get today's data (if available)
             query = """
@@ -132,7 +161,6 @@ class DirectionalBiasDetector:
             """
 
             result = con.execute(query, [instrument, current_date.date()]).fetchone()
-            con.close()
 
             if not result:
                 return None

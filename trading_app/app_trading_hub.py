@@ -105,8 +105,10 @@ if "chat_history" not in st.session_state:
 if "alert_system" not in st.session_state:
     st.session_state.alert_system = AlertSystem()
 if "setup_scanner" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.setup_scanner = SetupScanner(gold_db_path)
+    # Use cloud-aware path
+    from cloud_mode import get_database_path
+    db_path = get_database_path()
+    st.session_state.setup_scanner = SetupScanner(db_path)
 if "chart_timeframe" not in st.session_state:
     st.session_state.chart_timeframe = ChartTimeframe.M1
 if "indicators_enabled" not in st.session_state:
@@ -135,11 +137,11 @@ if "risk_manager" not in st.session_state:
 if "position_tracker" not in st.session_state:
     st.session_state.position_tracker = PositionTracker()
 if "directional_bias_detector" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.directional_bias_detector = DirectionalBiasDetector(gold_db_path)
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.directional_bias_detector = DirectionalBiasDetector(None)
 if "strategy_discovery" not in st.session_state:
-    gold_db_path = str(Path(__file__).parent.parent / "gold.db")
-    st.session_state.strategy_discovery = StrategyDiscovery(gold_db_path)
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.strategy_discovery = StrategyDiscovery(None)
 if "market_intelligence" not in st.session_state:
     st.session_state.market_intelligence = MarketIntelligence(TZ_LOCAL)
 
@@ -204,10 +206,11 @@ with st.sidebar:
                             st.info("📊 Loading from cache (data < 6 hours old)")
 
                     if needs_backfill:
-                        # Backfill from gold.db then refresh
-                        gold_db_path = str(Path(__file__).parent.parent / "gold.db")
+                        # Backfill from database then refresh
+                        from cloud_mode import get_database_path
+                        db_path = get_database_path()
                         st.info("🔄 Loading fresh data from database...")
-                        loader.backfill_from_gold_db(gold_db_path, days=2)
+                        loader.backfill_from_gold_db(db_path, days=2)
 
                     loader.refresh()
 

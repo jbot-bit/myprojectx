@@ -8,6 +8,8 @@ import pandas as pd
 from dataclasses import dataclass
 from typing import List, Optional, Dict
 import logging
+from pathlib import Path
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -53,9 +55,16 @@ class BacktestResult:
 class StrategyDiscovery:
     """Backtest engine for discovering profitable ORB configurations"""
 
-    def __init__(self, db_path: str = "gold.db"):
-        self.db_path = db_path
-        self.con = duckdb.connect(db_path, read_only=True)
+    def __init__(self, db_path: Optional[str] = None):
+        # Use cloud-aware path if not provided
+        if db_path is None:
+            from cloud_mode import get_database_path
+            self.db_path = get_database_path()
+        else:
+            self.db_path = db_path
+        
+        # Lazy connection - only connect when needed
+        self._con = None
 
         # Map instruments to their feature tables
         self.feature_tables = {
@@ -70,6 +79,24 @@ class StrategyDiscovery:
             "NQ": 2,    # $2/point
             "MPL": 5    # $5/point (micro)
         }
+
+    def _get_connection(self):
+        """Get database connection, creating it if needed"""
+        if self._con is None:
+            try:
+                # Check if database exists
+                db_path_obj = Path(self.db_path)
+                if not db_path_obj.exists():
+                    logger.warning(f"Database not found at {self.db_path}. Strategy discovery unavailable.")
+                    return None
+                
+                self._con = duckdb.connect(self.db_path, read_only=True)
+                logger.info(f"Connected to database: {self.db_path}")
+            except Exception as e:
+                logger.error(f"Error connecting to database {self.db_path}: {e}")
+                return None
+        
+        return self._con
 
     def backtest_configuration(self, config: DiscoveryConfig) -> BacktestResult:
         """
@@ -100,7 +127,21 @@ class StrategyDiscovery:
         ORDER BY date_local
         """
 
-        df = self.con.execute(query).df()
+        con = self._get_connection()
+        if con is None:
+            return BacktestResult(
+                config=config,
+                total_trades=0,
+                wins=0,
+                losses=0,
+                win_rate=0.0,
+                avg_r=0.0,
+                annual_trades=0,
+                tier="N/A",
+                total_r=0.0
+            )
+
+        df = con.execute(query).df()
 
         if df.empty:
             return BacktestResult(
@@ -256,18 +297,27 @@ class StrategyDiscovery:
 
     def get_existing_setups(self, instrument: str, orb_time: str) -> List[Dict]:
         """Get existing validated setups for this instrument/ORB from database"""
+        con = self._get_connection()
+        if con is None:
+            return []
+        
         query = """
         SELECT instrument, orb_time, tier, win_rate, rr, sl_mode, orb_size_filter, avg_r, annual_trades
         FROM validated_setups
         WHERE instrument = ? AND orb_time = ?
         """
-        df = self.con.execute(query, [instrument, orb_time]).df()
-        return df.to_dict('records') if not df.empty else []
+        try:
+            df = con.execute(query, [instrument, orb_time]).df()
+            return df.to_dict('records') if not df.empty else []
+        except Exception as e:
+            logger.error(f"Error querying validated_setups: {e}")
+            return []
 
     def close(self):
         """Close database connection"""
-        if self.con:
-            self.con.close()
+        if self._con:
+            self._con.close()
+            self._con = None
 
 
 def add_setup_to_production(

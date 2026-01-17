@@ -37,7 +37,7 @@ if not exist "C:\temp\trading_hub_android" (
 
 REM Step 2: Check Java 21
 echo [2/4] Checking Java version...
-set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot
+set JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot
 
 if not exist "%JAVA_HOME%\bin\java.exe" (
     echo Java 21 not found!

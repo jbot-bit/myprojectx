@@ -16,6 +16,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import logging
 import pandas as pd
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -23,38 +24,68 @@ logger = logging.getLogger(__name__)
 class SetupDetector:
     """Detects validated high-probability trading setups."""
 
-    def __init__(self, db_path: str = "../gold.db"):
-        self.db_path = db_path
+    def __init__(self, db_path: Optional[str] = None):
+        # Use cloud-aware path if not provided
+        if db_path is None:
+            from cloud_mode import get_database_path
+            self.db_path = get_database_path()
+        else:
+            self.db_path = db_path
+        
+        # Lazy connection - only connect when needed
+        self._con = None
+
+    def _get_connection(self):
+        """Get database connection, creating it if needed"""
+        if self._con is None:
+            try:
+                # Check if database exists
+                db_path_obj = Path(self.db_path)
+                if not db_path_obj.exists():
+                    logger.warning(f"Database not found at {self.db_path}. Setup detection unavailable.")
+                    return None
+                
+                self._con = duckdb.connect(self.db_path, read_only=True)
+                logger.info(f"Connected to database: {self.db_path}")
+            except Exception as e:
+                logger.error(f"Error connecting to database {self.db_path}: {e}")
+                return None
+        
+        return self._con
 
     def get_all_validated_setups(self, instrument: str = "MGC") -> List[Dict]:
         """Get all validated setups for an instrument."""
-        con = duckdb.connect(self.db_path, read_only=True)
+        try:
+            con = self._get_connection()
+            if con is None:
+                return []
 
-        result = con.execute("""
-            SELECT
-                instrument,
-                setup_id,
-                orb_time,
-                rr,
-                sl_mode,
-                close_confirmations,
-                buffer_ticks,
-                orb_size_filter,
-                atr_filter,
-                trades,
-                win_rate,
-                avg_r,
-                annual_trades,
-                tier,
-                notes
-            FROM validated_setups
-            WHERE instrument = ?
-            ORDER BY avg_r DESC
-        """, [instrument]).df()
+            result = con.execute("""
+                SELECT
+                    instrument,
+                    setup_id,
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    close_confirmations,
+                    buffer_ticks,
+                    orb_size_filter,
+                    atr_filter,
+                    trades,
+                    win_rate,
+                    avg_r,
+                    annual_trades,
+                    tier,
+                    notes
+                FROM validated_setups
+                WHERE instrument = ?
+                ORDER BY avg_r DESC
+            """, [instrument]).df()
 
-        con.close()
-
-        return result.to_dict('records')
+            return result.to_dict('records')
+        except Exception as e:
+            logger.error(f"Error getting validated setups: {e}")
+            return []
 
     def check_orb_setup(
         self,
@@ -69,80 +100,89 @@ class SetupDetector:
 
         Returns list of matching setups, sorted by tier (best first).
         """
-        con = duckdb.connect(self.db_path, read_only=True)
+        try:
+            con = self._get_connection()
+            if con is None:
+                return []
 
-        # Calculate orb_size as % of ATR
-        if atr_20 and atr_20 > 0:
-            orb_size_pct = orb_size / atr_20
-        else:
-            orb_size_pct = None
+            # Calculate orb_size as % of ATR
+            if atr_20 and atr_20 > 0:
+                orb_size_pct = orb_size / atr_20
+            else:
+                orb_size_pct = None
 
-        # Find matching setups
-        query = """
-            SELECT
-                setup_id,
-                orb_time,
-                rr,
-                sl_mode,
-                close_confirmations,
-                buffer_ticks,
-                orb_size_filter,
-                win_rate,
-                avg_r,
-                tier,
-                notes
-            FROM validated_setups
-            WHERE instrument = ?
-              AND orb_time = ?
-              AND (orb_size_filter IS NULL OR ? <= orb_size_filter)
-            ORDER BY
-                CASE tier
-                    WHEN 'S+' THEN 1
-                    WHEN 'S' THEN 2
-                    WHEN 'A' THEN 3
-                    WHEN 'B' THEN 4
-                    WHEN 'C' THEN 5
-                    ELSE 6
-                END,
-                avg_r DESC
-        """
+            # Find matching setups
+            query = """
+                SELECT
+                    setup_id,
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    close_confirmations,
+                    buffer_ticks,
+                    orb_size_filter,
+                    win_rate,
+                    avg_r,
+                    tier,
+                    notes
+                FROM validated_setups
+                WHERE instrument = ?
+                  AND orb_time = ?
+                  AND (orb_size_filter IS NULL OR ? <= orb_size_filter)
+                ORDER BY
+                    CASE tier
+                        WHEN 'S+' THEN 1
+                        WHEN 'S' THEN 2
+                        WHEN 'A' THEN 3
+                        WHEN 'B' THEN 4
+                        WHEN 'C' THEN 5
+                        ELSE 6
+                    END,
+                    avg_r DESC
+            """
 
-        result = con.execute(query, [instrument, orb_time, orb_size_pct]).df()
-        con.close()
+            result = con.execute(query, [instrument, orb_time, orb_size_pct]).df()
 
-        matches = result.to_dict('records')
+            matches = result.to_dict('records')
 
-        if matches:
-            logger.info(f"Found {len(matches)} validated setups for {instrument} {orb_time} ORB")
-            for match in matches:
-                logger.info(f"  -> {match['tier']} tier: {match['win_rate']:.1f}% WR, {match['avg_r']:+.3f}R avg")
+            if matches:
+                logger.info(f"Found {len(matches)} validated setups for {instrument} {orb_time} ORB")
+                for match in matches:
+                    logger.info(f"  -> {match['tier']} tier: {match['win_rate']:.1f}% WR, {match['avg_r']:+.3f}R avg")
 
-        return matches
+            return matches
+        except Exception as e:
+            logger.error(f"Error checking ORB setup: {e}")
+            return []
 
     def get_elite_setups(self, instrument: str = "MGC") -> List[Dict]:
         """Get only S+ and S tier setups (elite performers)."""
-        con = duckdb.connect(self.db_path, read_only=True)
+        try:
+            con = self._get_connection()
+            if con is None:
+                return []
 
-        result = con.execute("""
-            SELECT
-                setup_id,
-                orb_time,
-                rr,
-                sl_mode,
-                win_rate,
-                avg_r,
-                annual_trades,
-                tier,
-                notes
-            FROM validated_setups
-            WHERE instrument = ?
-              AND tier IN ('S+', 'S')
-            ORDER BY avg_r DESC
-        """, [instrument]).df()
+            result = con.execute("""
+                SELECT
+                    setup_id,
+                    orb_time,
+                    rr,
+                    sl_mode,
+                    win_rate,
+                    avg_r,
+                    annual_trades,
+                    tier,
+                    notes
+                FROM validated_setups
+                WHERE instrument = ?
+                  AND tier IN ('S+', 'S')
+                ORDER BY avg_r DESC
+            """, [instrument]).df()
 
-        con.close()
-
-        return result.to_dict('records')
+            return result.to_dict('records')
+        except Exception as e:
+            logger.error(f"Error getting elite setups: {e}")
+            return []
 
     def format_setup_alert(self, setup: Dict) -> str:
         """Format a validated setup as an alert message."""
