@@ -1,0 +1,51 @@
+You are working inside a production trading application.
+
+Goal:
+Design and implement a comprehensive testing framework that validates BOTH:
+1) Strategy correctness (logic, calculations, rules)
+2) Strategy presentation (how strategies are displayed in the app UI)
+
+Constraints:
+- Do NOT assume any strategy is correct.
+- Do NOT change strategy logic unless a test proves it is wrong.
+- Do NOT hardcode values unless required for deterministic tests.
+- Respect existing canonical enforcement, zero-lookahead rules, and database constraints.
+
+Testing Scope:
+1) Strategy Logic Tests
+   - Validate inputs → outputs deterministically
+   - Confirm no lookahead bias
+   - Verify session timing, conditions, and filters are applied correctly
+   - Confirm expected behavior on edge cases (no trade, partial data, missing signals)
+   - Confirm results are reproducible
+
+2) Strategy Data Integrity Tests
+   - Confirm strategies read from canonical data sources only
+   - Verify calculations match stored values where applicable
+   - Detect mismatches between computed and displayed results
+
+3) Strategy Display / UI Tests
+   - Confirm strategies shown in the app match the underlying logic
+   - Validate labels, names, directions, metrics, and statistics
+   - Ensure no strategy is displayed without passing validation
+   - Confirm sorting, filtering, and grouping behave correctly
+   - Ensure UI never shows contradictory or misleading information
+
+4) Regression & Drift Detection
+   - Tests should fail if strategy outputs or display change unexpectedly
+   - Flag silent changes in performance, rules, or presentation
+
+Output Requirements:
+- Propose the test structure first (types of tests, layers, responsibilities)
+- Identify where tests should live in the repo
+- Define what is tested automatically vs manually
+- Produce tests incrementally, starting with the most critical coverage
+- Ask for confirmation before implementing large test suites
+
+Tone:
+- Defensive
+- Deterministic
+- Audit-grade
+- Production-safe
+
+Do NOT implement anything until the proposed testing plan is reviewed and approved.
