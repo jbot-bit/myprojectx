@@ -52,11 +52,11 @@ def get_canon_db_path() -> str:
     config = load_canonical_config()
 
     # Check if running in cloud mode
-    from cloud_mode import is_cloud_deployment
+    from trading_app.cloud_mode import is_cloud_deployment
 
     if is_cloud_deployment():
         # Cloud mode - use MotherDuck
-        from cloud_mode import get_database_connection
+        from trading_app.cloud_mode import get_database_connection
         # Return connection string (not path)
         token = os.getenv("MOTHERDUCK_TOKEN")
         if token:
@@ -157,7 +157,7 @@ def assert_canonical_environment():
         )
 
     # Check 3: Canonical database accessible (local mode only)
-    from cloud_mode import is_cloud_deployment
+    from trading_app.cloud_mode import is_cloud_deployment
 
     if not is_cloud_deployment():
         logger.info("Checking canonical database access...")
