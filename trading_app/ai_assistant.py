@@ -12,7 +12,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Database path
+# Database path (legacy - use cloud_mode.get_database_connection() instead)
 DB_PATH = Path(__file__).parent.parent / "gold.db"
 
 
@@ -41,14 +41,17 @@ class TradingAIAssistant:
     def load_validated_setups(self, instrument: str = "MGC") -> str:
         """
         Load validated setups from database and format for AI prompt.
+        Cloud-aware: Uses MotherDuck in cloud, local gold.db otherwise.
 
         Returns formatted string with current strategy performance data.
         """
         try:
-            if not DB_PATH.exists():
-                return "**VALIDATED SETUPS:** Database not available\n"
+            # Use cloud-aware connection
+            from cloud_mode import get_database_connection
+            con = get_database_connection()
 
-            con = duckdb.connect(str(DB_PATH), read_only=True)
+            if con is None:
+                return "**VALIDATED SETUPS:** Database not available\n"
 
             # Query validated setups for this instrument
             setups = con.execute("""
