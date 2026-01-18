@@ -240,32 +240,56 @@ class LiveDataLoader:
             logger.warning(f"No bars returned from ProjectX for {self.symbol}")
             return pd.DataFrame(columns=["ts_utc", "open", "high", "low", "close", "volume"])
 
-        # Insert/update bars in database
-        for bar in bars:
-            self.insert_bar({
-                "ts_utc": bar["t"],  # ISO timestamp
-                "open": float(bar["o"]),
-                "high": float(bar["h"]),
-                "low": float(bar["l"]),
-                "close": float(bar["c"]),
-                "volume": int(bar["v"]),
-            })
+        # Convert bars to DataFrame directly (skip database in cloud mode for performance)
+        from cloud_mode import is_cloud_deployment
 
-        # Now fetch from database to get standardized format
-        cutoff = datetime.now(TZ_UTC) - timedelta(minutes=lookback_minutes)
-        result = self.con.execute(f"""
-            SELECT ts_utc, open, high, low, close, volume
-            FROM live_bars
-            WHERE symbol = ? AND ts_utc >= ?
-            ORDER BY ts_utc
-        """, [self.symbol, cutoff]).fetchdf()
+        if is_cloud_deployment():
+            # Cloud mode: Process bars directly without database writes
+            rows = []
+            for bar in bars:
+                rows.append({
+                    "ts_utc": pd.to_datetime(bar["t"]),
+                    "open": float(bar["o"]),
+                    "high": float(bar["h"]),
+                    "low": float(bar["l"]),
+                    "close": float(bar["c"]),
+                    "volume": int(bar["v"]),
+                })
 
-        # Convert to local timezone for display
-        result["ts_local"] = pd.to_datetime(result["ts_utc"]).dt.tz_convert(TZ_LOCAL)
+            result = pd.DataFrame(rows)
+            result["ts_local"] = result["ts_utc"].dt.tz_convert(TZ_LOCAL)
 
-        self.bars_df = result
-        logger.info(f"Fetched {len(bars)} bars from ProjectX for {self.symbol}")
-        return result
+            self.bars_df = result
+            logger.info(f"Fetched {len(bars)} bars from ProjectX for {self.symbol} (cloud mode)")
+            return result
+
+        else:
+            # Local mode: Insert into database
+            for bar in bars:
+                self.insert_bar({
+                    "ts_utc": bar["t"],
+                    "open": float(bar["o"]),
+                    "high": float(bar["h"]),
+                    "low": float(bar["l"]),
+                    "close": float(bar["c"]),
+                    "volume": int(bar["v"]),
+                })
+
+            # Fetch from database to get standardized format
+            cutoff = datetime.now(TZ_UTC) - timedelta(minutes=lookback_minutes)
+            result = self.con.execute(f"""
+                SELECT ts_utc, open, high, low, close, volume
+                FROM live_bars
+                WHERE symbol = ? AND ts_utc >= ?
+                ORDER BY ts_utc
+            """, [self.symbol, cutoff]).fetchdf()
+
+            # Convert to local timezone for display
+            result["ts_local"] = pd.to_datetime(result["ts_utc"]).dt.tz_convert(TZ_LOCAL)
+
+            self.bars_df = result
+            logger.info(f"Fetched {len(bars)} bars from ProjectX for {self.symbol}")
+            return result
 
     def get_bars_in_range(self, start_local: datetime, end_local: datetime) -> pd.DataFrame:
         """
