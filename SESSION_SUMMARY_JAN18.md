@@ -108,7 +108,7 @@ NQ (Nasdaq E-mini):
 ## Files Created/Modified Today
 
 ### New Files Created:
-1. `MULTI_INSTRUMENT_ARCHITECTURE.md` - Complete architecture documentation
+1. `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md` - Complete architecture documentation
 2. `trading_app/db_router.py` - Cloud/local database router
 3. `scripts/check_motherduck_data.py` - Cloud data checker
 4. `scripts/quick_check_cloud.py` - Quick cloud check
@@ -127,7 +127,7 @@ NQ (Nasdaq E-mini):
 ### Untracked Files (Ready to Commit):
 - `MIGRATION_SUMMARY.md`
 - `MOTHERDUCK_MIGRATION_GUIDE.md`
-- `MULTI_INSTRUMENT_ARCHITECTURE.md`
+- `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md`
 - `trading_app/db_router.py`
 - `scripts/migrate_to_motherduck.py`
 - `scripts/test_motherduck_connection.py`
@@ -291,7 +291,7 @@ This was the right call - always verify before destroying data.
 ## Support & References
 
 ### Documentation:
-- `MULTI_INSTRUMENT_ARCHITECTURE.md` - Architecture details
+- `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md` - Architecture details
 - `CLAUDE.md` - Project commands and guidelines
 - `AUDIT_STATUS_JAN17.md` - Audit system status
 - `APP_PRODUCTION_STATUS.md` - Trading app status
