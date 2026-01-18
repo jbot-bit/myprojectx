@@ -198,8 +198,14 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
                 # Fetch data (cloud-aware)
                 if is_cloud_deployment():
                     if os.getenv("PROJECTX_API_KEY"):
-                        loader.refresh()
-                        st.success("Fetched live data from ProjectX API")
+                        st.info("Connecting to ProjectX API...")
+                        try:
+                            loader.refresh()
+                            st.success("✓ Fetched live data from ProjectX API")
+                        except Exception as e:
+                            st.error(f"ProjectX API error: {str(e)[:100]}")
+                            logger.error(f"ProjectX refresh failed: {e}", exc_info=True)
+                            st.stop()
                     else:
                         st.error("No PROJECTX_API_KEY found. Add it in Streamlit Cloud secrets.")
                         st.stop()
