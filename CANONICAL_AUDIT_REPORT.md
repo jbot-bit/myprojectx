@@ -102,7 +102,7 @@ See full inventory from agent a660ce8 above.
 5. **README.md** - Project overview
 
 #### Strategy & Logic (9 files) - CANONICAL/IMPORTANT
-6. **SOURCE_OF_TRUTH.md** - Which app to use (app_trading_hub.py)
+6. **APP_USAGE_GUIDE.md** - Which app to use (app_trading_hub.py)
 7. **UNICORN_SETUPS_CORRECTED.md** - Post-bugfix setups
 8. **SCAN_WINDOW_BUG_FIX_SUMMARY.md** - Critical bug context
 9. **ZERO_LOOKAHEAD_RULES.md** - Research methodology
