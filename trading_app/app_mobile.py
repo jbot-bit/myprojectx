@@ -222,23 +222,33 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
 
                 st.session_state.data_loader = loader
 
-                # Initialize ML engine if enabled
+                # Initialize ML engine if enabled (with timeout protection)
                 ml_engine = None
                 if ML_ENABLED:
                     try:
+                        st.info("Loading ML models...")
                         import sys
                         sys.path.insert(0, str(Path(__file__).parent.parent))
                         from ml_inference.inference_engine import MLInferenceEngine
                         ml_engine = MLInferenceEngine()
                         logger.info("ML engine initialized successfully")
+                        st.success("ML models loaded ✓")
+                    except ImportError as e:
+                        logger.warning(f"ML inference not available: {e}")
+                        st.warning("ML predictions disabled (models not found)")
                     except Exception as e:
                         logger.warning(f"ML engine initialization failed: {e}")
+                        st.warning(f"ML predictions disabled ({str(e)[:50]}...)")
 
+                # Initialize strategy engine
+                st.info("Initializing strategy engine...")
                 st.session_state.strategy_engine = StrategyEngine(loader, ml_engine=ml_engine)
 
-                st.success(f"Loaded data for {PRIMARY_INSTRUMENT}")
+                st.success(f"✓ Loaded data for {PRIMARY_INSTRUMENT}")
                 logger.info(f"Data initialized for {PRIMARY_INSTRUMENT}")
 
+                # Small delay to show success message
+                time.sleep(0.5)
                 st.rerun()
 
             except Exception as e:

@@ -204,7 +204,9 @@ SNAP_TO_CARDS = True  # CSS scroll-snap for card alignment
 # ============================================================================
 # ML/AI CONFIGURATION
 # ============================================================================
-ML_ENABLED = os.getenv("ML_ENABLED", "true").lower() == "true"  # Enable ML predictions
+# Disable ML in cloud by default for faster loading (can override in secrets with ML_ENABLED="true")
+_is_cloud = os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
+ML_ENABLED = os.getenv("ML_ENABLED", "false" if _is_cloud else "true").lower() == "true"
 ML_CONFIDENCE_THRESHOLD = float(os.getenv("ML_CONFIDENCE_THRESHOLD", "0.55"))  # Minimum confidence to show
 ML_HIGH_CONFIDENCE = float(os.getenv("ML_HIGH_CONFIDENCE", "0.65"))  # High confidence threshold
 ML_CACHE_TTL = int(os.getenv("ML_CACHE_TTL", "300"))  # Cache TTL in seconds (5 minutes)
