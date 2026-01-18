@@ -12,6 +12,7 @@ Benefits:
 - Zero chance of mismatch errors
 - Single source of truth (database)
 - test_app_sync.py no longer needed
+- Cloud-aware: Uses MotherDuck in cloud deployment
 
 Usage:
     from config_generator import load_instrument_configs
@@ -24,11 +25,54 @@ import duckdb
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 # Database path (relative to project root)
 DB_PATH = Path(__file__).parent / "gold.db"
+
+
+def get_database_connection():
+    """
+    Get database connection (cloud-aware).
+
+    Returns:
+        duckdb.Connection - MotherDuck if in cloud, else local gold.db
+    """
+    # Check if we're in cloud deployment
+    is_cloud = (
+        os.getenv("STREAMLIT_SHARING_MODE") is not None
+        or os.getenv("STREAMLIT_RUNTIME_ENV") == "cloud"
+        or not DB_PATH.exists()
+    )
+
+    if is_cloud:
+        # Cloud mode - use MotherDuck
+        try:
+            import streamlit as st
+            token = st.secrets.get("MOTHERDUCK_TOKEN", os.getenv("MOTHERDUCK_TOKEN"))
+        except:
+            token = os.getenv("MOTHERDUCK_TOKEN")
+
+        if not token:
+            logger.error("MOTHERDUCK_TOKEN not found in cloud deployment")
+            return None
+
+        try:
+            conn = duckdb.connect(f'md:projectx_prod?motherduck_token={token}')
+            logger.info("Connected to MotherDuck for config loading")
+            return conn
+        except Exception as e:
+            logger.error(f"Failed to connect to MotherDuck: {e}")
+            return None
+    else:
+        # Local mode - use gold.db
+        if not DB_PATH.exists():
+            logger.warning(f"Database not found at {DB_PATH}")
+            return None
+
+        return duckdb.connect(str(DB_PATH), read_only=True)
 
 
 def load_instrument_configs(
@@ -37,10 +81,11 @@ def load_instrument_configs(
 ) -> Tuple[Dict[str, Dict[str, any]], Dict[str, Optional[float]]]:
     """
     Load ORB configurations and size filters for an instrument from database.
+    Cloud-aware: Uses MotherDuck in cloud, local gold.db otherwise.
 
     Args:
         instrument: Instrument symbol (e.g., 'MGC', 'NQ', 'MPL')
-        db_path: Optional path to database (defaults to gold.db in project root)
+        db_path: Optional path to database (ignored in cloud mode, uses MotherDuck)
 
     Returns:
         Tuple of (orb_configs, orb_size_filters)
@@ -58,16 +103,13 @@ def load_instrument_configs(
         >>> mgc_filters["1000"]
         None
     """
-    if db_path is None:
-        db_path = DB_PATH
-
-    # Handle missing database gracefully
-    if not db_path.exists():
-        logger.warning(f"Database not found at {db_path}. Returning empty configs.")
-        return {}, {}
-
     try:
-        conn = duckdb.connect(str(db_path), read_only=True)
+        # Get connection (cloud-aware)
+        conn = get_database_connection()
+
+        if conn is None:
+            logger.warning(f"Could not connect to database. Returning empty configs.")
+            return {}, {}
 
         # Query validated_setups for this instrument
         query = """
@@ -117,6 +159,7 @@ def load_all_instrument_configs(
 ) -> Dict[str, Tuple[Dict, Dict]]:
     """
     Load configurations for all instruments in validated_setups.
+    Cloud-aware: Uses MotherDuck in cloud, local gold.db otherwise.
 
     Returns:
         Dict mapping instrument name to (orb_configs, orb_size_filters)
@@ -128,15 +171,12 @@ def load_all_instrument_configs(
                 'MPL': (mpl_configs, mpl_filters)
             }
     """
-    if db_path is None:
-        db_path = DB_PATH
-
-    if not db_path.exists():
-        logger.warning(f"Database not found at {db_path}")
-        return {}
-
     try:
-        conn = duckdb.connect(str(db_path), read_only=True)
+        conn = get_database_connection()
+
+        if conn is None:
+            logger.warning("Could not connect to database")
+            return {}
 
         # Get list of all instruments
         instruments = conn.execute(
