@@ -3,6 +3,15 @@ MOBILE TRADING HUB - Streamlit Application
 Card-based, swipeable, mobile-first trading interface
 """
 
+import sys
+from pathlib import Path
+
+# Add trading_app directory to Python path (for Streamlit Cloud)
+if __name__ == "__main__" or "streamlit" in sys.modules:
+    current_dir = Path(__file__).parent
+    if str(current_dir) not in sys.path:
+        sys.path.insert(0, str(current_dir))
+
 import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
@@ -10,7 +19,6 @@ import time
 import logging
 import uuid
 import os
-from pathlib import Path
 from streamlit_autorefresh import st_autorefresh
 
 from config import *
