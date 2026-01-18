@@ -30,7 +30,7 @@ class CSVChartAnalyzer:
             instrument: Trading instrument (MGC, NQ, MPL)
         """
         self.instrument = instrument
-        self.setup_detector = SetupDetector(instrument=instrument)
+        self.setup_detector = SetupDetector()
 
     def analyze_csv(self, csv_data: bytes) -> Optional[Dict]:
         """

@@ -29,7 +29,7 @@ class ChartAnalyzer:
             instrument: Trading instrument (MGC, NQ, MPL)
         """
         self.instrument = instrument
-        self.setup_detector = SetupDetector(instrument=instrument)
+        self.setup_detector = SetupDetector()
 
         # Check for API key
         self.api_key = os.getenv("ANTHROPIC_API_KEY")
