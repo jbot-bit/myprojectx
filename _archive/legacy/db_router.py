@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
 """
+⚠️ DEPRECATED - Archived 2026-01-18 (police.txt enforcement)
+
+This module is NO LONGER USED. Zero imports found in codebase.
+Replaced by: trading_app/cloud_mode.py
+
+Reason: Duplicate functionality - cloud_mode.py already provides:
+- get_database_connection() (7 active imports)
+- get_motherduck_connection()
+- is_cloud_deployment()
+
+This file is kept for reference only. Do not import or use.
+
+---
+
+ORIGINAL DOCSTRING:
 Database router - single source of truth for database connections.
 Handles local vs cloud mode transparently.
 
