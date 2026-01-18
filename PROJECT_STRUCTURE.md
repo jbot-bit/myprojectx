@@ -233,7 +233,7 @@ This document describes the current production-ready file structure after compre
 - `SYNC_PROJECT_NOW.md` - Project synchronization guide
 
 **Technical Reference:**
-- `DATABASE_SCHEMA.md` - Schema documentation
+- `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md` - Schema documentation
 - `DATABASE_SCHEMA_SOURCE_OF_TRUTH.md` - Canonical schema reference
 - `TERMINOLOGY_EXPLAINED.md` - Glossary of terms
 - `PROJECT_STRUCTURE.md` - This file

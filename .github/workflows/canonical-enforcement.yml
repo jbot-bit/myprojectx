@@ -1,0 +1,156 @@
+name: Canonical Enforcement
+
+on:
+  push:
+    branches: [ main, master, mobile, develop ]
+  pull_request:
+    branches: [ main, master, mobile, develop ]
+  workflow_dispatch:
+
+jobs:
+  check-shadow-databases:
+    name: Check for Shadow Databases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Run shadow database guard
+        run: |
+          python tools/check_no_shadow_dbs.py
+        continue-on-error: false
+
+  test-canonical-environment:
+    name: Test Canonical Environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run canonical environment tests
+        run: |
+          pytest tests/test_canonical_env.py -v --tb=short
+        continue-on-error: false
+
+  test-no-hardcoded-connections:
+    name: Test No Hardcoded DB Connections
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest
+
+      - name: Run hardcoded connection tests
+        run: |
+          pytest tests/test_no_hardcoded_db_paths.py -v --tb=short
+        continue-on-error: false
+
+  verify-canonical-structure:
+    name: Verify Repository Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check CANONICAL.json exists
+        run: |
+          if [ ! -f "CANONICAL.json" ]; then
+            echo "ERROR: CANONICAL.json not found in root"
+            exit 1
+          fi
+          echo "✓ CANONICAL.json found"
+
+      - name: Check canonical module exists
+        run: |
+          if [ ! -f "trading_app/cloud_mode.py" ]; then
+            echo "ERROR: Canonical connection module not found"
+            exit 1
+          fi
+          echo "✓ Canonical connection module found"
+
+      - name: Check documentation exists
+        run: |
+          if [ ! -f "DATABASE_SCHEMA_SOURCE_OF_TRUTH.md" ]; then
+            echo "ERROR: Schema documentation missing"
+            exit 1
+          fi
+          if [ ! -f "TRADING_PLAYBOOK.md" ]; then
+            echo "ERROR: Trading playbook missing"
+            exit 1
+          fi
+          echo "✓ Documentation files found"
+
+      - name: Check no db_router imports
+        run: |
+          # Search for db_router imports in active code (excluding _archive)
+          if grep -r "from db_router import\|import db_router" --include="*.py" \
+             --exclude-dir="_archive" \
+             --exclude-dir="_INVALID_SCRIPTS_ARCHIVE" \
+             --exclude-dir="backups" .; then
+            echo "ERROR: Found imports from deprecated db_router module"
+            exit 1
+          fi
+          echo "✓ No deprecated db_router imports found"
+
+  summary:
+    name: Enforcement Summary
+    needs: [check-shadow-databases, test-canonical-environment, test-no-hardcoded-connections, verify-canonical-structure]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [ "${{ needs.check-shadow-databases.result }}" != "success" ] || \
+             [ "${{ needs.test-canonical-environment.result }}" != "success" ] || \
+             [ "${{ needs.test-no-hardcoded-connections.result }}" != "success" ] || \
+             [ "${{ needs.verify-canonical-structure.result }}" != "success" ]; then
+            echo "❌ CANONICAL ENFORCEMENT FAILED"
+            echo ""
+            echo "One or more enforcement checks failed:"
+            echo "  - Shadow databases: ${{ needs.check-shadow-databases.result }}"
+            echo "  - Canonical environment: ${{ needs.test-canonical-environment.result }}"
+            echo "  - Hardcoded connections: ${{ needs.test-no-hardcoded-connections.result }}"
+            echo "  - Repository structure: ${{ needs.verify-canonical-structure.result }}"
+            echo ""
+            echo "Please fix violations before merging."
+            exit 1
+          fi
+
+          echo "✅ CANONICAL ENFORCEMENT PASSED"
+          echo ""
+          echo "All checks passed:"
+          echo "  ✓ No shadow databases"
+          echo "  ✓ Canonical environment valid"
+          echo "  ✓ No hardcoded connections"
+          echo "  ✓ Repository structure correct"
+          echo ""
+          echo "Repository follows canonical enforcement rules."

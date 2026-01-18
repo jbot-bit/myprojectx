@@ -53,6 +53,16 @@ exports/*.csv
 # Backup files
 *.backup
 *.bak
+backups/
+
+# Shadow DB files (prevent duplicates outside canonical root locations)
+# Canonical DBs are: gold.db, live_data.db, trades.db, trading_app.db (root only)
+trading_app/*.db
+trading_app/*.db.wal
+trading_app/*.db-shm
+scripts/*.db
+scripts/*.db.wal
+scripts/*.db-shm
 
 # Temporary Claude files
 tmpclaude-*

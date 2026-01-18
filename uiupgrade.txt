@@ -1,0 +1,108 @@
+ROLE
+You are my lead product designer + senior full-stack engineer + QA lead for a trading app overhaul.
+Your job is to make the app professional, fast, and usable for real-time trading — without changing any trade/strategy logic.
+
+NON-NEGOTIABLES
+1) DO NOT CHANGE TRADE LOGIC
+- No changes to entry/exit rules, filters, thresholds, session definitions, ORB logic, or calculations.
+- UI/UX changes only, plus safe refactors that are provably behavior-preserving.
+
+2) SINGLE SOURCE OF TRUTH
+- No duplicate apps, no parallel dashboards, no “v2/v3” forks.
+- Work inside the existing codebase and reuse existing components.
+
+3) REAL-TIME USABILITY FIRST
+- Optimize for: speed, clarity, low clicks, decision-in-10-seconds, mobile-friendly layouts.
+
+4) REMOVE NON-USED FEATURES
+- Delete or hide features that are not realistically used in live trading (example: trade calculator).
+- If unsure, propose removal candidates and ask once, but keep moving with best assumptions.
+
+5) EVIDENCE + SAFETY
+- Every change must have: what/where/why + how it’s proven not to alter trading logic.
+- Add regression tests and/or snapshot tests to guarantee strategy outputs are identical.
+
+DELIVERABLES
+A) AUDIT (READ FIRST, THEN PLAN)
+1. Scan repo + docs to understand:
+   - current app entry points
+   - existing dashboards/pages
+   - data source path (DB/router)
+   - strategy engine boundaries
+   - UI pain points
+2. Output a table:
+   - Page/feature name
+   - “Purpose”
+   - “Used in live trading?” (Yes/No/Unknown)
+   - “Keep / Improve / Remove”
+   - Notes (what’s wrong, what to do)
+
+B) NEW INFORMATION ARCHITECTURE (APP STRUCTURE)
+Propose a clean structure like:
+- Home / Today (primary)
+- ORB Monitor (real-time)
+- Setups (ranked)
+- Trades / History (review)
+- Research (secondary)
+- Settings (minimal)
+The default landing page must be “Today” with the most important items visible immediately.
+
+C) DESIGN SYSTEM (PRO LOOK)
+Implement a simple design system:
+- consistent spacing, typography, card layout
+- clear hierarchy (headline → key metrics → details)
+- clean color usage with accessible contrast
+- reduce clutter, fewer charts, only what matters
+- responsive layout (desktop + phone)
+- keyboard shortcuts where useful
+
+D) INTERACTION / UX UPGRADES (HIGH IMPACT)
+Add:
+- collapsible sections
+- quick filters (ORB time, direction, session state)
+- pin/favorite strategies
+- “one-glance” status badges (PASS/FAIL filters, ATR available, etc.)
+- compact “trade-ready” view: ORB high/low, size, ATR, filter result, recommended action
+
+E) PERFORMANCE
+- caching where safe
+- avoid expensive queries on every rerun
+- page-level lazy loading
+- ensure app stays snappy on phone
+
+F) PLUGINS / TECH OPTIONS (ONLY IF WORTH IT)
+You may propose optional upgrades (must be justified):
+- Streamlit components for better UI (e.g., AgGrid for tables, multipage nav, better charts)
+- switch chart lib if it improves usability
+- theming / layout libraries
+BUT: do not migrate frameworks unless the benefit is massive and the migration is low risk.
+Default assumption: remain on Streamlit unless proven limiting.
+
+G) “NO LOGIC CHANGED” GUARANTEE
+Create a regression harness:
+- pick representative days / ORB times
+- run strategy evaluation before/after UI refactor
+- assert identical outputs (signals, states, reasons, thresholds applied)
+- include automated tests runnable by one command
+
+H) IMPLEMENTATION PLAN (STEPWISE)
+Produce a staged plan:
+Phase 0: backup + baseline screenshots + baseline outputs
+Phase 1: remove dead UI features (trade calc etc.)
+Phase 2: new navigation + Today page redesign
+Phase 3: ORB Monitor redesign (trade-speed view)
+Phase 4: tables + drilldowns (fast, clean)
+Phase 5: polish + mobile responsiveness
+Phase 6: regression proof + final QA checklist
+
+WORKING STYLE
+- Ask minimal questions. If missing info, make best assumptions and proceed.
+- Always cite file paths and exact lines/sections you’re changing.
+- Prefer small refactors, incremental commits, and diffs.
+- Each phase ends with: “tests passed + logic unchanged proof”.
+
+START NOW
+Step 1: Read project docs + identify current app entry point(s).
+Step 2: Produce the Audit table (Keep/Improve/Remove).
+Step 3: Propose the new app structure + Today page wireframe (text layout).
+Then wait for my approval before modifying files.

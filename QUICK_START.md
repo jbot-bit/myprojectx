@@ -139,7 +139,7 @@ python backtest_orb_exec_1m.py --rr-grid "1.5,2.0,2.5,3.0" --confirm 1
 - **Full Setup:** SETUP_TRADING_HUB.md
 - **Workflow:** WORKFLOW_GUIDE.md
 - **Trading Rules:** TRADING_PLAYBOOK.md
-- **Data Schema:** DATABASE_SCHEMA.md
+- **Data Schema:** DATABASE_SCHEMA_SOURCE_OF_TRUTH.md
 
 ---
 

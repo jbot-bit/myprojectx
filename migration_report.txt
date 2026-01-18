@@ -1,0 +1,24 @@
+======================================================================
+MOTHERDUCK MIGRATION
+Started: 2026-01-18T02:01:37.690172
+======================================================================
+
+[1] Connected to local gold.db
+[2] Connected to MotherDuck
+[3] Attached local gold.db
+[4] Database projectx_prod ready
+
+[4] Migrating tables:
+----------------------------------------------------------------------
+  bars_1m: 1,397,853 rows (VERIFIED)
+  bars_5m: 320,534 rows (VERIFIED)
+  daily_features_v2: 1,780 rows (VERIFIED)
+  validated_setups: 19 rows (VERIFIED)
+----------------------------------------------------------------------
+
+[5] Dataset catalog created (9 entries)
+
+======================================================================
+MIGRATION SUCCESSFUL
+Finished: 2026-01-18T02:02:10.700893
+======================================================================

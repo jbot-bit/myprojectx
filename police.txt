@@ -1,0 +1,115 @@
+YOU ARE IN ENFORCEMENT MODE.
+Goal: make the repo self-policing so it is impossible to:
+- load the wrong DB
+- use old schemas/docs by accident
+- keep multiple “sources of truth”
+- drift into duplicate apps/pipelines
+
+NON-NEGOTIABLE RULES
+1) NEVER change trading logic. Only add “guards”, “pointers”, and “tests”.
+2) Single source of truth for:
+   - DB path
+   - schema doc
+   - rules doc
+   - app entrypoint(s)
+3) If ambiguity exists, STOP and produce an evidence report before editing files.
+
+DELIVERABLES (MUST IMPLEMENT)
+A) CANONICAL POINTERS FILE (one file, repo root)
+Create: CANONICAL.json
+Fields:
+- canon_db_path
+- canon_schema_doc
+- canon_ruleset_doc
+- canon_app_entry
+- allowed_tables_or_views (list)
+- required_files (optional list)
+Example values should be filled using actual repo files after discovery.
+
+B) AUTO-DISCOVERY “WORKING SET BUILDER”
+Create script: tools/build_working_set.py
+This script MUST:
+1) take an entrypoint (default from CANONICAL.json)
+2) parse Python imports recursively (AST) to get all local modules used
+3) scan for runtime file dependencies:
+   - duckdb.connect(...)
+   - open(...)
+   - pandas.read_csv/read_parquet/read_json
+   - Path(...).read_text / read_bytes
+   - any hardcoded “.db” path usage
+4) produce:
+   - _WORKING_SET/ folder containing ONLY required code + docs + the canonical DB
+   - _WORKING_SET/_INVENTORY.json with sha256 for every copied file
+   - _WORKING_SET/_MISSING_REPORT.json if anything referenced is missing
+5) if a dependency is missing, it must FAIL with a clear message (no silent passes)
+
+C) RUNTIME ENFORCEMENT (FAIL FAST)
+Add a small module: trading_app/canonical.py
+This module MUST:
+- load CANONICAL.json
+- expose get_canon_db_path(), get_canon_docs(), etc.
+- provide assert_canonical_environment() that:
+   1) checks ONLY ONE DB exists inside working set (or explicitly allowed list)
+   2) verifies the DB path used == canon_db_path (no overrides)
+   3) connects read-only and verifies required tables/views exist
+   4) prints a single banner at startup:
+      “CANONICAL OK: DB=..., SCHEMA=..., RULESET=...”
+- If any check fails -> raise Exception and stop the app.
+
+Then update DB connection points to use ONLY trading_app.canonical.get_canon_db_path()
+Do NOT change queries, logic, thresholds, outcomes, signals. Path-only refactor.
+
+D) “NO OLD DB” GUARD (HARD)
+Add: tools/check_no_shadow_dbs.py
+This script fails if:
+- more than one *.db / *.duckdb exists in the working set OR repo root (except allowed patterns)
+- any file matches *old*, *backup*, *copy*, *deprecated* inside working set
+- any code contains duckdb.connect("some.db") literal not routed through canonical.py
+
+E) TESTS (AUTO-CHECKING)
+Add pytest tests:
+- test_canonical_env.py:
+  - assert canonical file loads
+  - assert DB connects
+  - assert required tables exist
+  - assert app imports without triggering wrong DB
+- test_no_hardcoded_db_paths.py:
+  - grep/AST scan that duckdb.connect is only called through canonical module
+
+F) OPTIONAL BUT STRONGLY PREFERRED: PRE-COMMIT / CI
+If repo has pre-commit or GitHub Actions, add:
+- run tools/check_no_shadow_dbs.py
+- run pytest
+If not present, create minimal GitHub Action workflow for these checks.
+
+WORKFLOW (DO THIS IN ORDER)
+1) DISCOVERY REPORT FIRST (NO CHANGES YET)
+Produce a concise report:
+- current entrypoint(s)
+- all DB files found and where
+- current schema/rules docs found and where
+- list of places that open/connect DB
+- list of duplicate apps/dashboards if any
+
+2) IMPLEMENT CANONICAL.json + canonical.py + enforce DB path routing
+
+3) IMPLEMENT tools/build_working_set.py
+- Provide command examples:
+  python tools/build_working_set.py --entry app_trading_hub.py --out _WORKING_SET
+
+4) IMPLEMENT guards + tests + CI
+
+5) PROVE IT
+- Provide the exact commands to run:
+  - python tools/check_no_shadow_dbs.py
+  - pytest -q
+  - streamlit run <canon_app_entry>
+- Show what success output looks like.
+
+CONSTRAINTS
+- Do not delete files. If something must be “ignored”, do it via working set + guards.
+- Do not create new app variants.
+- Do not change strategy behavior.
+- Every change must cite exact file paths touched and what changed.
+
+START NOW with Step 1: DISCOVERY REPORT.

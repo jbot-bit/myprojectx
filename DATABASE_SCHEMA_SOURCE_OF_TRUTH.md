@@ -1,6 +1,6 @@
 # Database Schema - Source of Truth
 
-**Last Updated:** 2026-01-15
+**Last Updated:** 2026-01-18 (merged multi-instrument guide)
 
 ## VERIFIED TABLES (Source of Truth)
 
@@ -115,3 +115,252 @@ Where:
 ---
 
 **CRITICAL:** Only use `v_orb_trades_half` and related daily_features_v2 tables. All orb_trades_*_exec tables are ARCHIVED and outdated.
+
+---
+
+## Table Naming Convention
+
+**Pattern:**
+```
+{table_name}         <- MGC (default, no suffix)
+{table_name}_mpl     <- MPL
+{table_name}_nq      <- NQ
+{table_name}_es      <- ES (future)
+{table_name}_rty     <- RTY (future)
+```
+
+**Examples:**
+- `bars_1m` = MGC 1-minute bars
+- `bars_1m_mpl` = MPL 1-minute bars
+- `bars_1m_nq` = NQ 1-minute bars
+- `daily_features_v2` = MGC daily features
+- `daily_features_v2_mpl` = MPL daily features
+- `daily_features_v2_nq` = NQ daily features
+
+---
+
+## Full Table Schemas
+
+### bars_1m (and bars_1m_mpl, bars_1m_nq)
+```sql
+CREATE TABLE bars_1m (
+    ts_utc TIMESTAMPTZ PRIMARY KEY,
+    symbol VARCHAR,              -- e.g., 'MGC', 'MGCG6', etc.
+    source_symbol VARCHAR,       -- actual contract (e.g., 'MGCG6')
+    open DOUBLE,
+    high DOUBLE,
+    low DOUBLE,
+    close DOUBLE,
+    volume BIGINT
+);
+```
+
+### bars_5m (and bars_5m_mpl, bars_5m_nq)
+```sql
+CREATE TABLE bars_5m (
+    ts_utc TIMESTAMPTZ PRIMARY KEY,
+    symbol VARCHAR,
+    source_symbol VARCHAR,
+    open DOUBLE,
+    high DOUBLE,
+    low DOUBLE,
+    close DOUBLE,
+    volume BIGINT
+);
+```
+**Note:** 5-minute bars are aggregated from 1-minute bars. Never manually edit.
+
+### daily_features_v2 (and daily_features_v2_mpl, daily_features_v2_nq)
+```sql
+CREATE TABLE daily_features_v2 (
+    date_local DATE PRIMARY KEY,
+    instrument VARCHAR,          -- 'MGC', 'MPL', 'NQ'
+
+    -- Session data
+    asia_high DOUBLE,
+    asia_low DOUBLE,
+    london_high DOUBLE,
+    london_low DOUBLE,
+    ny_high DOUBLE,
+    ny_low DOUBLE,
+
+    -- ORBs (6 total: 0900, 1000, 1100, 1800, 2300, 0030)
+    orb_0900_high DOUBLE,
+    orb_0900_low DOUBLE,
+    orb_0900_size DOUBLE,
+    orb_0900_break_dir VARCHAR,
+    orb_0900_outcome VARCHAR,
+    orb_0900_r_multiple DOUBLE,
+    -- ... (repeated for each ORB time: 1000, 1100, 1800, 2300, 0030)
+
+    -- Indicators
+    atr_20 DOUBLE,
+    rsi_14 DOUBLE,
+
+    -- Pre-move metrics
+    pre_ny_travel DOUBLE,
+    pre_orb_travel DOUBLE
+);
+```
+
+### validated_setups (shared across all instruments)
+```sql
+CREATE TABLE validated_setups (
+    setup_id INTEGER PRIMARY KEY,
+    instrument VARCHAR,           -- 'MGC', 'MPL', 'NQ'
+    strategy_name VARCHAR,
+    orb_time VARCHAR,
+    rr_target DOUBLE,
+    sl_mode VARCHAR,
+    tier VARCHAR,
+    win_rate DOUBLE,
+    avg_r DOUBLE,
+    trade_count INTEGER,
+    orb_size_filter DOUBLE        -- NULL or threshold
+);
+```
+
+---
+
+## Query Patterns
+
+### Get MGC bars
+```sql
+SELECT * FROM bars_1m WHERE ts_utc >= '2026-01-01';
+```
+
+### Get MPL bars
+```sql
+SELECT * FROM bars_1m_mpl WHERE ts_utc >= '2026-01-01';
+```
+
+### Get NQ bars
+```sql
+SELECT * FROM bars_1m_nq WHERE ts_utc >= '2026-01-01';
+```
+
+### Get all validated setups for MGC
+```sql
+SELECT * FROM validated_setups WHERE instrument = 'MGC';
+```
+
+### Get daily features for MPL
+```sql
+SELECT * FROM daily_features_v2_mpl
+WHERE instrument = 'MPL'
+ORDER BY date_local DESC
+LIMIT 30;
+```
+
+---
+
+## Application Integration
+
+### Python Helper Functions
+
+```python
+def get_bars_table(instrument: str) -> str:
+    """Get 1-minute bars table name for instrument"""
+    if instrument == 'MGC':
+        return 'bars_1m'
+    elif instrument == 'MPL':
+        return 'bars_1m_mpl'
+    elif instrument == 'NQ':
+        return 'bars_1m_nq'
+    else:
+        raise ValueError(f"Unknown instrument: {instrument}")
+
+def get_feature_table(instrument: str) -> str:
+    """Get daily features table for instrument"""
+    if instrument == 'MGC':
+        return 'daily_features_v2'
+    else:
+        return f'daily_features_v2_{instrument.lower()}'
+
+# Usage example
+instrument = 'MPL'
+bars_table = get_bars_table(instrument)
+features_table = get_feature_table(instrument)
+
+bars = conn.execute(
+    f"SELECT * FROM {bars_table} WHERE ts_utc >= ?",
+    [start_date]
+).fetchall()
+```
+
+---
+
+## Data Pipeline
+
+### Backfill Process
+
+Each instrument has its own backfill workflow:
+
+**MGC:**
+```bash
+python backfill_databento_continuous.py 2024-01-01 2026-01-10
+python build_daily_features.py 2026-01-10
+```
+
+**MPL:**
+```bash
+python backfill_databento_continuous.py 2024-01-01 2026-01-10 --instrument MPL
+python build_daily_features.py 2026-01-10 --instrument MPL
+```
+
+**NQ:**
+```bash
+python backfill_databento_continuous.py 2024-01-01 2026-01-10 --instrument NQ
+python build_daily_features.py 2026-01-10 --instrument NQ
+```
+
+---
+
+## Adding New Instruments
+
+To add a new instrument (e.g., ES - E-mini S&P 500):
+
+1. **Create tables:**
+   - `bars_1m_es`
+   - `bars_5m_es`
+   - `daily_features_v2_es`
+
+2. **Backfill data:**
+   ```bash
+   python backfill_databento_continuous.py 2024-01-01 2026-01-10 --instrument ES
+   python build_daily_features.py 2026-01-10 --instrument ES
+   ```
+
+3. **Add strategies to validated_setups:**
+   ```sql
+   INSERT INTO validated_setups (instrument, strategy_name, orb_time, ...)
+   VALUES ('ES', 'DAY_ORB', '0900', ...);
+   ```
+
+4. **Update apps:**
+   - Add 'ES' to instrument selector
+   - Update helper functions (get_bars_table, get_feature_table)
+
+---
+
+## Architecture Decision: Separate Tables
+
+**Why separate tables per instrument instead of unified tables?**
+
+**Benefits:**
+- **Simple**: No complex consolidation logic
+- **Fast**: Smaller tables = faster queries
+- **Safe**: No schema confusion or type mismatches
+- **Debuggable**: Each instrument is isolated
+- **Scalable**: Easy to add new instruments
+
+**Avoided Problems:**
+- Schema corruption during consolidation
+- VARCHAR vs DOUBLE type issues
+- Complex multi-instrument queries
+- Migration complexity
+
+**Current Status:**
+- MGC: 720,227 1-min bars, 740 daily features
+- MPL: 327,127 1-min bars, 730 daily features
+- NQ: 350,499 1-min bars, 310 daily features

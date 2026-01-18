@@ -1,7 +1,7 @@
-# SOURCE OF TRUTH - TRADING APP
+# App Usage Guide - Which App to Use
 
-**Date**: 2026-01-16
-**Status**: ✅ SINGLE SOURCE OF TRUTH ESTABLISHED
+**Date**: 2026-01-18 (renamed from SOURCE_OF_TRUTH.md for clarity)
+**Purpose**: Guide to which trading apps to use and how to use them
 
 ---
 
@@ -95,7 +95,7 @@ These apps are OLD and INCOMPLETE:
 ```
 myprojectx/
 ├── START_TRADING_APP.bat          ← USE THIS to launch app
-├── SOURCE_OF_TRUTH.md             ← THIS FILE (read it!)
+├── APP_USAGE_GUIDE.md             ← THIS FILE (read it!)
 ├── gold.db                         ← Database with validated_setups
 ├── test_app_sync.py               ← Verify database/config sync
 ├── trading_app/                    ← THE PRODUCTION CODE

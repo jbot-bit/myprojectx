@@ -25,32 +25,30 @@ class SetupDetector:
     """Detects validated high-probability trading setups."""
 
     def __init__(self, db_path: Optional[str] = None):
-        # Use cloud-aware path if not provided
-        if db_path is None:
-            from cloud_mode import get_database_path
-            self.db_path = get_database_path()
-        else:
-            self.db_path = db_path
-        
+        # Cloud-aware: db_path parameter is ignored in cloud mode
+        # Connections handled by get_database_connection()
+        self.db_path = db_path  # Legacy parameter, kept for compatibility
+
         # Lazy connection - only connect when needed
         self._con = None
 
     def _get_connection(self):
-        """Get database connection, creating it if needed"""
+        """Get database connection, creating it if needed (cloud-aware)"""
         if self._con is None:
             try:
-                # Check if database exists
-                db_path_obj = Path(self.db_path)
-                if not db_path_obj.exists():
-                    logger.warning(f"Database not found at {self.db_path}. Setup detection unavailable.")
+                # Use cloud-aware connection
+                from cloud_mode import get_database_connection
+                self._con = get_database_connection()
+
+                if self._con is None:
+                    logger.warning("Database connection unavailable. Setup detection disabled.")
                     return None
-                
-                self._con = duckdb.connect(self.db_path, read_only=True)
-                logger.info(f"Connected to database: {self.db_path}")
+
+                logger.info("Connected to database for setup detection")
             except Exception as e:
-                logger.error(f"Error connecting to database {self.db_path}: {e}")
+                logger.error(f"Error connecting to database: {e}")
                 return None
-        
+
         return self._con
 
     def get_all_validated_setups(self, instrument: str = "MGC") -> List[Dict]:

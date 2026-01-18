@@ -16,8 +16,8 @@ Order of authority (highest → lowest):
 
 1) PROJECT_INSTRUCTIONS.md (this file)
 2) CLAUDE.md
-3) TRADING_RULESET_CANONICAL.md
-4) DATABASE_SCHEMA.md
+3) TRADING_PLAYBOOK.md
+4) DATABASE_SCHEMA_SOURCE_OF_TRUTH.md
 5) TERMINOLOGY_EXPLAINED.md
 6) PROJECT_STRUCTURE.md
 7) DOCUMENTATION_INDEX.md
@@ -95,7 +95,7 @@ Canonical tables / views:
 - validated_setups (read-only usage)
 
 Schema meanings are defined ONLY in:
-- DATABASE_SCHEMA.md
+- DATABASE_SCHEMA_SOURCE_OF_TRUTH.md
 
 No alternate schemas.
 No schema logic embedded in UI code.
@@ -110,8 +110,8 @@ NOT ALL DOCS HAVE BEEN ARCHIVED YET.
 ### 6.1 Canonical documentation (defines reality)
 - PROJECT_INSTRUCTIONS.md
 - CLAUDE.md
-- TRADING_RULESET_CANONICAL.md
-- DATABASE_SCHEMA.md
+- TRADING_PLAYBOOK.md
+- DATABASE_SCHEMA_SOURCE_OF_TRUTH.md
 - TERMINOLOGY_EXPLAINED.md
 - PROJECT_STRUCTURE.md
 - DOCUMENTATION_INDEX.md

@@ -1,0 +1,55 @@
+# Pre-commit hooks for canonical enforcement
+# Install: pip install pre-commit
+# Setup: pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Canonical enforcement - Shadow database guard
+  - repo: local
+    hooks:
+      - id: check-no-shadow-dbs
+        name: Check for shadow databases
+        entry: python tools/check_no_shadow_dbs.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+        verbose: true
+
+  # Standard Python checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+      - id: end-of-file-fixer
+        exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+      - id: check-yaml
+        exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+      - id: check-json
+        exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+      - id: check-added-large-files
+        args: ['--maxkb=10240']  # 10MB limit
+        exclude: '^(gold\.db|backups/)'
+      - id: check-merge-conflict
+      - id: debug-statements
+        exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+
+  # Python code formatting (optional - uncomment if you want auto-formatting)
+  # - repo: https://github.com/psf/black
+  #   rev: 23.12.1
+  #   hooks:
+  #     - id: black
+  #       exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+  #       args: ['--line-length=100']
+
+  # Python import sorting (optional)
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.13.2
+  #   hooks:
+  #     - id: isort
+  #       exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/)'
+  #       args: ['--profile', 'black']
+
+# Exclude archived code from all hooks
+exclude: '^(_archive/|_INVALID_SCRIPTS_ARCHIVE/|backups/)'
