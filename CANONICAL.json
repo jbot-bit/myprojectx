@@ -1,0 +1,93 @@
+{
+  "version": "1.0.0",
+  "created": "2026-01-18",
+  "description": "Single source of truth for all canonical file paths, database locations, and documentation. This file enforces the police.txt rules to prevent drift and duplication.",
+
+  "databases": {
+    "main": "gold.db",
+    "cache": "live_data.db",
+    "trades": "trades.db",
+    "app_state": "trading_app.db",
+    "allowed_locations": [
+      "gold.db",
+      "live_data.db",
+      "trades.db",
+      "trading_app.db"
+    ],
+    "forbidden_locations": [
+      "trading_app/*.db",
+      "scripts/*.db",
+      "**/*_old.db",
+      "**/*_backup.db",
+      "**/*_copy.db"
+    ]
+  },
+
+  "connection_module": {
+    "canonical": "trading_app/cloud_mode.py",
+    "functions": [
+      "get_database_connection()",
+      "get_motherduck_connection()",
+      "is_cloud_deployment()",
+      "get_database_path()"
+    ]
+  },
+
+  "documentation": {
+    "schema": "DATABASE_SCHEMA_SOURCE_OF_TRUTH.md",
+    "trading_rules": "TRADING_PLAYBOOK.md",
+    "zero_lookahead": "ZERO_LOOKAHEAD_RULES.md",
+    "project_instructions": "CLAUDE.md",
+    "workflow": "WORKFLOW_GUIDE.md"
+  },
+
+  "entry_points": {
+    "mobile": "trading_app/app_mobile.py",
+    "desktop": "trading_app/app_trading_hub.py"
+  },
+
+  "database_tables": {
+    "persistent": [
+      "bars_1m",
+      "bars_5m",
+      "daily_features_v2",
+      "validated_setups"
+    ],
+    "cache": [
+      "live_bars",
+      "live_journal",
+      "ml_predictions",
+      "ml_performance"
+    ]
+  },
+
+  "ignore_patterns": [
+    "_archive/**",
+    "_INVALID_SCRIPTS_ARCHIVE/**",
+    "backups/**",
+    "*.db.wal",
+    "*.db-shm",
+    "*.pyc",
+    "__pycache__/**",
+    ".pytest_cache/**"
+  ],
+
+  "required_files": [
+    "gold.db",
+    "CANONICAL.json",
+    "DATABASE_SCHEMA_SOURCE_OF_TRUTH.md",
+    "TRADING_PLAYBOOK.md",
+    "trading_app/cloud_mode.py",
+    "trading_app/config.py"
+  ],
+
+  "enforcement": {
+    "guards": [
+      "tools/check_no_shadow_dbs.py"
+    ],
+    "tests": [
+      "tests/test_canonical_env.py",
+      "tests/test_no_hardcoded_db_paths.py"
+    ]
+  }
+}
