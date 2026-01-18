@@ -1387,7 +1387,294 @@ def render_positions_card(risk_manager, data_loader):
 
 
 # ============================================================================
-# CARD 5: AI CHAT
+# CARD 5: CHART ANALYSIS (CSV Upload)
+# ============================================================================
+
+def render_chart_analysis_card(instrument="MGC"):
+    """
+    Chart Analysis Card - Upload and analyze TradingView charts
+
+    Shows:
+    - CSV file upload
+    - Analysis results (ORBs, indicators, market structure)
+    - Top 5 strategy recommendations
+    - Setup quality and reasoning
+    """
+
+    st.markdown("## 📊 Chart Analysis")
+
+    st.info("💡 Upload a TradingView CSV export to analyze potential setups")
+
+    # Instructions
+    with st.expander("📖 How to Export from TradingView", expanded=False):
+        st.markdown("""
+        **Export OHLCV data from TradingView:**
+
+        1. Open your chart in TradingView
+        2. Click the "..." menu on the chart
+        3. Select "Export chart data..."
+        4. Save the CSV file
+        5. Upload it here
+
+        **CSV Format Expected:**
+        ```
+        time,open,high,low,close,volume
+        2024-01-15 09:00,2650.0,2652.0,2649.5,2651.5,1234
+        ```
+
+        **Timeframe:** Any timeframe works (1m, 5m, 1h, etc.)
+
+        **Best Results:** At least 24 hours of data with ORB windows (0900, 1000, 1100, 1800, 2300, 0030)
+        """)
+
+    # File uploader
+    uploaded_file = st.file_uploader(
+        "Choose CSV file",
+        type=['csv'],
+        help="Upload TradingView chart export (CSV format)",
+        key="chart_csv_upload"
+    )
+
+    if uploaded_file is not None:
+        try:
+            # Read CSV bytes
+            csv_data = uploaded_file.read()
+
+            with st.spinner("🔍 Analyzing chart..."):
+                # Import analyzer
+                from csv_chart_analyzer import analyze_csv_and_recommend
+
+                # Analyze
+                analysis, recommendations = analyze_csv_and_recommend(
+                    csv_data=csv_data,
+                    instrument=instrument,
+                    top_n=5
+                )
+
+            if not analysis or not analysis.get("success"):
+                st.error("❌ Failed to analyze CSV. Check format and try again.")
+                return
+
+            # Show analysis results
+            st.success("✅ Analysis complete!")
+
+            # Data Summary
+            st.markdown("### 📈 Data Summary")
+            data_summary = analysis.get("data_summary", {})
+
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Total Bars</div>
+                    <div class="mobile-metric-value" style="font-size: 20px;">{data_summary.get('total_bars', 0)}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                duration = data_summary.get('duration_hours', 0)
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Duration</div>
+                    <div class="mobile-metric-value" style="font-size: 20px;">{duration:.1f}h</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                price_range = data_summary.get('price_range', {}).get('range', 0)
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Range</div>
+                    <div class="mobile-metric-value" style="font-size: 20px;">{price_range:.2f}</div>
+                    <div class="mobile-metric-subtitle">points</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Current State
+            current_state = analysis.get("current_state", {})
+            current_price = current_state.get("current_price", 0)
+
+            st.markdown(f"""
+            <div class="mobile-metric" style="margin-top: 12px;">
+                <div class="mobile-metric-label">Current Price</div>
+                <div class="mobile-metric-value" style="font-size: 28px;">${current_price:.2f}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            # ORB Analysis
+            st.markdown("### 🎯 Detected ORBs")
+            orb_analysis = analysis.get("orb_analysis", {})
+
+            detected_orbs = {k: v for k, v in orb_analysis.items() if v.get("detected")}
+
+            if detected_orbs:
+                for orb_name, orb_data in detected_orbs.items():
+                    orb_high = orb_data.get("high", 0)
+                    orb_low = orb_data.get("low", 0)
+                    orb_size = orb_data.get("size", 0)
+                    position = orb_data.get("price_position", "INSIDE")
+                    direction = orb_data.get("potential_direction", "WAIT")
+
+                    # Color based on position
+                    if position == "ABOVE":
+                        position_color = "#10b981"
+                        position_emoji = "⬆️"
+                    elif position == "BELOW":
+                        position_color = "#ef4444"
+                        position_emoji = "⬇️"
+                    else:
+                        position_color = "#9ca3af"
+                        position_emoji = "↔️"
+
+                    st.markdown(f"""
+                    <div class="mobile-metric" style="border-left: 4px solid {position_color}; margin-bottom: 8px;">
+                        <div class="mobile-metric-label">{orb_name} ORB {position_emoji}</div>
+                        <div style="font-size: 14px; color: #9ca3af; margin-top: 4px;">
+                            Range: ${orb_low:.2f} - ${orb_high:.2f} ({orb_size:.2f} pts)
+                        </div>
+                        <div style="font-size: 14px; color: {position_color}; font-weight: 600; margin-top: 4px;">
+                            Price {position} → {direction}
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.caption("No ORBs detected in data range")
+
+            # Indicators
+            indicators = analysis.get("indicators", {})
+            if indicators:
+                st.markdown("### 📐 Indicators")
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    atr_20 = indicators.get("atr_20")
+                    if atr_20:
+                        st.markdown(f"""
+                        <div class="mobile-metric">
+                            <div class="mobile-metric-label">ATR (20)</div>
+                            <div class="mobile-metric-value" style="font-size: 18px;">{atr_20:.2f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                with col2:
+                    rsi_14 = indicators.get("rsi_14")
+                    if rsi_14:
+                        rsi_color = "#10b981" if 40 <= rsi_14 <= 60 else "#ef4444" if rsi_14 > 70 or rsi_14 < 30 else "#9ca3af"
+                        st.markdown(f"""
+                        <div class="mobile-metric">
+                            <div class="mobile-metric-label">RSI (14)</div>
+                            <div class="mobile-metric-value" style="font-size: 18px; color: {rsi_color};">{rsi_14:.1f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                with col3:
+                    volatility = indicators.get("recent_volatility")
+                    if volatility:
+                        st.markdown(f"""
+                        <div class="mobile-metric">
+                            <div class="mobile-metric-label">Volatility</div>
+                            <div class="mobile-metric-value" style="font-size: 18px;">{volatility:.2f}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+            # Market Structure
+            structure = analysis.get("market_structure", {})
+            if structure:
+                st.markdown("### 🏗️ Market Structure")
+
+                trend = structure.get("trend", "UNKNOWN")
+                trend_colors = {
+                    "TRENDING_UP": "#10b981",
+                    "TRENDING_DOWN": "#ef4444",
+                    "RANGING": "#9ca3af"
+                }
+                trend_color = trend_colors.get(trend, "#9ca3af")
+
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Trend</div>
+                    <div class="mobile-metric-value" style="font-size: 20px; color: {trend_color};">{trend.replace('_', ' ')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Strategy Recommendations
+            st.markdown("### 🏆 Top 5 Recommended Strategies")
+
+            if recommendations:
+                for i, rec in enumerate(recommendations, 1):
+                    setup = rec.get("setup", {})
+                    score = rec.get("score", 0)
+                    reasoning = rec.get("reasoning", "")
+
+                    # Setup details
+                    setup_name = setup.get("setup_name", "Unknown")
+                    tier = setup.get("tier", "C")
+                    win_rate = setup.get("win_rate", 0)
+                    avg_r = setup.get("avg_r", 0)
+                    annual_trades = setup.get("annual_trades", 0)
+
+                    # Tier badge color
+                    tier_colors = {
+                        "S+": "#ffd700",
+                        "S": "#c0c0c0",
+                        "A": "#cd7f32",
+                        "B": "#9ca3af",
+                        "C": "#6b7280"
+                    }
+                    tier_color = tier_colors.get(tier, "#9ca3af")
+
+                    # Score color (gradient from red to green)
+                    if score >= 70:
+                        score_color = "#10b981"
+                    elif score >= 50:
+                        score_color = "#fbbf24"
+                    else:
+                        score_color = "#9ca3af"
+
+                    st.markdown(f"""
+                    <div class="mobile-metric" style="border-left: 4px solid {tier_color}; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-size: 18px; font-weight: 700;">#{i} {setup_name}</div>
+                            <span style="background: {tier_color}; color: #000; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 700;">{tier}</span>
+                        </div>
+                        <div style="font-size: 14px; color: #9ca3af; margin-bottom: 8px;">
+                            Score: <span style="color: {score_color}; font-weight: 700;">{score:.0f}/100</span>
+                        </div>
+                        <div style="font-size: 13px; color: #9ca3af; line-height: 1.4; margin-bottom: 8px;">
+                            {reasoning}
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Win Rate</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{win_rate:.1f}%</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Avg R</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">+{avg_r:.2f}</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Trades/Yr</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{annual_trades}</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            else:
+                st.caption("No recommendations available")
+
+            # Help text
+            st.markdown("---")
+            st.caption("💡 **Tip:** Higher scores indicate better setup match for current conditions. S+ and S tier setups are most profitable.")
+
+        except Exception as e:
+            st.error(f"❌ Error analyzing chart: {e}")
+            import traceback
+            st.code(traceback.format_exc())
+
+
+# ============================================================================
+# CARD 6: AI CHAT
 # ============================================================================
 
 def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader, compact=False):

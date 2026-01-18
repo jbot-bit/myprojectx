@@ -47,6 +47,7 @@ from mobile_ui import (
     render_chart_card,
     render_trade_entry_card,
     render_positions_card,
+    render_chart_analysis_card,
     render_ai_chat_card
 )
 
@@ -281,11 +282,12 @@ except Exception as e:
 # CARD-BASED NAVIGATION
 # ============================================================================
 
-# Card definitions - 3 cards with integrated AI chat
+# Card definitions - 4 cards with integrated AI chat
 CARDS = [
     {"name": "Dashboard", "icon": "📊", "render": render_dashboard_card},
     {"name": "Chart", "icon": "📈", "render": render_chart_card},
     {"name": "Trade", "icon": "🎯", "render": render_trade_entry_card},
+    {"name": "Analyze", "icon": "🔍", "render": render_chart_analysis_card},
 ]
 
 card_names = [f"{card['icon']} {card['name']}" for card in CARDS]
@@ -327,6 +329,11 @@ try:
         render_trade_entry_card(
             st.session_state.data_loader,
             st.session_state.strategy_engine
+        )
+    elif current_card == 3:
+        # Chart Analysis
+        render_chart_analysis_card(
+            instrument=st.session_state.current_symbol
         )
 
     # AI Chat integrated at bottom of every card
