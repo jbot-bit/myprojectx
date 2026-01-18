@@ -823,8 +823,51 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
             </div>
             """, unsafe_allow_html=True)
 
-        # Trade Levels (if ENTER action)
-        if action == "ENTER" and entry_price and stop_price and target_price:
+        # Trade Setup Details - Show for ALL actions
+        if setup_name and orb_high and orb_low:
+            st.markdown("### 📋 Trade Setup")
+
+            # Extract ORB time from setup name (e.g., "2300 ORB HALF" -> "2300")
+            orb_time = setup_name.split()[0] if setup_name else None
+
+            # ORB Window timing
+            if orb_time and orb_time.isdigit():
+                hour = int(orb_time[:2])
+                minute = int(orb_time[2:]) if len(orb_time) == 4 else 0
+
+                # Format time display
+                from datetime import datetime
+                orb_start = datetime.now(TZ_LOCAL).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                orb_end = orb_start + timedelta(minutes=5)
+                time_display = f"{orb_start.strftime('%H:%M')} - {orb_end.strftime('%H:%M')}"
+
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">ORB Window</div>
+                    <div class="mobile-metric-value" style="font-size: 20px;">{time_display}</div>
+                    <div class="mobile-metric-subtitle">{orb_time} ORB (5 minutes)</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Entry Conditions
+            if direction:
+                if direction == "LONG":
+                    entry_condition = f"First 5m close ABOVE ${orb_high:.2f}"
+                    entry_trigger = f"Enter at market when close > ${orb_high:.2f}"
+                else:
+                    entry_condition = f"First 5m close BELOW ${orb_low:.2f}"
+                    entry_trigger = f"Enter at market when close < ${orb_low:.2f}"
+
+                st.markdown(f"""
+                <div class="mobile-metric" style="background: rgba(99, 102, 241, 0.1); border-left: 4px solid #6366f1;">
+                    <div class="mobile-metric-label">Entry Condition</div>
+                    <div style="font-size: 14px; color: #f9fafb; font-weight: 600; margin-bottom: 4px;">{entry_condition}</div>
+                    <div style="font-size: 13px; color: #9ca3af;">{entry_trigger}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Trade Levels - Show for ENTER or if we have calculated levels
+        if entry_price and stop_price and target_price:
             st.markdown("### 📍 Trade Levels")
 
             col1, col2, col3 = st.columns(3)
@@ -838,10 +881,23 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
                 """, unsafe_allow_html=True)
 
             with col2:
+                # Show stop placement logic
+                if orb_high and orb_low:
+                    orb_mid = (orb_high + orb_low) / 2
+                    if "HALF" in setup_name:
+                        stop_logic = "ORB Midpoint"
+                    elif "FULL" in setup_name:
+                        stop_logic = "ORB Low" if direction == "LONG" else "ORB High"
+                    else:
+                        stop_logic = ""
+                else:
+                    stop_logic = ""
+
                 st.markdown(f"""
                 <div class="mobile-metric">
-                    <div class="mobile-metric-label">Stop</div>
+                    <div class="mobile-metric-label">Stop Loss</div>
                     <div class="mobile-metric-value" style="font-size: 20px; color: #ef4444;">${stop_price:.2f}</div>
+                    <div class="mobile-metric-subtitle">{stop_logic}</div>
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -850,11 +906,21 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
                 rr_display = f"{rr:.1f}R" if rr else ""
                 st.markdown(f"""
                 <div class="mobile-metric">
-                    <div class="mobile-metric-label">Target</div>
+                    <div class="mobile-metric-label">Take Profit</div>
                     <div class="mobile-metric-value" style="font-size: 20px; color: #10b981;">${target_price:.2f}</div>
                     <div class="mobile-metric-subtitle">{rr_display}</div>
                 </div>
                 """, unsafe_allow_html=True)
+
+            # Risk/Reward summary
+            reward_points = abs(target_price - entry_price)
+            st.markdown(f"""
+            <div style="background: rgba(16, 185, 129, 0.1); border-radius: 8px; padding: 12px; margin-top: 12px;">
+                <div style="font-size: 13px; color: #9ca3af; text-align: center;">
+                    Risk: {risk_points:.2f} pts → Reward: {reward_points:.2f} pts
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
 
         # ML Insights (if available) - only when we have evaluation
         from config import ML_ENABLED, ML_SHADOW_MODE
@@ -1598,6 +1664,62 @@ def render_chart_analysis_card(instrument="MGC"):
                 </div>
                 """, unsafe_allow_html=True)
 
+            # AI Market Analysis
+            st.markdown("### 🤖 AI Market Analysis")
+
+            # Generate AI analysis based on data
+            analysis_points = []
+
+            # Trend analysis
+            if structure:
+                trend = structure.get("trend", "UNKNOWN")
+                if trend == "TRENDING_UP":
+                    analysis_points.append("📈 Market is **trending upward** - favor LONG setups on pullbacks or breakouts")
+                elif trend == "TRENDING_DOWN":
+                    analysis_points.append("📉 Market is **trending downward** - favor SHORT setups on rallies or breakdowns")
+                else:
+                    analysis_points.append("↔️ Market is **ranging** - look for breakouts from ORB levels")
+
+            # ORB analysis
+            detected_count = len(detected_orbs)
+            if detected_count > 0:
+                above_count = sum(1 for orb in detected_orbs.values() if orb.get("price_position") == "ABOVE")
+                below_count = sum(1 for orb in detected_orbs.values() if orb.get("price_position") == "BELOW")
+
+                if above_count > below_count:
+                    analysis_points.append(f"🚀 Price is **above {above_count} ORB(s)** - bullish breakout momentum")
+                elif below_count > above_count:
+                    analysis_points.append(f"🔻 Price is **below {below_count} ORB(s)** - bearish breakdown momentum")
+                else:
+                    analysis_points.append(f"⏳ Price is **inside ORB range** - wait for breakout confirmation")
+
+            # Volatility analysis
+            if indicators:
+                atr_20 = indicators.get("atr_20")
+                if atr_20:
+                    if atr_20 > 20:
+                        analysis_points.append(f"⚡ **High volatility** (ATR: {atr_20:.1f}) - larger stops needed, bigger profit potential")
+                    elif atr_20 < 10:
+                        analysis_points.append(f"😴 **Low volatility** (ATR: {atr_20:.1f}) - tighter stops okay, smaller targets expected")
+                    else:
+                        analysis_points.append(f"✅ **Normal volatility** (ATR: {atr_20:.1f}) - standard position sizing applies")
+
+                rsi_14 = indicators.get("rsi_14")
+                if rsi_14:
+                    if rsi_14 > 70:
+                        analysis_points.append(f"⚠️ RSI **overbought** ({rsi_14:.1f}) - consider taking profits or waiting for pullback")
+                    elif rsi_14 < 30:
+                        analysis_points.append(f"⚠️ RSI **oversold** ({rsi_14:.1f}) - consider buying dips or waiting for bounce")
+
+            # Display analysis
+            if analysis_points:
+                for point in analysis_points:
+                    st.markdown(f"- {point}")
+            else:
+                st.caption("Insufficient data for market analysis")
+
+            st.markdown("---")
+
             # Strategy Recommendations
             st.markdown("### 🏆 Top 5 Recommended Strategies")
 
@@ -1632,6 +1754,77 @@ def render_chart_analysis_card(instrument="MGC"):
                     else:
                         score_color = "#9ca3af"
 
+                    # Get trade details from setup
+                    orb_time = setup.get("orb_time", "")
+                    sl_mode = setup.get("sl_mode", "HALF")
+                    rr = setup.get("rr", 1.0)
+
+                    # Get ORB data from analysis
+                    orb_data = orb_analysis.get(orb_time, {}) if orb_time else {}
+                    orb_high = orb_data.get("high")
+                    orb_low = orb_data.get("low")
+                    orb_direction = orb_data.get("potential_direction", "WAIT")
+
+                    # Calculate trade levels if ORB detected
+                    trade_levels_html = ""
+                    if orb_high and orb_low and orb_direction in ["LONG", "SHORT"]:
+                        # Entry
+                        entry = orb_high if orb_direction == "LONG" else orb_low
+
+                        # Stop loss
+                        orb_mid = (orb_high + orb_low) / 2
+                        if sl_mode == "HALF":
+                            stop = orb_mid
+                            stop_logic = "ORB Midpoint"
+                        else:
+                            stop = orb_low if orb_direction == "LONG" else orb_high
+                            stop_logic = "ORB Low" if orb_direction == "LONG" else "ORB High"
+
+                        # Target
+                        risk = abs(entry - stop)
+                        target = entry + (risk * rr) if orb_direction == "LONG" else entry - (risk * rr)
+
+                        # ORB timing
+                        if orb_time and orb_time.isdigit():
+                            hour = int(orb_time[:2])
+                            minute = int(orb_time[2:]) if len(orb_time) == 4 else 0
+                            time_str = f"{hour:02d}:{minute:02d}-{hour:02d}:{minute+5:02d}"
+                        else:
+                            time_str = "N/A"
+
+                        # Entry condition
+                        if orb_direction == "LONG":
+                            entry_cond = f"First 5m close ABOVE ${orb_high:.2f}"
+                        else:
+                            entry_cond = f"First 5m close BELOW ${orb_low:.2f}"
+
+                        trade_levels_html = f"""
+                        <div style="background: rgba(16, 185, 129, 0.05); border-radius: 8px; padding: 12px; margin: 12px 0;">
+                            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 8px;">📋 TRADE PLAN</div>
+                            <div style="font-size: 11px; color: #9ca3af; line-height: 1.6;">
+                                <strong>Time:</strong> {time_str} ({orb_time} ORB)<br>
+                                <strong>Entry:</strong> {entry_cond}<br>
+                                <strong>Direction:</strong> {'🚀 LONG' if orb_direction == 'LONG' else '🔻 SHORT'}<br>
+                                <strong>Entry:</strong> ${entry:.2f}<br>
+                                <strong>Stop:</strong> ${stop:.2f} ({stop_logic})<br>
+                                <strong>Target:</strong> ${target:.2f} ({rr:.1f}R)<br>
+                                <strong>Risk:</strong> {risk:.2f} pts → <strong>Reward:</strong> {risk * rr:.2f} pts
+                            </div>
+                        </div>
+                        <div style="background: rgba(99, 102, 241, 0.05); border-radius: 8px; padding: 12px; margin: 12px 0;">
+                            <div style="font-size: 12px; font-weight: 700; color: #6366f1; margin-bottom: 8px;">✅ TO INCREASE PROBABILITY</div>
+                            <div style="font-size: 11px; color: #9ca3af; line-height: 1.6;">
+                                • Wait for ORB to form completely (full 5 minutes)<br>
+                                • Enter ONLY on first close outside ORB<br>
+                                • Confirm direction matches trend/momentum<br>
+                                • Check volume increases on breakout<br>
+                                • Watch for false breakouts (wicks returning into ORB)<br>
+                                • Consider wider stops in high volatility (ATR > 20)<br>
+                                • Don't chase - if you miss entry, wait for next setup
+                            </div>
+                        </div>
+                        """
+
                     st.markdown(f"""
                     <div class="mobile-metric" style="border-left: 4px solid {tier_color}; margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1644,6 +1837,7 @@ def render_chart_analysis_card(instrument="MGC"):
                         <div style="font-size: 13px; color: #9ca3af; line-height: 1.4; margin-bottom: 8px;">
                             {reasoning}
                         </div>
+                        {trade_levels_html}
                         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
                             <div style="text-align: center;">
                                 <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Win Rate</div>
