@@ -53,6 +53,7 @@ exports/*.csv
 # Backup files
 *.backup
 *.bak
+backups/
 
 # Temporary Claude files
 tmpclaude-*
