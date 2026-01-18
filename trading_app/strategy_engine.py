@@ -40,12 +40,24 @@ class StrategyEvaluation:
     priority: int
     state: StrategyState
     action: ActionType
-    reasons: List[str]  # Max 3 factual bullets
+    reasons: List[str]  # Max 3-5 factual bullets (expanded for better explanations)
     next_instruction: str  # ONE explicit instruction
     entry_price: Optional[float] = None
     stop_price: Optional[float] = None
     target_price: Optional[float] = None
     risk_pct: Optional[float] = None
+
+    # NEW FIELDS: For complete trade explanations (Phase 1 enhancement)
+    setup_name: Optional[str] = None          # Specific setup: "2300 ORB HALF", "1000 ORB FULL"
+    setup_tier: Optional[str] = None          # Quality tier: "S+", "S", "A", "B", "C"
+    orb_high: Optional[float] = None          # ORB high level (for verification)
+    orb_low: Optional[float] = None           # ORB low level (for verification)
+    direction: Optional[str] = None           # Trade direction: "LONG" or "SHORT"
+    position_size: Optional[int] = None       # Number of contracts
+    rr: Optional[float] = None                # Reward:risk ratio (1.5, 3.0, 8.0)
+    win_rate: Optional[float] = None          # Historical win rate % (56.1, 15.3)
+    avg_r: Optional[float] = None             # Average R-multiple (0.403, 0.378)
+    annual_trades: Optional[int] = None       # Annual trade frequency (260, 52)
 
 
 class StrategyEngine:
@@ -814,21 +826,36 @@ class StrategyEngine:
 
             size_note = f" | {size_multiplier:.2f}x size" if size_multiplier > 1.0 else ""
 
+            # Get setup info from database (for tier, win_rate, etc.)
+            setup_info = self._get_setup_info(orb_name)
+
             return StrategyEvaluation(
                 strategy_name=f"{orb_name}_ORB",
                 priority=2 if config["tier"] == "NIGHT" else 4,
                 state=StrategyState.READY,
                 action=ActionType.ENTER,
                 reasons=[
-                    f"Breakout above {orb_name} ORB high ({orb_high:.2f})",
-                    f"Config: RR={config['rr']}, SL={config['sl_mode']}",
-                    f"Filter: PASSED (small ORB){size_note}" if filter_result["pass"] else "Filter: N/A"
+                    f"{orb_name} ORB formed (High: ${orb_high:.2f}, Low: ${orb_low:.2f}, Size: {orb_size:.2f} pts)",
+                    f"ORB size filter PASSED ({orb_size:.2f} pts / {filter_result.get('atr', 0):.1f} ATR < threshold)" if filter_result["pass"] else f"ORB filter N/A (no filter on {orb_name})",
+                    f"First close outside ORB detected (Close: ${current_price:.2f} > High: ${orb_high:.2f})",
+                    f"{setup_info.get('tier', 'N/A')} tier setup ({setup_info.get('win_rate', 0):.1f}% win rate, {setup_info.get('annual_expectancy', 0):.0f}R/year expectancy)" if setup_info else f"Config: RR={config['rr']}, SL={config['sl_mode']}{size_note}"
                 ],
-                next_instruction=f"ENTER LONG at market, stop {stop:.2f}, target {target:.2f}",
+                next_instruction=f"Enter long at ${entry:.2f}, stop at ${stop:.2f} (ORB {config['sl_mode'].lower()}), target at ${target:.2f} ({config['rr']}R)",
                 entry_price=entry,
                 stop_price=stop,
                 target_price=target,
-                risk_pct=adjusted_risk_pct
+                risk_pct=adjusted_risk_pct,
+                # NEW FIELDS
+                setup_name=f"{orb_name} ORB {config['sl_mode']}",
+                setup_tier=setup_info.get('tier') if setup_info else None,
+                orb_high=orb_high,
+                orb_low=orb_low,
+                direction="LONG",
+                position_size=None,  # Will be calculated by UI/position sizing module
+                rr=config["rr"],
+                win_rate=setup_info.get('win_rate') if setup_info else None,
+                avg_r=setup_info.get('avg_r') if setup_info else None,
+                annual_trades=setup_info.get('annual_trades') if setup_info else None
             )
 
         elif current_price < orb_low:
@@ -846,21 +873,36 @@ class StrategyEngine:
 
             size_note = f" | {size_multiplier:.2f}x size" if size_multiplier > 1.0 else ""
 
+            # Get setup info from database (for tier, win_rate, etc.)
+            setup_info = self._get_setup_info(orb_name)
+
             return StrategyEvaluation(
                 strategy_name=f"{orb_name}_ORB",
                 priority=2 if config["tier"] == "NIGHT" else 4,
                 state=StrategyState.READY,
                 action=ActionType.ENTER,
                 reasons=[
-                    f"Breakout below {orb_name} ORB low ({orb_low:.2f})",
-                    f"Config: RR={config['rr']}, SL={config['sl_mode']}",
-                    f"Filter: PASSED (small ORB){size_note}" if filter_result["pass"] else "Filter: N/A"
+                    f"{orb_name} ORB formed (High: ${orb_high:.2f}, Low: ${orb_low:.2f}, Size: {orb_size:.2f} pts)",
+                    f"ORB size filter PASSED ({orb_size:.2f} pts / {filter_result.get('atr', 0):.1f} ATR < threshold)" if filter_result["pass"] else f"ORB filter N/A (no filter on {orb_name})",
+                    f"First close outside ORB detected (Close: ${current_price:.2f} < Low: ${orb_low:.2f})",
+                    f"{setup_info.get('tier', 'N/A')} tier setup ({setup_info.get('win_rate', 0):.1f}% win rate, {setup_info.get('annual_expectancy', 0):.0f}R/year expectancy)" if setup_info else f"Config: RR={config['rr']}, SL={config['sl_mode']}{size_note}"
                 ],
-                next_instruction=f"ENTER SHORT at market, stop {stop:.2f}, target {target:.2f}",
+                next_instruction=f"Enter short at ${entry:.2f}, stop at ${stop:.2f} (ORB {config['sl_mode'].lower()}), target at ${target:.2f} ({config['rr']}R)",
                 entry_price=entry,
                 stop_price=stop,
                 target_price=target,
-                risk_pct=adjusted_risk_pct
+                risk_pct=adjusted_risk_pct,
+                # NEW FIELDS
+                setup_name=f"{orb_name} ORB {config['sl_mode']}",
+                setup_tier=setup_info.get('tier') if setup_info else None,
+                orb_high=orb_high,
+                orb_low=orb_low,
+                direction="SHORT",
+                position_size=None,  # Will be calculated by UI/position sizing module
+                rr=config["rr"],
+                win_rate=setup_info.get('win_rate') if setup_info else None,
+                avg_r=setup_info.get('avg_r') if setup_info else None,
+                annual_trades=setup_info.get('annual_trades') if setup_info else None
             )
 
         else:
@@ -940,6 +982,55 @@ class StrategyEngine:
             # Don't fail the evaluation if ML fails
 
         return evaluation
+
+    def _get_setup_info(self, orb_name: str) -> Optional[Dict]:
+        """
+        Get setup information from validated_setups database.
+
+        Args:
+            orb_name: ORB time ("0900", "1000", "1100", "2300", "0030")
+
+        Returns:
+            Dictionary with tier, win_rate, avg_r, annual_trades, annual_expectancy
+            None if setup not found in database
+        """
+        try:
+            from setup_detector import SetupDetector
+
+            # Get config for this ORB
+            config = self.orb_configs.get(orb_name)
+            if not config:
+                return None
+
+            rr = config.get("rr")
+            sl_mode = config.get("sl_mode")
+
+            # Query database for this setup
+            detector = SetupDetector(instrument=self.instrument)
+            all_setups = detector.get_all_validated_setups(self.instrument)
+
+            # Find matching setup
+            for setup in all_setups:
+                if (setup["orb_time"] == orb_name and
+                    setup["rr"] == rr and
+                    setup["sl_mode"] == sl_mode):
+
+                    # Calculate annual expectancy
+                    annual_expectancy = setup["avg_r"] * setup["annual_trades"]
+
+                    return {
+                        "tier": setup["tier"],
+                        "win_rate": setup["win_rate"],
+                        "avg_r": setup["avg_r"],
+                        "annual_trades": setup["annual_trades"],
+                        "annual_expectancy": annual_expectancy
+                    }
+
+            return None
+
+        except Exception as e:
+            logger.error(f"Failed to get setup info for {orb_name}: {e}")
+            return None
 
     def _get_ml_features(self) -> Dict:
         """

@@ -713,19 +713,65 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
         </div>
         """, unsafe_allow_html=True)
 
-    # Status Card
+    # Status Card (ENHANCED with complete explanations)
     if latest_evaluation:
         st.markdown("### 🎯 Status")
 
         action = latest_evaluation.action.value
-        reasons = latest_evaluation.reasons[:3]
+        reasons = latest_evaluation.reasons[:4]  # Show 4 reasons now (expanded)
         next_action = latest_evaluation.next_instruction
 
-        reasons_html = "".join([f"<li>• {reason}</li>" for reason in reasons])
+        # Get new fields
+        setup_name = getattr(latest_evaluation, 'setup_name', None)
+        setup_tier = getattr(latest_evaluation, 'setup_tier', None)
+        orb_high = getattr(latest_evaluation, 'orb_high', None)
+        orb_low = getattr(latest_evaluation, 'orb_low', None)
+        direction = getattr(latest_evaluation, 'direction', None)
+        rr = getattr(latest_evaluation, 'rr', None)
+        win_rate = getattr(latest_evaluation, 'win_rate', None)
+        avg_r = getattr(latest_evaluation, 'avg_r', None)
+        annual_trades = getattr(latest_evaluation, 'annual_trades', None)
+        entry_price = getattr(latest_evaluation, 'entry_price', None)
+        stop_price = getattr(latest_evaluation, 'stop_price', None)
+        target_price = getattr(latest_evaluation, 'target_price', None)
+
+        # Setup header with tier badge
+        if setup_name and setup_tier:
+            tier_colors = {
+                "S+": "#ffd700",  # Gold
+                "S": "#c0c0c0",   # Silver
+                "A": "#cd7f32",   # Bronze
+                "B": "#9ca3af",   # Gray
+                "C": "#6b7280"    # Darker gray
+            }
+            tier_color = tier_colors.get(setup_tier, "#9ca3af")
+            setup_header = f'<div style="font-size: 16px; margin-bottom: 8px;"><strong>{setup_name}</strong> <span style="background: {tier_color}; color: #000; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 700;">{setup_tier}</span></div>'
+        else:
+            setup_header = ""
+
+        # ORB range display
+        if orb_high and orb_low:
+            orb_size = orb_high - orb_low
+            orb_range_html = f'<div style="font-size: 14px; color: #9ca3af; margin-bottom: 8px;">ORB: ${orb_low:.2f} - ${orb_high:.2f} ({orb_size:.2f} pts)</div>'
+        else:
+            orb_range_html = ""
+
+        # Direction indicator
+        if direction:
+            direction_color = "#10b981" if direction == "LONG" else "#ef4444"
+            direction_emoji = "🚀" if direction == "LONG" else "🔻"
+            direction_html = f'<div style="font-size: 14px; color: {direction_color}; font-weight: 600; margin-bottom: 8px;">{direction_emoji} {direction}</div>'
+        else:
+            direction_html = ""
+
+        reasons_html = "".join([f"<li style='font-size: 13px;'>• {reason}</li>" for reason in reasons])
 
         st.markdown(f"""
         <div class="mobile-status">
             <div class="mobile-status-header">{action}</div>
+            {setup_header}
+            {direction_html}
+            {orb_range_html}
             <ul class="mobile-status-reasons">
                 {reasons_html}
             </ul>
@@ -734,6 +780,81 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # Setup Statistics (if available)
+        if win_rate is not None and avg_r is not None and annual_trades is not None:
+            annual_expectancy = avg_r * annual_trades
+
+            st.markdown("### 📊 Setup Stats")
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Win Rate</div>
+                    <div class="mobile-metric-value" style="font-size: 24px;">{win_rate:.1f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Avg R</div>
+                    <div class="mobile-metric-value" style="font-size: 24px;">+{avg_r:.2f}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Frequency</div>
+                    <div class="mobile-metric-value" style="font-size: 24px;">{annual_trades}</div>
+                    <div class="mobile-metric-subtitle">trades/year</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Annual expectancy display
+            exp_color = "#10b981" if annual_expectancy > 0 else "#ef4444"
+            st.markdown(f"""
+            <div class="mobile-metric" style="margin-top: 12px;">
+                <div class="mobile-metric-label">Annual Expectancy</div>
+                <div class="mobile-metric-value" style="font-size: 28px; color: {exp_color};">+{annual_expectancy:.0f}R</div>
+                <div class="mobile-metric-subtitle">per year</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Trade Levels (if ENTER action)
+        if action == "ENTER" and entry_price and stop_price and target_price:
+            st.markdown("### 📍 Trade Levels")
+
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Entry</div>
+                    <div class="mobile-metric-value" style="font-size: 20px;">${entry_price:.2f}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Stop</div>
+                    <div class="mobile-metric-value" style="font-size: 20px; color: #ef4444;">${stop_price:.2f}</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            with col3:
+                risk_points = abs(entry_price - stop_price)
+                rr_display = f"{rr:.1f}R" if rr else ""
+                st.markdown(f"""
+                <div class="mobile-metric">
+                    <div class="mobile-metric-label">Target</div>
+                    <div class="mobile-metric-value" style="font-size: 20px; color: #10b981;">${target_price:.2f}</div>
+                    <div class="mobile-metric-subtitle">{rr_display}</div>
+                </div>
+                """, unsafe_allow_html=True)
 
         # ML Insights (if available) - only when we have evaluation
         from config import ML_ENABLED, ML_SHADOW_MODE
