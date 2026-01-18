@@ -530,7 +530,12 @@ class LiveDataLoader:
             if result and result[0] is not None:
                 return float(result[0])
         except Exception as e:
-            logger.warning(f"Could not get ATR from gold.db: {e}")
+            # In cloud mode, gold.db doesn't exist - this is expected
+            from cloud_mode import is_cloud_deployment
+            if not is_cloud_deployment():
+                logger.warning(f"Could not get ATR from gold.db: {e}")
+            else:
+                logger.debug(f"ATR not available from gold.db in cloud mode (expected): {e}")
 
         return None
 

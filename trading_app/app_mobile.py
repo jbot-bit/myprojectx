@@ -190,7 +190,7 @@ if not st.session_state.data_loader or not st.session_state.strategy_engine:
     </div>
     """, unsafe_allow_html=True)
 
-    if st.button("🚀 Start myprojectx", use_container_width=True, type="primary"):
+    if st.button("🚀 Start myprojectx", width='stretch', type="primary"):
         with st.spinner("Loading data..."):
             try:
                 # Initialize data loader
@@ -416,7 +416,7 @@ with st.expander("⚙️ Settings", expanded=False):
         st.info(f"Refreshing every {refresh_interval}s")
 
     # Refresh data button
-    if st.button("🔄 Refresh Data Now", use_container_width=True):
+    if st.button("🔄 Refresh Data Now", width='stretch'):
         with st.spinner("Refreshing..."):
             try:
                 st.session_state.data_loader.refresh()
@@ -426,7 +426,7 @@ with st.expander("⚙️ Settings", expanded=False):
                 st.error(f"Refresh error: {e}")
 
     # Reset button
-    if st.button("🔄 Reset App", use_container_width=True, type="secondary"):
+    if st.button("🔄 Reset App", width='stretch', type="secondary"):
         st.session_state.clear()
         st.success("App reset! Reloading...")
         st.rerun()

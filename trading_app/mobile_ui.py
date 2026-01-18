@@ -556,7 +556,7 @@ def render_card_navigation(current_card: int, total_cards: int, card_names: list
     col1, col2, col3 = st.columns([1, 6, 1])
 
     with col1:
-        if st.button("◄", key="nav_prev", disabled=(current_card == 0), use_container_width=True):
+        if st.button("◄", key="nav_prev", disabled=(current_card == 0), width='stretch'):
             st.session_state.mobile_current_card = current_card - 1
             st.rerun()
 
@@ -573,7 +573,7 @@ def render_card_navigation(current_card: int, total_cards: int, card_names: list
         st.markdown(f"<div style='text-align: center; color: #9ca3af; font-size: 14px; margin-top: 8px;'>{card_names[current_card]} ({current_card + 1}/{total_cards})</div>", unsafe_allow_html=True)
 
     with col3:
-        if st.button("►", key="nav_next", disabled=(current_card == total_cards - 1), use_container_width=True):
+        if st.button("►", key="nav_next", disabled=(current_card == total_cards - 1), width='stretch'):
             st.session_state.mobile_current_card = current_card + 1
             st.rerun()
 
@@ -1101,7 +1101,7 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
                     height=350  # Mobile height
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
         except Exception as e:
             st.error(f"Chart error: {e}")
@@ -1202,11 +1202,11 @@ def render_trade_entry_card(data_loader, strategy_engine):
     col1, col2 = st.columns(2)
 
     with col1:
-        if st.button("🚀 LONG", key="trade_long", use_container_width=True):
+        if st.button("🚀 LONG", key="trade_long", width='stretch'):
             st.session_state.trade_direction = "LONG"
 
     with col2:
-        if st.button("🔻 SHORT", key="trade_short", use_container_width=True):
+        if st.button("🔻 SHORT", key="trade_short", width='stretch'):
             st.session_state.trade_direction = "SHORT"
 
     # Get or initialize direction
@@ -1245,7 +1245,7 @@ def render_trade_entry_card(data_loader, strategy_engine):
         sl_mode = st.selectbox("Stop Loss Mode", ["FULL", "HALF"])
 
     # Calculate button
-    if st.button("📊 Calculate Trade", use_container_width=True, type="primary"):
+    if st.button("📊 Calculate Trade", width='stretch', type="primary"):
         if orb_high > orb_low:
             levels = calculate_trade_levels(orb_high, orb_low, direction, rr, sl_mode)
 
@@ -1292,7 +1292,7 @@ def render_trade_entry_card(data_loader, strategy_engine):
             """, unsafe_allow_html=True)
 
             # Copy levels button
-            if st.button("📋 Copy Levels", use_container_width=True):
+            if st.button("📋 Copy Levels", width='stretch'):
                 levels_text = f"Entry: ${levels['entry']:.2f} | Stop: ${levels['stop']:.2f} | Target: ${levels['target']:.2f}"
                 st.code(levels_text)
                 st.success("Copy the text above!")
@@ -1372,7 +1372,7 @@ def render_positions_card(risk_manager, data_loader):
             """, unsafe_allow_html=True)
 
             # Close button
-            if st.button(f"🚪 Close Position #{i+1}", key=f"close_pos_{i}", use_container_width=True, type="secondary"):
+            if st.button(f"🚪 Close Position #{i+1}", key=f"close_pos_{i}", width='stretch', type="secondary"):
                 st.warning("Position closed (simulated)")
 
     else:
@@ -1732,7 +1732,7 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader,
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        if st.button("📤 Send", type="primary", use_container_width=True):
+        if st.button("📤 Send", type="primary", width='stretch'):
             if user_input.strip():
                 with st.spinner("Thinking..."):
                     # Get current price
@@ -1762,7 +1762,7 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader,
                 st.rerun()
 
     with col2:
-        if st.button("🗑️ Clear", use_container_width=True):
+        if st.button("🗑️ Clear", width='stretch'):
             chat_history.clear()
             st.rerun()
 
@@ -1773,11 +1773,11 @@ def render_ai_chat_card(ai_assistant, chat_history, current_symbol, data_loader,
         col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("📊 Calculate Trade", key="quick_calc", use_container_width=True):
+            if st.button("📊 Calculate Trade", key="quick_calc", width='stretch'):
                 chat_history.append({"role": "user", "content": "How do I calculate my stop and target for an ORB trade?"})
                 st.rerun()
 
         with col2:
-            if st.button("❓ Why Good?", key="quick_why", use_container_width=True):
+            if st.button("❓ Why Good?", key="quick_why", width='stretch'):
                 chat_history.append({"role": "user", "content": "Why is the current setup a good trade?"})
                 st.rerun()

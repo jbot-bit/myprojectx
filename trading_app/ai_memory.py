@@ -48,7 +48,7 @@ class AIMemoryManager:
             conn = duckdb.connect(self.db_path)
             conn.execute("""
                 INSERT INTO ai_chat_history (session_id, role, content, context_data, instrument, tags)
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES ($1, $2, $3, $4, $5, $6)
             """, [session_id, role, content, json.dumps(context_data or {}), instrument, tags or []])
             conn.close()
         except Exception as e:
@@ -61,9 +61,9 @@ class AIMemoryManager:
             result = conn.execute("""
                 SELECT role, content, timestamp, context_data, tags
                 FROM ai_chat_history
-                WHERE session_id = ?
+                WHERE session_id = $1
                 ORDER BY timestamp DESC
-                LIMIT ?
+                LIMIT $2
             """, [session_id, limit]).fetchall()
             conn.close()
 
@@ -87,21 +87,25 @@ class AIMemoryManager:
         try:
             conn = duckdb.connect(self.db_path, read_only=True)
 
-            sql = """
-                SELECT session_id, role, content, timestamp, instrument, tags
-                FROM ai_chat_history
-                WHERE content LIKE ?
-            """
-            params = [f"%{query}%"]
-
+            # Use DuckDB parameter syntax ($1, $2, etc.)
             if instrument:
-                sql += " AND instrument = ?"
-                params.append(instrument)
+                sql = """
+                    SELECT session_id, role, content, timestamp, instrument, tags
+                    FROM ai_chat_history
+                    WHERE content LIKE $1
+                      AND instrument = $2
+                    ORDER BY timestamp DESC LIMIT $3
+                """
+                result = conn.execute(sql, [f"%{query}%", instrument, limit]).fetchall()
+            else:
+                sql = """
+                    SELECT session_id, role, content, timestamp, instrument, tags
+                    FROM ai_chat_history
+                    WHERE content LIKE $1
+                    ORDER BY timestamp DESC LIMIT $2
+                """
+                result = conn.execute(sql, [f"%{query}%", limit]).fetchall()
 
-            sql += " ORDER BY timestamp DESC LIMIT ?"
-            params.append(limit)
-
-            result = conn.execute(sql, params).fetchall()
             conn.close()
 
             return [
@@ -124,21 +128,27 @@ class AIMemoryManager:
         try:
             conn = duckdb.connect(self.db_path, read_only=True)
 
-            sql = """
-                SELECT role, content, timestamp, context_data
-                FROM ai_chat_history
-                WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL ? DAY
-                  AND list_has(tags, 'trade')
-            """
-            params = [days]
-
+            # Use DuckDB parameter syntax ($1, $2, etc.)
             if session_id:
-                sql += " AND session_id = ?"
-                params.append(session_id)
+                sql = """
+                    SELECT role, content, timestamp, context_data
+                    FROM ai_chat_history
+                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL $1 DAY
+                      AND list_has(tags, 'trade')
+                      AND session_id = $2
+                    ORDER BY timestamp DESC LIMIT 20
+                """
+                result = conn.execute(sql, [days, session_id]).fetchall()
+            else:
+                sql = """
+                    SELECT role, content, timestamp, context_data
+                    FROM ai_chat_history
+                    WHERE timestamp >= CURRENT_TIMESTAMP - INTERVAL $1 DAY
+                      AND list_has(tags, 'trade')
+                    ORDER BY timestamp DESC LIMIT 20
+                """
+                result = conn.execute(sql, [days]).fetchall()
 
-            sql += " ORDER BY timestamp DESC LIMIT 20"
-
-            result = conn.execute(sql, params).fetchall()
             conn.close()
 
             return [
@@ -158,7 +168,7 @@ class AIMemoryManager:
         """Clear all messages for a session"""
         try:
             conn = duckdb.connect(self.db_path)
-            conn.execute("DELETE FROM ai_chat_history WHERE session_id = ?", [session_id])
+            conn.execute("DELETE FROM ai_chat_history WHERE session_id = $1", [session_id])
             conn.close()
             logger.info(f"Cleared session: {session_id}")
         except Exception as e:
