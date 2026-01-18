@@ -467,22 +467,25 @@ class LiveDataLoader:
         """
         today = datetime.now(TZ_LOCAL).date()
 
-        # Map symbol to instrument name
+        # Map symbol to instrument name and features table
         if self.symbol == "NQ" or self.symbol == "MNQ":
             instrument = "NQ"
+            features_table = "daily_features_v2_nq"
         elif self.symbol == "MPL":
             instrument = "MPL"
+            features_table = "daily_features_v2_mpl"
         else:
             instrument = "MGC"
+            features_table = "daily_features_v2"
 
-        # Try from gold.db if available (unified daily_features_v2 table)
+        # Try from gold.db if available (separate tables per instrument)
         try:
             # Use absolute path to avoid working directory issues
             gold_db_path = os.getenv("GOLD_DB_PATH", str(Path(__file__).parent.parent / "gold.db"))
             gold_con = duckdb.connect(gold_db_path, read_only=True)
-            result = gold_con.execute("""
+            result = gold_con.execute(f"""
                 SELECT atr_20
-                FROM daily_features_v2
+                FROM {features_table}
                 WHERE date_local = ? AND instrument = ?
             """, [today, instrument]).fetchone()
 
@@ -492,9 +495,9 @@ class LiveDataLoader:
 
             # Try yesterday if today not available yet
             yesterday = today - timedelta(days=1)
-            result = gold_con.execute("""
+            result = gold_con.execute(f"""
                 SELECT atr_20
-                FROM daily_features_v2
+                FROM {features_table}
                 WHERE date_local = ? AND instrument = ?
             """, [yesterday, instrument]).fetchone()
 

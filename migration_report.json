@@ -1,0 +1,27 @@
+{
+  "started": "2026-01-18T02:01:37.690172",
+  "tables": {
+    "bars_1m": {
+      "row_count": 1397853,
+      "min_ts": "2024-01-02 09:00:00+10:00",
+      "max_ts": "2026-01-15 00:26:00+10:00",
+      "verified": true
+    },
+    "bars_5m": {
+      "row_count": 320534,
+      "min_ts": "2024-01-02 09:00:00+10:00",
+      "max_ts": "2026-01-15 00:25:00+10:00",
+      "verified": true
+    },
+    "daily_features_v2": {
+      "row_count": 1780,
+      "verified": true
+    },
+    "validated_setups": {
+      "row_count": 19,
+      "verified": true
+    }
+  },
+  "success": true,
+  "finished": "2026-01-18T02:02:10.700893"
+}
