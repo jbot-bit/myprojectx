@@ -67,11 +67,16 @@ class CSVChartAnalyzer:
                 return None
 
             # Perform analysis
+            orb_analysis = self._detect_orbs(df)
+
+            # Validate ORB states (raises ValueError if invalid)
+            self._validate_orb_states(orb_analysis)
+
             analysis = {
                 "success": True,
                 "data_summary": self._analyze_data_summary(df),
                 "current_state": self._analyze_current_state(df),
-                "orb_analysis": self._detect_orbs(df),
+                "orb_analysis": orb_analysis,
                 "indicators": self._calculate_indicators(df),
                 "market_structure": self._analyze_structure(df),
                 "session_context": self._determine_session(df),
@@ -113,11 +118,28 @@ class CSVChartAnalyzer:
 
     def _detect_orbs(self, df: pd.DataFrame) -> Dict:
         """
-        Detect Opening Range Breakouts in the data.
+        Detect Opening Range Breakouts with stateful, time-aware logic.
 
-        Looks for 5-minute windows at standard ORB times.
+        ORB States (one-way transitions only):
+        - PENDING: ORB time not reached yet
+        - FORMING: Inside 5-minute ORB window
+        - ACTIVE: ORB formed, waiting for breakout
+        - BROKEN_UP: First close above ORB (LOCKED)
+        - BROKEN_DOWN: First close below ORB (LOCKED)
+
+        Once BROKEN, state is IMMUTABLE - never reverts.
         """
         orb_results = {}
+
+        # Get latest timestamp in data
+        latest_time = df['time'].iloc[-1]
+
+        # Ensure latest_time is timezone-aware
+        if latest_time.tzinfo is None:
+            latest_time = latest_time.tz_localize('UTC')
+
+        # Convert to local time for ORB comparison
+        local_time = latest_time.astimezone(TZ_LOCAL)
 
         # Try to detect each ORB time
         for orb_info in ORB_TIMES:
@@ -125,48 +147,171 @@ class CSVChartAnalyzer:
             orb_hour = orb_info["hour"]
             orb_min = orb_info["min"]
 
+            # Create ORB window times (in local timezone)
+            orb_start_local = local_time.replace(hour=orb_hour, minute=orb_min, second=0, microsecond=0)
+            orb_end_local = orb_start_local + timedelta(minutes=5)
+
+            # Convert to UTC for data comparison
+            orb_start_utc = orb_start_local.astimezone(pytz.UTC)
+            orb_end_utc = orb_end_local.astimezone(pytz.UTC)
+
+            # STATE 1: PENDING (time not reached)
+            if latest_time < orb_start_utc:
+                orb_results[orb_name] = {
+                    "state": "PENDING",
+                    "detected": False,
+                    "note": f"ORB window starts at {orb_start_local.strftime('%H:%M')} (not reached yet)"
+                }
+                continue
+
+            # STATE 2: FORMING (inside ORB window)
+            if orb_start_utc <= latest_time < orb_end_utc:
+                orb_results[orb_name] = {
+                    "state": "FORMING",
+                    "detected": False,
+                    "note": f"ORB forming (completes at {orb_end_local.strftime('%H:%M')})"
+                }
+                continue
+
+            # STATE 3+: ORB window complete - evaluate break
             # Find bars in the ORB window (5 minutes)
-            orb_bars = df[
-                (df['time'].dt.hour == orb_hour) &
-                (df['time'].dt.minute >= orb_min) &
-                (df['time'].dt.minute < orb_min + 5)
+            # Convert times to local timezone for filtering
+            df_local = df.copy()
+            if df_local['time'].dt.tz is None:
+                df_local['time'] = pd.to_datetime(df_local['time']).dt.tz_localize('UTC')
+            df_local['time_local'] = df_local['time'].dt.tz_convert(TZ_LOCAL)
+
+            orb_bars = df_local[
+                (df_local['time_local'].dt.hour == orb_hour) &
+                (df_local['time_local'].dt.minute >= orb_min) &
+                (df_local['time_local'].dt.minute < orb_min + 5)
             ]
 
-            if not orb_bars.empty:
-                orb_high = orb_bars['high'].max()
-                orb_low = orb_bars['low'].min()
-                orb_size = orb_high - orb_low
-
-                # Get latest price to determine position
-                latest_price = df['close'].iloc[-1]
-
-                if latest_price > orb_high:
-                    position = "ABOVE"
-                    potential_direction = "LONG"
-                elif latest_price < orb_low:
-                    position = "BELOW"
-                    potential_direction = "SHORT"
-                else:
-                    position = "INSIDE"
-                    potential_direction = "WAIT"
-
+            if orb_bars.empty:
                 orb_results[orb_name] = {
-                    "detected": True,
-                    "high": orb_high,
-                    "low": orb_low,
-                    "size": orb_size,
-                    "midpoint": (orb_high + orb_low) / 2,
-                    "price_position": position,
-                    "potential_direction": potential_direction,
-                    "bars_count": len(orb_bars)
-                }
-            else:
-                orb_results[orb_name] = {
+                    "state": "NOT_DETECTED",
                     "detected": False,
                     "note": f"No bars found for {orb_name} ORB window"
                 }
+                continue
+
+            # Calculate ORB levels
+            orb_high = orb_bars['high'].max()
+            orb_low = orb_bars['low'].min()
+            orb_size = orb_high - orb_low
+
+            # Find FIRST close outside ORB after window closed
+            # This is the ONLY way to determine break - use first break, then LOCK
+            # Ensure proper timezone comparison
+            df_times_utc = df['time']
+            if df_times_utc.dt.tz is None:
+                df_times_utc = pd.to_datetime(df_times_utc).dt.tz_localize('UTC')
+
+            bars_after_orb = df[df_times_utc >= orb_end_utc]
+
+            break_time = None
+            break_price = None
+            state = "ACTIVE"  # Default: ORB formed but not broken
+            potential_direction = "WAIT"
+
+            # Get current price position for display (not for state decision)
+            current_price = df['close'].iloc[-1]
+            if current_price > orb_high:
+                current_position = "ABOVE"
+            elif current_price < orb_low:
+                current_position = "BELOW"
+            else:
+                current_position = "INSIDE"
+
+            # Search for FIRST break
+            if not bars_after_orb.empty:
+                for idx, row in bars_after_orb.iterrows():
+                    close = row['close']
+
+                    # Check for break (FIRST close outside range)
+                    if close > orb_high:
+                        state = "BROKEN_UP"
+                        potential_direction = "LONG"
+                        break_time = row['time']
+                        break_price = close
+                        break  # LOCK STATE - stop searching
+                    elif close < orb_low:
+                        state = "BROKEN_DOWN"
+                        potential_direction = "SHORT"
+                        break_time = row['time']
+                        break_price = close
+                        break  # LOCK STATE - stop searching
+
+            # Build result
+            result = {
+                "state": state,
+                "detected": True,
+                "high": orb_high,
+                "low": orb_low,
+                "size": orb_size,
+                "midpoint": (orb_high + orb_low) / 2,
+                "orb_window_end": orb_end_local,
+                "bars_count": len(orb_bars),
+                "current_price_position": current_position,  # For display only
+                "potential_direction": potential_direction
+            }
+
+            # Add break details if broken
+            if state in ["BROKEN_UP", "BROKEN_DOWN"]:
+                result["locked"] = True  # IMMUTABLE
+                result["break_time"] = break_time
+                result["break_price"] = break_price
+
+                # Legacy compatibility fields (deprecated but kept for existing code)
+                result["price_position"] = "ABOVE" if state == "BROKEN_UP" else "BELOW"
+            else:
+                result["locked"] = False
+
+                # Legacy compatibility - but mark as unreliable
+                result["price_position"] = current_position
+
+            orb_results[orb_name] = result
 
         return orb_results
+
+    def _validate_orb_states(self, orb_results: Dict) -> bool:
+        """
+        Validate that ORB states follow legal transitions.
+
+        Raises ValueError if:
+        - LOCKED state is not BROKEN_UP or BROKEN_DOWN
+        - BROKEN states missing break_time
+        - State violates one-way transition rules
+
+        Returns:
+            True if all states are valid
+        """
+        for orb_name, result in orb_results.items():
+            state = result.get("state")
+            locked = result.get("locked", False)
+
+            # Skip PENDING/FORMING/NOT_DETECTED states
+            if state in ["PENDING", "FORMING", "NOT_DETECTED"]:
+                continue
+
+            # Rule: LOCKED states must be BROKEN
+            if locked and state not in ["BROKEN_UP", "BROKEN_DOWN"]:
+                raise ValueError(
+                    f"{orb_name}: LOCKED state must be BROKEN_UP or BROKEN_DOWN, got {state}"
+                )
+
+            # Rule: BROKEN states must be locked
+            if state in ["BROKEN_UP", "BROKEN_DOWN"] and not locked:
+                raise ValueError(
+                    f"{orb_name}: BROKEN state must have locked=True"
+                )
+
+            # Rule: BROKEN states must have break_time
+            if state in ["BROKEN_UP", "BROKEN_DOWN"]:
+                if "break_time" not in result:
+                    raise ValueError(f"{orb_name}: BROKEN state missing break_time")
+
+        return True
 
     def _calculate_indicators(self, df: pd.DataFrame) -> Dict:
         """Calculate technical indicators."""
@@ -372,8 +517,21 @@ class CSVChartAnalyzer:
 
         # Check if ORB is detected for this setup
         orb_data = orb_analysis.get(orb_time, {})
-        if orb_data.get("detected"):
-            score += 20  # Big bonus for detected ORB
+        orb_state = orb_data.get("state")
+
+        # State-based scoring
+        if orb_state == "PENDING":
+            # ORB hasn't started yet - neutral
+            score += 0
+        elif orb_state == "FORMING":
+            # ORB is forming - wait for completion
+            score += 5
+        elif orb_state == "NOT_DETECTED":
+            # No ORB data - skip
+            score += 0
+        elif orb_state == "ACTIVE":
+            # ORB formed but not broken yet - good opportunity
+            score += 15
 
             # Check filter pass (if setup has filter)
             orb_filter = setup.get("orb_size_filter")
@@ -383,16 +541,29 @@ class CSVChartAnalyzer:
                 orb_size = orb_data.get("size", 0)
                 ratio = orb_size / atr_20
                 if ratio < orb_filter:
-                    score += 20  # PASSES filter
+                    score += 20  # PASSES filter - ready to trade
                 else:
-                    score -= 10  # FAILS filter (penalize)
+                    score -= 15  # FAILS filter - skip this setup
+        elif orb_state in ["BROKEN_UP", "BROKEN_DOWN"]:
+            # ORB already broken - HIGHEST priority (active trade)
+            score += 30
 
-            # Bonus for price position
-            position = orb_data.get("price_position")
-            if position in ["ABOVE", "BELOW"]:
-                score += 10  # Price already outside = setup active
-            elif position == "INSIDE":
-                score += 5  # Preparing for breakout
+            # Check filter pass (if setup has filter)
+            orb_filter = setup.get("orb_size_filter")
+            atr_20 = indicators.get("atr_20")
+
+            if orb_filter and atr_20:
+                orb_size = orb_data.get("size", 0)
+                ratio = orb_size / atr_20
+                if ratio < orb_filter:
+                    score += 25  # PASSES filter + BROKEN = best setup
+                else:
+                    # BROKEN but failed filter - still show but lower score
+                    score -= 20
+
+            # Bonus: ORB is locked, this is a confirmed signal
+            if orb_data.get("locked"):
+                score += 10  # Immutable state = high confidence
 
         return score
 
@@ -412,14 +583,21 @@ class CSVChartAnalyzer:
         if session:
             reasons.append(f"{session} session match")
 
-        # ORB detection
+        # ORB detection with state
         orb_time = setup.get("orb_time", "")
         orb_data = orb_analysis.get(orb_time, {})
+        orb_state = orb_data.get("state")
 
-        if orb_data.get("detected"):
+        # State-specific reasoning
+        if orb_state == "PENDING":
+            reasons.append(f"⏰ ORB PENDING (window at {orb_time})")
+        elif orb_state == "FORMING":
+            reasons.append(f"⏳ ORB FORMING (completing soon)")
+        elif orb_state == "NOT_DETECTED":
+            reasons.append("❌ ORB not in data range")
+        elif orb_state == "ACTIVE":
             orb_size = orb_data.get("size", 0)
-            position = orb_data.get("price_position", "")
-            reasons.append(f"ORB detected ({orb_size:.2f} pts, price {position})")
+            reasons.append(f"✅ ORB ACTIVE ({orb_size:.2f} pts, waiting for break)")
 
             # Filter check
             orb_filter = setup.get("orb_size_filter")
@@ -428,18 +606,42 @@ class CSVChartAnalyzer:
             if orb_filter and atr_20:
                 ratio = orb_size / atr_20
                 if ratio < orb_filter:
-                    reasons.append(f"Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
+                    reasons.append(f"✓ Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
                 else:
-                    reasons.append(f"Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
+                    reasons.append(f"✗ Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
             else:
-                reasons.append("No filter (trades all ORBs)")
+                reasons.append("No filter")
 
-            # Direction
-            direction = orb_data.get("potential_direction")
-            if direction != "WAIT":
-                reasons.append(f"Setup: {direction} breakout")
-        else:
-            reasons.append("ORB not in data range")
+            # Show current price position
+            current_pos = orb_data.get("current_price_position", "INSIDE")
+            reasons.append(f"Price currently {current_pos}")
+
+        elif orb_state in ["BROKEN_UP", "BROKEN_DOWN"]:
+            orb_size = orb_data.get("size", 0)
+            direction = "LONG" if orb_state == "BROKEN_UP" else "SHORT"
+            break_time = orb_data.get("break_time")
+            break_price = orb_data.get("break_price", 0)
+
+            if break_time:
+                break_time_str = break_time.strftime("%H:%M") if hasattr(break_time, 'strftime') else str(break_time)
+                reasons.append(f"🔒 {direction} BROKEN at {break_time_str} (${break_price:.2f})")
+            else:
+                reasons.append(f"🔒 {direction} BROKEN")
+
+            # Filter check
+            orb_filter = setup.get("orb_size_filter")
+            atr_20 = indicators.get("atr_20")
+
+            if orb_filter and atr_20:
+                ratio = orb_size / atr_20
+                if ratio < orb_filter:
+                    reasons.append(f"✓ Filter PASSED ({ratio:.3f} < {orb_filter:.3f})")
+                else:
+                    reasons.append(f"✗ Filter FAILED ({ratio:.3f} > {orb_filter:.3f})")
+            else:
+                reasons.append("No filter")
+
+            reasons.append(f"ORB size: {orb_size:.2f} pts")
 
         # Expectancy
         annual_exp = avg_r * annual_trades

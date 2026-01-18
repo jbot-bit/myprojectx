@@ -145,13 +145,10 @@
 
         // Auto-load if URL is saved and valid
         window.addEventListener('load', function() {
-            const savedUrl = localStorage.getItem('streamlit_url');
-            if (savedUrl) {
-                const urlInput = document.getElementById('server-url');
-                if (urlInput.value) {
-                    // Uncomment to auto-connect on launch:
-                    // loadApp();
-                }
+            const urlInput = document.getElementById('server-url');
+            // Auto-connect to Streamlit app on launch
+            if (urlInput.value) {
+                setTimeout(loadApp, 500); // Small delay for UX
             }
         });
     </script>

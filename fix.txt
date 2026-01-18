@@ -1,0 +1,46 @@
+The chart analyzer logic is invalid and must be fixed.
+
+Problem:
+- ORB signals change retroactively between chart timestamps
+- Future ORBs are being evaluated before they exist
+- ORBs revert from BROKEN to INSIDE, which breaks trading logic
+
+Required Fix (do NOT skip any):
+
+1. Introduce ORB STATE
+   Each ORB must have a persistent state:
+   - PENDING (time not reached)
+   - ACTIVE (ORB formed, no break yet)
+   - BROKEN_UP
+   - BROKEN_DOWN
+   - LOCKED (final, immutable)
+
+2. Enforce one-way transitions
+   - ORBs may only move forward in state
+   - BROKEN_UP / BROKEN_DOWN can NEVER revert to INSIDE
+   - State must be frozen once broken
+
+3. Time-gated evaluation
+   - Do NOT evaluate ORBs whose session time has not occurred
+   - 1800 / 2300 / 0030 must show as PENDING earlier in the day
+
+4. Separate DISPLAY from DECISION
+   - Current price may be shown visually
+   - But must NOT re-trigger ORB decisions once locked
+
+5. Analyzer must be STATEFUL
+   - Either persist ORB states in memory per analysis run
+   - Or compute once per ORB close time and cache results
+   - Never recompute historical ORBs from latest price
+
+6. UI enforcement
+   - Display must reflect locked ORB state
+   - If an ORB is locked LONG/SHORT, it must NEVER change on later charts
+
+7. Add validation
+   - Raise an error if logic attempts to revert ORB state
+   - Add a test case proving 9:10 → 10:10 → 11:10 cannot flip earlier ORBs
+
+Do not change strategy intent.
+Fix the temporal logic so analysis matches real trading constraints.
+Propose the state model and patch before implementing.

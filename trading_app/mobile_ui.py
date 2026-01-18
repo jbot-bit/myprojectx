@@ -7,6 +7,8 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from typing import Optional
+import duckdb
+from pathlib import Path
 from config import TZ_LOCAL
 from live_chart_builder import build_live_trading_chart, calculate_trade_levels
 
@@ -538,6 +540,67 @@ def inject_mobile_css():
     st.markdown(MOBILE_CSS, unsafe_allow_html=True)
 
 
+def get_setup_config(instrument: str, orb_time: str, db_path: str = None):
+    """
+    Query validated_setups to get RR and SL_MODE for a specific setup
+
+    Args:
+        instrument: e.g., 'MGC', 'NQ', 'MPL'
+        orb_time: e.g., '0900', '1000', '1100'
+        db_path: Path to gold.db (auto-detected if None)
+
+    Returns:
+        dict with 'rr', 'sl_mode', 'tier', 'win_rate', 'avg_r', or None if not found
+    """
+    try:
+        if db_path is None:
+            # Auto-detect gold.db
+            db_path = Path(__file__).parent.parent / "gold.db"
+            if not db_path.exists():
+                return None
+
+        conn = duckdb.connect(str(db_path), read_only=True)
+
+        # Query for HALF setup first (preferred), then FULL as fallback
+        query = """
+        SELECT rr, sl_mode, tier, win_rate, avg_r
+        FROM validated_setups
+        WHERE instrument = ? AND orb_time = ?
+        ORDER BY CASE WHEN sl_mode = 'HALF' THEN 1 ELSE 2 END
+        LIMIT 1
+        """
+
+        result = conn.execute(query, [instrument, orb_time]).fetchone()
+        conn.close()
+
+        if result:
+            return {
+                'rr': result[0],
+                'sl_mode': result[1],
+                'tier': result[2],
+                'win_rate': result[3],
+                'avg_r': result[4]
+            }
+        else:
+            # Fallback defaults if not in database
+            return {
+                'rr': 1.0,
+                'sl_mode': 'HALF',
+                'tier': 'C',
+                'win_rate': 50.0,
+                'avg_r': 0.5
+            }
+    except Exception as e:
+        # Fallback defaults on error
+        return {
+            'rr': 1.0,
+            'sl_mode': 'HALF',
+            'tier': 'C',
+            'win_rate': 50.0,
+            'avg_r': 0.5
+        }
+
+
 # ============================================================================
 # CARD NAVIGATION
 # ============================================================================
@@ -597,6 +660,8 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
     - Safety status
     - Setup scanner results
     """
+    # Ensure datetime is available in function scope
+    from datetime import datetime as dt
 
     st.markdown("## 🔴 LIVE Dashboard")
 
@@ -617,7 +682,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
         <div class="mobile-metric">
             <div class="mobile-metric-label">MGC Price</div>
             <div class="mobile-metric-value mobile-metric-value-large">${current_price:.2f}</div>
-            <div class="mobile-metric-subtitle">{datetime.now(TZ_LOCAL).strftime('%H:%M:%S')}</div>
+            <div class="mobile-metric-subtitle">{dt.now(TZ_LOCAL).strftime('%H:%M:%S')}</div>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -669,7 +734,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
     # Next ORB Countdown
     st.markdown("### ⏰ Next ORB")
 
-    now = datetime.now(TZ_LOCAL)
+    now = dt.now(TZ_LOCAL)
     orb_times = {
         "0900": (9, 0, 5),
         "1000": (10, 0, 5),
@@ -836,8 +901,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
                 minute = int(orb_time[2:]) if len(orb_time) == 4 else 0
 
                 # Format time display
-                from datetime import datetime
-                orb_start = datetime.now(TZ_LOCAL).replace(hour=hour, minute=minute, second=0, microsecond=0)
+                orb_start = dt.now(TZ_LOCAL).replace(hour=hour, minute=minute, second=0, microsecond=0)
                 orb_end = orb_start + timedelta(minutes=5)
                 time_display = f"{orb_start.strftime('%H:%M')} - {orb_end.strftime('%H:%M')}"
 
@@ -984,7 +1048,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
         # datetime and TZ_LOCAL already imported at module level
 
         # Determine current session based on hour (simple time-based)
-        now = datetime.now(TZ_LOCAL)
+        now = dt.now(TZ_LOCAL)
         hour = now.hour
         if 9 <= hour < 18:
             session = "ASIA"
@@ -1045,7 +1109,7 @@ def render_dashboard_card(data_loader, strategy_engine, latest_evaluation, curre
     try:
         if hasattr(st.session_state, 'setup_scanner'):
             scanner = st.session_state.setup_scanner
-            now = datetime.now(TZ_LOCAL)
+            now = dt.now(TZ_LOCAL)
             setups = scanner.scan_for_setups(
                 instrument=current_symbol,
                 current_date=now,
@@ -1104,7 +1168,6 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
                 if orb_name and latest_evaluation and hasattr(latest_evaluation, 'strategy_name') and latest_evaluation.strategy_name:
                     orb_hour = int(orb_name[:2])
                     orb_min = int(orb_name[2:]) if len(orb_name) == 4 else 0
-                    from datetime import datetime
                     now_local = datetime.now(TZ_LOCAL)
                     orb_start = now_local.replace(hour=orb_hour, minute=orb_min, second=0, microsecond=0)
                     orb_end = orb_start + timedelta(minutes=5)
@@ -1214,7 +1277,6 @@ def render_chart_card(data_loader, strategy_engine, latest_evaluation):
                 st.markdown("### 🎯 Directional Bias")
                 try:
                     if hasattr(st.session_state, 'directional_bias_detector'):
-                        from datetime import datetime
                         bias = st.session_state.directional_bias_detector.get_directional_bias(
                             instrument="MGC",
                             orb_time="1100",
@@ -1567,44 +1629,254 @@ def render_chart_analysis_card(instrument="MGC"):
             </div>
             """, unsafe_allow_html=True)
 
-            # ORB Analysis
-            st.markdown("### 🎯 Detected ORBs")
+            # ORB Analysis with States
+            st.markdown("### 🎯 ORB Status")
             orb_analysis = analysis.get("orb_analysis", {})
 
-            detected_orbs = {k: v for k, v in orb_analysis.items() if v.get("detected")}
+            if orb_analysis:
+                for orb_name, orb_data in orb_analysis.items():
+                    orb_state = orb_data.get("state", "UNKNOWN")
 
-            if detected_orbs:
-                for orb_name, orb_data in detected_orbs.items():
-                    orb_high = orb_data.get("high", 0)
-                    orb_low = orb_data.get("low", 0)
-                    orb_size = orb_data.get("size", 0)
-                    position = orb_data.get("price_position", "INSIDE")
-                    direction = orb_data.get("potential_direction", "WAIT")
+                    # State-based display
+                    if orb_state == "PENDING":
+                        # Future ORB - show as upcoming
+                        note = orb_data.get("note", "")
 
-                    # Color based on position
-                    if position == "ABOVE":
-                        position_color = "#10b981"
-                        position_emoji = "⬆️"
-                    elif position == "BELOW":
-                        position_color = "#ef4444"
-                        position_emoji = "⬇️"
-                    else:
-                        position_color = "#9ca3af"
-                        position_emoji = "↔️"
+                        # Get setup config for this ORB
+                        setup_config = get_setup_config(instrument, orb_name)
 
-                    st.markdown(f"""
-                    <div class="mobile-metric" style="border-left: 4px solid {position_color}; margin-bottom: 8px;">
-                        <div class="mobile-metric-label">{orb_name} ORB {position_emoji}</div>
-                        <div style="font-size: 14px; color: #9ca3af; margin-top: 4px;">
-                            Range: ${orb_low:.2f} - ${orb_high:.2f} ({orb_size:.2f} pts)
+                        upcoming_info = ""
+                        if setup_config:
+                            rr = setup_config['rr']
+                            sl_mode = setup_config['sl_mode']
+                            tier = setup_config['tier']
+
+                            upcoming_info = f"""
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 6px;">
+                                Setup ready: {tier} tier, {rr:.1f}R target, {sl_mode} stop
+                            </div>
+                            """
+
+                        st.markdown(f"""
+                        <div class="mobile-metric" style="border-left: 4px solid #6b7280; margin-bottom: 8px; opacity: 0.7;">
+                            <div style="font-size: 12px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">
+                                ⏰ UPCOMING
+                            </div>
+                            <div class="mobile-metric-label" style="margin-top: 4px;">{orb_name} ORB</div>
+                            <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">
+                                {note}
+                            </div>
+                            {upcoming_info}
                         </div>
-                        <div style="font-size: 14px; color: {position_color}; font-weight: 600; margin-top: 4px;">
-                            Price {position} → {direction}
+                        """, unsafe_allow_html=True)
+
+                    elif orb_state == "FORMING":
+                        # ORB forming now
+                        note = orb_data.get("note", "")
+
+                        # Get setup config
+                        setup_config = get_setup_config(instrument, orb_name)
+
+                        forming_info = ""
+                        if setup_config:
+                            rr = setup_config['rr']
+                            sl_mode = setup_config['sl_mode']
+                            tier = setup_config['tier']
+
+                            forming_info = f"""
+                            <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; background: rgba(0,0,0,0.3); padding: 6px; border-radius: 4px;">
+                                When formed: {tier} tier, {rr:.1f}R target, {sl_mode} stop
+                            </div>
+                            """
+
+                        st.markdown(f"""
+                        <div class="mobile-metric" style="border-left: 4px solid #f59e0b; margin-bottom: 8px;">
+                            <div style="font-size: 13px; font-weight: 800; color: #f59e0b; text-transform: uppercase;">
+                                ⏳ FORMING NOW
+                            </div>
+                            <div class="mobile-metric-label" style="margin-top: 4px;">{orb_name} ORB</div>
+                            <div style="font-size: 12px; color: #f9fafb; font-weight: 600; margin-top: 6px;">
+                                Don't enter yet. Wait for 5-minute window to complete.
+                            </div>
+                            <div style="font-size: 12px; color: #9ca3af; margin-top: 4px;">
+                                {note}
+                            </div>
+                            {forming_info}
                         </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                        """, unsafe_allow_html=True)
+
+                    elif orb_state == "ACTIVE":
+                        # ORB formed, waiting for break
+                        orb_high = orb_data.get("high", 0)
+                        orb_low = orb_data.get("low", 0)
+                        orb_size = orb_data.get("size", 0)
+                        current_pos = orb_data.get("current_price_position", "INSIDE")
+                        potential_direction = orb_data.get("potential_direction", "WAIT")
+
+                        # Determine clear action status
+                        if current_pos == "INSIDE":
+                            action_status = "⏳ WAIT FOR BREAKOUT"
+                            action_color = "#f59e0b"
+                            action_instruction = "Don't enter yet. Wait for 5m close outside ORB range."
+                        elif current_pos == "ABOVE":
+                            action_status = "🚀 READY TO TRADE LONG"
+                            action_color = "#10b981"
+                            action_instruction = "Price broke above ORB. Enter LONG if not already in."
+                        elif current_pos == "BELOW":
+                            action_status = "🔻 READY TO TRADE SHORT"
+                            action_color = "#ef4444"
+                            action_instruction = "Price broke below ORB. Enter SHORT if not already in."
+                        else:
+                            action_status = "⏸️ STANDBY"
+                            action_color = "#6b7280"
+                            action_instruction = "Monitor price action."
+
+                        # Get setup config from validated_setups
+                        setup_config = get_setup_config(instrument, orb_name)
+
+                        # Calculate trade levels
+                        trade_plan_html = ""
+                        if orb_high and orb_low and setup_config and potential_direction != "WAIT":
+                            rr = setup_config['rr']
+                            sl_mode = setup_config['sl_mode']
+                            tier = setup_config['tier']
+
+                            # Direction indicators
+                            if potential_direction == "LONG":
+                                direction_emoji = "🚀"
+                                direction_color = "#10b981"
+                            elif potential_direction == "SHORT":
+                                direction_emoji = "🔻"
+                                direction_color = "#ef4444"
+                            else:
+                                direction_emoji = "↔️"
+                                direction_color = "#6366f1"
+
+                            # Calculate levels for the recommended direction
+                            if potential_direction in ["LONG", "SHORT"]:
+                                levels = calculate_trade_levels(orb_high, orb_low, potential_direction, rr, sl_mode)
+
+                                # Stop logic description
+                                if sl_mode == "HALF":
+                                    stop_logic = "ORB Mid"
+                                else:
+                                    stop_logic = "ORB Low" if potential_direction == "LONG" else "ORB High"
+
+                                # Clear trade instructions
+                                if current_pos == "INSIDE":
+                                    when_to_enter = f"WAIT for 5m candle to close {'ABOVE' if potential_direction == 'LONG' else 'BELOW'} ${orb_high if potential_direction == 'LONG' else orb_low:.2f}"
+                                else:
+                                    when_to_enter = "ENTER NOW (breakout confirmed)"
+
+                                trade_plan_html = f"""
+                                <div style="background: rgba(99, 102, 241, 0.08); border-radius: 8px; padding: 10px; margin-top: 8px;">
+                                    <div style="font-size: 13px; font-weight: 800; color: {action_color}; margin-bottom: 8px; text-transform: uppercase;">
+                                        {action_status}
+                                    </div>
+                                    <div style="font-size: 12px; color: #f9fafb; margin-bottom: 8px; font-weight: 600;">
+                                        {action_instruction}
+                                    </div>
+                                    <div style="font-size: 11px; color: #9ca3af; line-height: 1.8; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+                                        <div style="color: #6366f1; font-weight: 700; margin-bottom: 4px;">📋 TRADE PLAN ({potential_direction}):</div>
+                                        <strong>When:</strong> {when_to_enter}<br>
+                                        <strong>Entry:</strong> ${levels['entry']:.2f}<br>
+                                        <strong>Stop:</strong> ${levels['stop']:.2f} ({stop_logic})<br>
+                                        <strong>Target:</strong> ${levels['target']:.2f} ({rr:.1f}R)<br>
+                                        <strong>Risk:</strong> {levels['risk_points']:.2f} pts → <strong>Reward:</strong> {levels['reward_points']:.2f} pts
+                                    </div>
+                                </div>
+                                """
+
+                        st.markdown(f"""
+                        <div class="mobile-metric" style="border-left: 4px solid {action_color}; margin-bottom: 8px;">
+                            <div class="mobile-metric-label">{orb_name} ORB</div>
+                            <div style="font-size: 14px; color: #9ca3af; margin-top: 4px;">
+                                Range: ${orb_low:.2f} - ${orb_high:.2f} ({orb_size:.2f} pts)
+                            </div>
+                            {trade_plan_html}
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    elif orb_state in ["BROKEN_UP", "BROKEN_DOWN"]:
+                        # ORB broken - LOCKED
+                        orb_high = orb_data.get("high", 0)
+                        orb_low = orb_data.get("low", 0)
+                        orb_size = orb_data.get("size", 0)
+                        direction = "LONG" if orb_state == "BROKEN_UP" else "SHORT"
+                        break_time = orb_data.get("break_time")
+                        break_price = orb_data.get("break_price", 0)
+                        locked = orb_data.get("locked", False)
+
+                        # Color based on direction
+                        if orb_state == "BROKEN_UP":
+                            state_color = "#10b981"
+                            state_emoji = "🚀"
+                            action_status = "✅ TRADE IN PROGRESS (LONG)"
+                        else:
+                            state_color = "#ef4444"
+                            state_emoji = "🔻"
+                            action_status = "✅ TRADE IN PROGRESS (SHORT)"
+
+                        lock_icon = "🔒" if locked else ""
+
+                        break_time_str = ""
+                        if break_time:
+                            if hasattr(break_time, 'strftime'):
+                                break_time_str = break_time.strftime('%H:%M')
+                            else:
+                                break_time_str = str(break_time)
+
+                        # Get setup config and calculate trade levels
+                        setup_config = get_setup_config(instrument, orb_name)
+                        trade_plan_html = ""
+
+                        if orb_high and orb_low and setup_config:
+                            rr = setup_config['rr']
+                            sl_mode = setup_config['sl_mode']
+                            tier = setup_config['tier']
+
+                            levels = calculate_trade_levels(orb_high, orb_low, direction, rr, sl_mode)
+
+                            # Stop logic description
+                            if sl_mode == "HALF":
+                                stop_logic = "ORB Mid"
+                            else:
+                                stop_logic = "ORB Low" if direction == "LONG" else "ORB High"
+
+                            trade_plan_html = f"""
+                            <div style="background: rgba({'16, 185, 129' if orb_state == 'BROKEN_UP' else '239, 68, 68'}, 0.08); border-radius: 8px; padding: 10px; margin-top: 8px;">
+                                <div style="font-size: 13px; font-weight: 800; color: {state_color}; margin-bottom: 8px; text-transform: uppercase;">
+                                    {action_status}
+                                </div>
+                                <div style="font-size: 12px; color: #f9fafb; margin-bottom: 8px; font-weight: 600;">
+                                    Breakout happened at {break_time_str}. If you entered, hold to target.
+                                </div>
+                                <div style="font-size: 11px; color: #9ca3af; line-height: 1.8; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+                                    <div style="color: {state_color}; font-weight: 700; margin-bottom: 4px;">📋 TRADE LEVELS:</div>
+                                    <strong>Entry:</strong> ${levels['entry']:.2f} (breakout price)<br>
+                                    <strong>Stop:</strong> ${levels['stop']:.2f} ({stop_logic})<br>
+                                    <strong>Target:</strong> ${levels['target']:.2f} ({rr:.1f}R)<br>
+                                    <strong>Risk:</strong> {levels['risk_points']:.2f} pts → <strong>Reward:</strong> {levels['reward_points']:.2f} pts
+                                </div>
+                            </div>
+                            """
+
+                        st.markdown(f"""
+                        <div class="mobile-metric" style="border-left: 4px solid {state_color}; margin-bottom: 8px; background: rgba({'16, 185, 129' if orb_state == 'BROKEN_UP' else '239, 68, 68'}, 0.05);">
+                            <div class="mobile-metric-label">{orb_name} ORB {state_emoji}</div>
+                            <div style="font-size: 14px; color: #9ca3af; margin-top: 4px;">
+                                Range: ${orb_low:.2f} - ${orb_high:.2f} ({orb_size:.2f} pts)
+                            </div>
+                            {trade_plan_html}
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    elif orb_state == "NOT_DETECTED":
+                        # No data for this ORB
+                        pass  # Skip display
+
             else:
-                st.caption("No ORBs detected in data range")
+                st.caption("No ORB data available")
 
             # Indicators
             indicators = analysis.get("indicators", {})
@@ -1680,7 +1952,12 @@ def render_chart_analysis_card(instrument="MGC"):
                 else:
                     analysis_points.append("↔️ Market is **ranging** - look for breakouts from ORB levels")
 
-            # ORB analysis
+            # ORB analysis - filter for detected ORBs only (exclude PENDING, NOT_DETECTED)
+            detected_orbs = {
+                name: data for name, data in orb_analysis.items()
+                if data.get("state") not in ["PENDING", "NOT_DETECTED"]
+            } if orb_analysis else {}
+
             detected_count = len(detected_orbs)
             if detected_count > 0:
                 above_count = sum(1 for orb in detected_orbs.values() if orb.get("price_position") == "ABOVE")
@@ -1761,9 +2038,46 @@ def render_chart_analysis_card(instrument="MGC"):
 
                     # Get ORB data from analysis
                     orb_data = orb_analysis.get(orb_time, {}) if orb_time else {}
+                    orb_state = orb_data.get("state", "UNKNOWN")
                     orb_high = orb_data.get("high")
                     orb_low = orb_data.get("low")
                     orb_direction = orb_data.get("potential_direction", "WAIT")
+                    current_pos = orb_data.get("current_price_position", "UNKNOWN")
+
+                    # Determine clear action status
+                    if orb_state == "PENDING":
+                        action_status = "⏰ UPCOMING"
+                        action_color = "#6b7280"
+                        action_instruction = "Not time yet. This ORB window hasn't opened."
+                    elif orb_state == "FORMING":
+                        action_status = "⏳ FORMING NOW"
+                        action_color = "#f59e0b"
+                        action_instruction = "ORB is building right now. Wait for 5-minute window to complete."
+                    elif orb_state == "ACTIVE":
+                        if current_pos == "INSIDE":
+                            action_status = "⏳ WAIT FOR BREAKOUT"
+                            action_color = "#f59e0b"
+                            action_instruction = "ORB formed. Price is inside range. Wait for breakout."
+                        elif current_pos == "ABOVE":
+                            action_status = "🚀 READY TO TRADE LONG"
+                            action_color = "#10b981"
+                            action_instruction = "Price broke above! Enter LONG if not already in."
+                        elif current_pos == "BELOW":
+                            action_status = "🔻 READY TO TRADE SHORT"
+                            action_color = "#ef4444"
+                            action_instruction = "Price broke below! Enter SHORT if not already in."
+                        else:
+                            action_status = "⏸️ STANDBY"
+                            action_color = "#6b7280"
+                            action_instruction = "Monitor price action."
+                    elif orb_state in ["BROKEN_UP", "BROKEN_DOWN"]:
+                        action_status = "✅ TRADE IN PROGRESS"
+                        action_color = "#10b981" if orb_state == "BROKEN_UP" else "#ef4444"
+                        action_instruction = "Breakout already happened. If you entered, hold to target."
+                    else:
+                        action_status = "⏸️ NO DATA"
+                        action_color = "#6b7280"
+                        action_instruction = "ORB data not available for this time."
 
                     # Calculate trade levels if ORB detected
                     trade_levels_html = ""
@@ -1775,7 +2089,7 @@ def render_chart_analysis_card(instrument="MGC"):
                         orb_mid = (orb_high + orb_low) / 2
                         if sl_mode == "HALF":
                             stop = orb_mid
-                            stop_logic = "ORB Midpoint"
+                            stop_logic = "ORB Mid"
                         else:
                             stop = orb_low if orb_direction == "LONG" else orb_high
                             stop_logic = "ORB Low" if orb_direction == "LONG" else "ORB High"
@@ -1792,35 +2106,36 @@ def render_chart_analysis_card(instrument="MGC"):
                         else:
                             time_str = "N/A"
 
-                        # Entry condition
-                        if orb_direction == "LONG":
-                            entry_cond = f"First 5m close ABOVE ${orb_high:.2f}"
+                        # When to enter
+                        if orb_state == "PENDING":
+                            when_to_enter = f"WAIT - Window opens at {time_str}"
+                        elif orb_state == "FORMING":
+                            when_to_enter = "WAIT - ORB forming (don't enter yet)"
+                        elif current_pos == "INSIDE":
+                            when_to_enter = f"WAIT for 5m close {'ABOVE' if orb_direction == 'LONG' else 'BELOW'} ${entry:.2f}"
+                        elif current_pos in ["ABOVE", "BELOW"]:
+                            when_to_enter = "ENTER NOW (breakout confirmed)"
+                        elif orb_state in ["BROKEN_UP", "BROKEN_DOWN"]:
+                            when_to_enter = "ALREADY HAPPENED (hold if in trade)"
                         else:
-                            entry_cond = f"First 5m close BELOW ${orb_low:.2f}"
+                            when_to_enter = "Monitor price action"
 
                         trade_levels_html = f"""
-                        <div style="background: rgba(16, 185, 129, 0.05); border-radius: 8px; padding: 12px; margin: 12px 0;">
-                            <div style="font-size: 12px; font-weight: 700; color: #10b981; margin-bottom: 8px;">📋 TRADE PLAN</div>
-                            <div style="font-size: 11px; color: #9ca3af; line-height: 1.6;">
-                                <strong>Time:</strong> {time_str} ({orb_time} ORB)<br>
-                                <strong>Entry:</strong> {entry_cond}<br>
-                                <strong>Direction:</strong> {'🚀 LONG' if orb_direction == 'LONG' else '🔻 SHORT'}<br>
+                        <div style="background: rgba(99, 102, 241, 0.08); border-radius: 8px; padding: 10px; margin-top: 8px;">
+                            <div style="font-size: 13px; font-weight: 800; color: {action_color}; margin-bottom: 8px; text-transform: uppercase;">
+                                {action_status}
+                            </div>
+                            <div style="font-size: 12px; color: #f9fafb; margin-bottom: 8px; font-weight: 600;">
+                                {action_instruction}
+                            </div>
+                            <div style="font-size: 11px; color: #9ca3af; line-height: 1.8; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 6px;">
+                                <div style="color: #6366f1; font-weight: 700; margin-bottom: 4px;">📋 TRADE PLAN ({'🚀 LONG' if orb_direction == 'LONG' else '🔻 SHORT'}):</div>
+                                <strong>Time:</strong> {time_str}<br>
+                                <strong>When:</strong> {when_to_enter}<br>
                                 <strong>Entry:</strong> ${entry:.2f}<br>
                                 <strong>Stop:</strong> ${stop:.2f} ({stop_logic})<br>
                                 <strong>Target:</strong> ${target:.2f} ({rr:.1f}R)<br>
                                 <strong>Risk:</strong> {risk:.2f} pts → <strong>Reward:</strong> {risk * rr:.2f} pts
-                            </div>
-                        </div>
-                        <div style="background: rgba(99, 102, 241, 0.05); border-radius: 8px; padding: 12px; margin: 12px 0;">
-                            <div style="font-size: 12px; font-weight: 700; color: #6366f1; margin-bottom: 8px;">✅ TO INCREASE PROBABILITY</div>
-                            <div style="font-size: 11px; color: #9ca3af; line-height: 1.6;">
-                                • Wait for ORB to form completely (full 5 minutes)<br>
-                                • Enter ONLY on first close outside ORB<br>
-                                • Confirm direction matches trend/momentum<br>
-                                • Check volume increases on breakout<br>
-                                • Watch for false breakouts (wicks returning into ORB)<br>
-                                • Consider wider stops in high volatility (ATR > 20)<br>
-                                • Don't chase - if you miss entry, wait for next setup
                             </div>
                         </div>
                         """
