@@ -181,7 +181,7 @@ JOURNAL_TABLE = "live_journal"
 # ============================================================================
 # UI SETTINGS
 # ============================================================================
-CHART_HEIGHT = 600
+CHART_HEIGHT = 400  # Reduced from 600 for better layout (Phase 3)
 CHART_LOOKBACK_BARS = 200
 UPDATE_INTERVAL_MS = 5000  # 5 seconds
 

@@ -21,6 +21,7 @@ from utils import calculate_position_size, format_price, log_to_journal
 from ai_memory import AIMemoryManager
 from ai_assistant import TradingAIAssistant
 from cloud_mode import is_cloud_deployment, show_cloud_setup_instructions
+from alert_system import AlertSystem, render_alert_settings, render_audio_player, render_desktop_notification
 from setup_scanner import SetupScanner, render_setup_scanner_tab
 from enhanced_charting import EnhancedChart, ORBOverlay, TradeMarker, ChartTimeframe, resample_bars
 from live_chart_builder import build_live_trading_chart, calculate_trade_levels
@@ -28,6 +29,7 @@ from data_quality_monitor import DataQualityMonitor, render_data_quality_panel
 from market_hours_monitor import MarketHoursMonitor, render_market_hours_indicator
 from risk_manager import RiskManager, RiskLimits, render_risk_dashboard
 from position_tracker import PositionTracker, render_position_panel, render_empty_position_panel
+from directional_bias import DirectionalBiasDetector, render_directional_bias_indicator
 from strategy_discovery import StrategyDiscovery, DiscoveryConfig, add_setup_to_production, generate_config_snippet
 from market_intelligence import MarketIntelligence
 from render_intelligence import render_intelligence_panel
@@ -63,36 +65,6 @@ st.set_page_config(
 
 # Inject professional CSS
 inject_professional_css()
-
-# Add responsive mobile CSS
-st.markdown("""
-<style>
-    /* Mobile responsiveness improvements */
-    @media (max-width: 768px) {
-        h1 { font-size: 32px !important; }
-        h2 { font-size: 24px !important; }
-        h3 { font-size: 20px !important; }
-
-        /* Stack metrics vertically on mobile */
-        .stMetric { margin-bottom: 16px; }
-
-        /* Ensure text is readable */
-        body { font-size: 16px; }
-
-        /* Touch-friendly spacing */
-        .stButton button {
-            min-height: 48px;
-            font-size: 16px;
-        }
-    }
-
-    /* Better spacing throughout */
-    .stMarkdown { line-height: 1.6; }
-
-    /* Ensure charts are responsive */
-    .js-plotly-plot { width: 100% !important; }
-</style>
-""", unsafe_allow_html=True)
 
 # ============================================================================
 # SESSION STATE INITIALIZATION
@@ -130,6 +102,8 @@ if "chat_history" not in st.session_state:
     except Exception as e:
         logger.warning(f"Could not load chat history: {e}")
         st.session_state.chat_history = []
+if "alert_system" not in st.session_state:
+    st.session_state.alert_system = AlertSystem()
 if "setup_scanner" not in st.session_state:
     # Use cloud-aware path
     from cloud_mode import get_database_path
@@ -162,6 +136,9 @@ if "risk_manager" not in st.session_state:
     st.session_state.risk_manager = RiskManager(DEFAULT_ACCOUNT_SIZE, limits)
 if "position_tracker" not in st.session_state:
     st.session_state.position_tracker = PositionTracker()
+if "directional_bias_detector" not in st.session_state:
+    # Use cloud-aware path (None = auto-detect)
+    st.session_state.directional_bias_detector = DirectionalBiasDetector(None)
 if "strategy_discovery" not in st.session_state:
     # Use cloud-aware path (None = auto-detect)
     st.session_state.strategy_discovery = StrategyDiscovery(None)
@@ -344,6 +321,9 @@ with st.sidebar:
     if auto_refresh:
         st.info(f"Refreshing every {DATA_REFRESH_SECONDS}s")
 
+    # Alert system integration
+    render_alert_settings()
+
     # Safety features
     st.divider()
     st.subheader("[SAFETY] System Status")
@@ -428,27 +408,19 @@ if st.session_state.auto_refresh_enabled:
     # Show subtle refresh indicator in corner
     st.caption(f"🔄 Updates: {count} | Last: {now.strftime('%H:%M:%S')}")
 
-# Professional header with session badge
+# Professional header
 symbol = st.session_state.current_symbol
-now_time = datetime.now(TZ_LOCAL).strftime("%H:%M:%S")
-now_hour = datetime.now(TZ_LOCAL).hour
-session_name = "ASIA" if 9 <= now_hour < 18 else "LONDON" if 18 <= now_hour < 23 else "NY"
+col1, col2, col3 = st.columns([2, 1, 1])
+with col1:
+    st.markdown(f"# 🔴 LIVE {symbol}")
+with col2:
+    now_time = datetime.now(TZ_LOCAL).strftime("%H:%M:%S")
+    st.markdown(render_pro_metric("Local Time", now_time), unsafe_allow_html=True)
+with col3:
+    session_name = "ASIA" if 9 <= datetime.now(TZ_LOCAL).hour < 18 else "LONDON" if 18 <= datetime.now(TZ_LOCAL).hour < 23 else "NY"
+    st.markdown(render_status_badge(session_name, "active"), unsafe_allow_html=True)
 
-# Session color coding for quick visual recognition
-session_colors = {"ASIA": "#4CAF50", "LONDON": "#2196F3", "NY": "#FF9800"}
-session_color = session_colors.get(session_name, "#9E9E9E")
-
-st.markdown(f"""
-<div style="text-align: center; padding: 24px 0; margin-bottom: 20px; border-bottom: 4px solid {session_color};">
-    <h1 style="margin: 0; font-size: 48px; font-weight: 700; color: #1a1a1a;">🔴 LIVE {symbol}</h1>
-    <div style="margin-top: 16px; display: flex; justify-content: center; align-items: center; gap: 20px;">
-        <span style="background: {session_color}; color: white; padding: 8px 20px; border-radius: 24px; font-weight: 600; font-size: 16px;">
-            {session_name} SESSION
-        </span>
-        <span style="color: #666; font-size: 18px; font-weight: 500;">{now_time}</span>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown("---")
 
 if not st.session_state.data_loader or not st.session_state.strategy_engine:
     if is_cloud_deployment():
@@ -496,8 +468,231 @@ if current_price > 0:
 st.divider()
 
 # ========================================================================
-# STRATEGY EVALUATION (Must run FIRST to get trading decision)
+# NEXT ORB COUNTDOWN & SETUP DISPLAY
 # ========================================================================
+now = datetime.now(TZ_LOCAL)
+
+# Define ORB times (24-hour format)
+orb_times = {
+        "0900": (9, 0, 5),   # 09:00-09:05
+        "1000": (10, 0, 5),  # 10:00-10:05
+        "1100": (11, 0, 5),  # 11:00-11:05
+        "1800": (18, 0, 5),  # 18:00-18:05
+        "2300": (23, 0, 5),  # 23:00-23:05
+        "0030": (0, 30, 35), # 00:30-00:35
+    }
+
+# Find next ORB
+next_orb_name = None
+next_orb_start = None
+next_orb_end = None
+min_delta = timedelta(days=1)
+
+for orb_name, (hour, minute, end_minute) in orb_times.items():
+    orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
+
+    # Handle midnight crossing (0030)
+    if hour == 0 and now.hour >= 12:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
+
+    # If we're past this ORB today, check tomorrow
+    if now > orb_end:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
+
+    delta = orb_start - now
+    if delta < min_delta and delta > timedelta(0):
+        min_delta = delta
+        next_orb_name = orb_name
+        next_orb_start = orb_start
+        next_orb_end = orb_end
+
+# Check if we're IN an ORB window right now
+in_orb_window = False
+current_orb_name = None
+current_orb_end = None
+
+for orb_name, (hour, minute, end_minute) in orb_times.items():
+    orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
+
+    # Handle midnight crossing
+    if hour == 0 and now.hour >= 12:
+        orb_start += timedelta(days=1)
+        orb_end += timedelta(days=1)
+
+    if orb_start <= now <= orb_end:
+        in_orb_window = True
+        current_orb_name = orb_name
+        current_orb_end = orb_end
+        break
+
+# Display countdown or active ORB
+if in_orb_window:
+    # ORB WINDOW IS ACTIVE RIGHT NOW
+    time_remaining = (current_orb_end - now).total_seconds()
+    minutes = int(time_remaining // 60)
+    seconds = int(time_remaining % 60)
+
+    # Get current ORB high/low from live data
+    orb_start_time = now.replace(hour=orb_times[current_orb_name][0], minute=orb_times[current_orb_name][1], second=0, microsecond=0)
+
+    if st.session_state.data_loader:
+        orb_bars = st.session_state.data_loader.get_bars_in_range(orb_start_time, now)
+        if not orb_bars.empty:
+            orb_high = orb_bars['high'].max()
+            orb_low = orb_bars['low'].min()
+            orb_size = orb_high - orb_low
+        else:
+            orb_high = orb_low = orb_size = None
+    else:
+        orb_high = orb_low = orb_size = None
+
+    # Get filter threshold
+    engine = st.session_state.strategy_engine
+    if engine:
+        filter_threshold = engine.orb_size_filters.get(current_orb_name)
+        atr = st.session_state.data_loader.get_today_atr() if st.session_state.data_loader else None
+    else:
+        filter_threshold = None
+        atr = None
+
+    if filter_threshold and atr and orb_size:
+        filter_passed = orb_size < (atr * filter_threshold)
+        filter_text = f"< {filter_threshold*100:.1f}% ATR (~{atr * filter_threshold:.1f}pts)"
+    else:
+        filter_passed = True
+        filter_text = "None"
+
+    # Active ORB window banner
+    st.markdown(render_intelligence_card(
+        f"🚨 {current_orb_name} ORB ACTIVE",
+        "Window forming now - Note high and low",
+        "critical"
+    ), unsafe_allow_html=True)
+
+    # Countdown timer
+    st.markdown(render_countdown_timer(
+        f"{minutes:02d}:{seconds:02d}",
+        "Until Window Closes"
+    ), unsafe_allow_html=True)
+
+    # ORB metrics in professional cards
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown(render_pro_metric(
+            "ORB HIGH",
+            f"${orb_high:.2f}" if orb_high else "$0.00",
+            "↑" if orb_high else None,
+            True
+        ), unsafe_allow_html=True)
+    with col2:
+        st.markdown(render_pro_metric(
+            "ORB LOW",
+            f"${orb_low:.2f}" if orb_low else "$0.00",
+            "↓" if orb_low else None,
+            False
+        ), unsafe_allow_html=True)
+    with col3:
+        st.markdown(render_pro_metric(
+            "ORB SIZE",
+            f"{orb_size:.2f}pts" if orb_size else "0.00pts"
+        ), unsafe_allow_html=True)
+
+    # Filter status
+    if filter_passed:
+        st.success(f"✅ **FILTER PASSED** - {filter_text}")
+    else:
+        st.error(f"❌ **FILTER FAILED** - {filter_text}")
+
+    st.info(f"⏳ **WAIT FOR BREAKOUT** - Enter on first 5-min close OUTSIDE range at {current_orb_end.strftime('%H:%M:%S')}")
+
+elif next_orb_name and next_orb_start:
+    # COUNTDOWN TO NEXT ORB
+    time_until = (next_orb_start - now).total_seconds()
+    hours = int(time_until // 3600)
+    minutes = int((time_until % 3600) // 60)
+    seconds = int(time_until % 60)
+
+    # Get config for this ORB (only if engine is initialized)
+    engine = st.session_state.strategy_engine
+    if engine:
+        orb_config = engine.orb_configs.get(next_orb_name, {})
+        filter_threshold = engine.orb_size_filters.get(next_orb_name)
+        atr = st.session_state.data_loader.get_today_atr()
+    else:
+        orb_config = {}
+        filter_threshold = None
+        atr = None
+
+    # Check if SKIP
+    is_skip = orb_config.get("tier") == "SKIP"
+
+    if is_skip:
+        st.markdown(render_intelligence_card(
+            f"⏭️ SKIP {next_orb_name}",
+            f"Setup skipped - Next active in {hours}h {minutes}m",
+            "low"
+        ), unsafe_allow_html=True)
+    else:
+        st.markdown(render_intelligence_card(
+            f"⏰ NEXT: {next_orb_name} ORB",
+            f"Window {next_orb_start.strftime('%H:%M')} - {next_orb_end.strftime('%H:%M')}",
+            "medium"
+        ), unsafe_allow_html=True)
+
+    st.markdown(render_countdown_timer(
+        f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+        "Until ORB Window"
+    ), unsafe_allow_html=True)
+
+    # Setup details (if not skipped)
+    if not is_skip:
+        st.markdown("### Setup Details")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.markdown(render_pro_metric(
+                "CONFIG",
+                f"{orb_config.get('rr', '?')}R",
+                orb_config.get("sl_mode", "?")
+            ), unsafe_allow_html=True)
+        with col2:
+            filter_text = f"< {filter_threshold*100:.0f}% ATR" if filter_threshold else "None"
+            filter_detail = f"~{atr * filter_threshold:.1f}pts" if (filter_threshold and atr) else "All sizes OK"
+            st.markdown(render_pro_metric(
+                "FILTER",
+                filter_text,
+                filter_detail
+            ), unsafe_allow_html=True)
+        with col3:
+            risk_pct = "0.50%" if orb_config.get("tier", "DAY") == "NIGHT" else "0.25%"
+            st.markdown(render_pro_metric(
+                "POSITION RISK",
+                risk_pct
+            ), unsafe_allow_html=True)
+
+        # Entry checklist
+        with st.expander("📋 Entry Checklist", expanded=False):
+            checklist_items = [
+                f"1️⃣ Watch {next_orb_start.strftime('%H:%M')}-{next_orb_end.strftime('%H:%M')} for range formation",
+                "2️⃣ Note ORB high and low prices",
+            ]
+            if filter_threshold and atr:
+                checklist_items.append(f"3️⃣ Check: ORB size < {atr * filter_threshold:.1f}pts")
+                checklist_items.append("4️⃣ Wait for 5-min close OUTSIDE range")
+                stop_desc = "midpoint" if orb_config.get("sl_mode") == "HALF" else "opposite side"
+                checklist_items.append(f"5️⃣ Enter with {orb_config.get('sl_mode', 'FULL')} stop at {stop_desc}")
+            else:
+                checklist_items.append("3️⃣ Wait for 5-min close OUTSIDE range")
+                stop_desc = "midpoint" if orb_config.get("sl_mode") == "HALF" else "opposite side"
+                checklist_items.append(f"4️⃣ Enter with {orb_config.get('sl_mode', 'FULL')} stop at {stop_desc}")
+
+            for item in checklist_items:
+                st.markdown(item)
+
+# Evaluate strategies
 try:
     evaluation = st.session_state.strategy_engine.evaluate_all()
     st.session_state.last_evaluation = evaluation
@@ -511,9 +706,8 @@ except Exception as e:
     st.stop()
 
 # ========================================================================
-# 🚦 DECISION PANEL - WHAT TO DO NOW (MOST IMPORTANT - ALWAYS VISIBLE)
+# DECISION PANEL (WHAT TO DO NOW) - ENHANCED VISUAL DESIGN
 # ========================================================================
-st.markdown('<div style="background: linear-gradient(to bottom, #ffffff, #f8f9fa); padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin: 20px 0;">', unsafe_allow_html=True)
 
 # Color-code by action
 action_styles = {
@@ -576,216 +770,75 @@ with col2:
     </div>
     """, unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)  # Close decision panel container
-
-st.divider()
-
 # ========================================================================
-# NEXT ORB COUNTDOWN & SETUP DISPLAY (Collapsible)
+# ML INSIGHTS PANEL (SHADOW MODE)
 # ========================================================================
-with st.expander("⏱️ Next ORB Countdown & Setup Details", expanded=False):
-    now = datetime.now(TZ_LOCAL)
 
-    # Define ORB times (24-hour format)
-    orb_times = {
-            "0900": (9, 0, 5),   # 09:00-09:05
-            "1000": (10, 0, 5),  # 10:00-10:05
-            "1100": (11, 0, 5),  # 11:00-11:05
-            "1800": (18, 0, 5),  # 18:00-18:05
-            "2300": (23, 0, 5),  # 23:00-23:05
-            "0030": (0, 30, 35), # 00:30-00:35
-        }
-
-    # Find next ORB
-    next_orb_name = None
-    next_orb_start = None
-    next_orb_end = None
-    min_delta = timedelta(days=1)
-
-    for orb_name, (hour, minute, end_minute) in orb_times.items():
-        orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
-
-        # Handle midnight crossing (0030)
-        if hour == 0 and now.hour >= 12:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
-
-        # If we're past this ORB today, check tomorrow
-        if now > orb_end:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
-
-        delta = orb_start - now
-        if delta < min_delta and delta > timedelta(0):
-            min_delta = delta
-            next_orb_name = orb_name
-            next_orb_start = orb_start
-            next_orb_end = orb_end
-
-    # Check if we're IN an ORB window right now
-    in_orb_window = False
-    current_orb_name = None
-    current_orb_end = None
-
-    for orb_name, (hour, minute, end_minute) in orb_times.items():
-        orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        orb_end = now.replace(hour=hour, minute=end_minute, second=0, microsecond=0)
-
-        # Handle midnight crossing
-        if hour == 0 and now.hour >= 12:
-            orb_start += timedelta(days=1)
-            orb_end += timedelta(days=1)
-
-        if orb_start <= now <= orb_end:
-            in_orb_window = True
-            current_orb_name = orb_name
-            current_orb_end = orb_end
+if ML_ENABLED and ML_SHADOW_MODE and evaluation.reasons:
+    # Check if first reason contains ML prediction
+    ml_reason = None
+    for reason in evaluation.reasons:
+        if reason.startswith("ML:"):
+            ml_reason = reason
             break
 
-    # Display countdown or active ORB
-    if in_orb_window:
-        # ORB WINDOW IS ACTIVE RIGHT NOW
-        time_remaining = (current_orb_end - now).total_seconds()
-        minutes = int(time_remaining // 60)
-        seconds = int(time_remaining % 60)
+    if ml_reason:
+        with st.expander("🤖 ML Insights (Shadow Mode)", expanded=False):
+            st.markdown("""
+            <div style="background: #f0f8ff; border-left: 4px solid #0066cc; padding: 12px; border-radius: 4px; margin-bottom: 12px;">
+                ⚠️ <strong>Shadow Mode:</strong> ML predictions are shown for monitoring but don't affect trading decisions yet.
+            </div>
+            """, unsafe_allow_html=True)
 
-        # Get current ORB high/low from live data
-        orb_start_time = now.replace(hour=orb_times[current_orb_name][0], minute=orb_times[current_orb_name][1], second=0, microsecond=0)
+            # Parse ML prediction from reason
+            # Format: "ML: UP (52% confidence)" or "ML: LOW confidence DOWN"
+            import re
+            match = re.search(r'ML: (?:(HIGH|MEDIUM|LOW) confidence )?(\w+)(?: \((\d+)% confidence\))?', ml_reason)
 
-        if st.session_state.data_loader:
-            orb_bars = st.session_state.data_loader.get_bars_in_range(orb_start_time, now)
-            if not orb_bars.empty:
-                orb_high = orb_bars['high'].max()
-                orb_low = orb_bars['low'].min()
-                orb_size = orb_high - orb_low
+            if match:
+                confidence_level = match.group(1) if match.group(1) else "UNKNOWN"
+                direction = match.group(2)
+                confidence_pct = match.group(3)
+
+                # Display ML prediction
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.metric("ML Direction", direction,
+                             help="Predicted break direction")
+
+                with col2:
+                    conf_value = f"{confidence_pct}%" if confidence_pct else confidence_level
+                    conf_color = "🟢" if confidence_level == "HIGH" else "🟡" if confidence_level == "MEDIUM" else "🔴"
+                    st.metric("Confidence", f"{conf_color} {conf_value}",
+                             help="Model confidence in prediction")
+
+                with col3:
+                    # Agreement with rules
+                    if direction in evaluation.strategy_name or \
+                       (direction == "UP" and "LONG" in str(evaluation.action)) or \
+                       (direction == "DOWN" and "SHORT" in str(evaluation.action)):
+                        agreement = "✅ Agrees"
+                        agreement_color = "green"
+                    else:
+                        agreement = "⚠️ Differs"
+                        agreement_color = "orange"
+
+                    st.markdown(f"<div style='padding: 8px; background: {agreement_color}22; border-radius: 4px; text-align: center;'>"
+                               f"<strong>{agreement}</strong><br><small>with rules</small></div>",
+                               unsafe_allow_html=True)
+
+                # Show model info
+                st.markdown("---")
+                st.caption("**Model:** Directional Classifier v2 (Balanced) | **Accuracy:** 50% | **Trained:** Jan 17, 2026")
+
+                # Performance disclaimer
+                st.info("📊 ML predictions are learning from 740+ days of historical data. Performance is being monitored before enabling for live trading.")
             else:
-                orb_high = orb_low = orb_size = None
-        else:
-            orb_high = orb_low = orb_size = None
+                # Fallback if parsing fails
+                st.info(ml_reason)
 
-        # Get filter threshold
-        engine = st.session_state.strategy_engine
-        if engine:
-            filter_threshold = engine.orb_size_filters.get(current_orb_name)
-            atr = st.session_state.data_loader.get_today_atr() if st.session_state.data_loader else None
-        else:
-            filter_threshold = None
-            atr = None
-
-        if filter_threshold and atr and orb_size:
-            filter_passed = orb_size < (atr * filter_threshold)
-            filter_text = f"< {filter_threshold*100:.1f}% ATR (~{atr * filter_threshold:.1f}pts)"
-        else:
-            filter_passed = True
-            filter_text = "None"
-
-        # Active ORB window banner
-        st.markdown(render_intelligence_card(
-            f"🚨 {current_orb_name} ORB ACTIVE",
-            "Window forming now - Note high and low",
-            "critical"
-        ), unsafe_allow_html=True)
-
-        # Countdown timer
-        st.markdown(render_countdown_timer(
-            f"{minutes:02d}:{seconds:02d}",
-            "Until Window Closes"
-        ), unsafe_allow_html=True)
-
-        # ORB metrics in professional cards
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown(render_pro_metric(
-                "ORB HIGH",
-                f"${orb_high:.2f}" if orb_high else "$0.00",
-                "↑" if orb_high else None,
-                True
-            ), unsafe_allow_html=True)
-        with col2:
-            st.markdown(render_pro_metric(
-                "ORB LOW",
-                f"${orb_low:.2f}" if orb_low else "$0.00",
-                "↓" if orb_low else None,
-                False
-            ), unsafe_allow_html=True)
-        with col3:
-            st.markdown(render_pro_metric(
-                "ORB SIZE",
-                f"{orb_size:.2f}pts" if orb_size else "0.00pts"
-            ), unsafe_allow_html=True)
-
-        # Filter status
-        if filter_passed:
-            st.success(f"✅ **FILTER PASSED** - {filter_text}")
-        else:
-            st.error(f"❌ **FILTER FAILED** - {filter_text}")
-
-        st.info(f"⏳ **WAIT FOR BREAKOUT** - Enter on first 5-min close OUTSIDE range at {current_orb_end.strftime('%H:%M:%S')}")
-
-    elif next_orb_name and next_orb_start:
-        # COUNTDOWN TO NEXT ORB
-        time_until = (next_orb_start - now).total_seconds()
-        hours = int(time_until // 3600)
-        minutes = int((time_until % 3600) // 60)
-        seconds = int(time_until % 60)
-
-        # Get config for this ORB (only if engine is initialized)
-        engine = st.session_state.strategy_engine
-        if engine:
-            orb_config = engine.orb_configs.get(next_orb_name, {})
-            filter_threshold = engine.orb_size_filters.get(next_orb_name)
-            atr = st.session_state.data_loader.get_today_atr()
-        else:
-            orb_config = {}
-            filter_threshold = None
-            atr = None
-
-        # Check if SKIP
-        is_skip = orb_config.get("tier") == "SKIP"
-
-        if is_skip:
-            st.markdown(render_intelligence_card(
-                f"⏭️ SKIP {next_orb_name}",
-                f"Setup skipped - Next active in {hours}h {minutes}m",
-                "low"
-            ), unsafe_allow_html=True)
-        else:
-            st.markdown(render_intelligence_card(
-                f"⏰ NEXT: {next_orb_name} ORB",
-                f"Window {next_orb_start.strftime('%H:%M')} - {next_orb_end.strftime('%H:%M')}",
-                "medium"
-            ), unsafe_allow_html=True)
-
-        st.markdown(render_countdown_timer(
-            f"{hours:02d}:{minutes:02d}:{seconds:02d}",
-            "Until ORB Window"
-        ), unsafe_allow_html=True)
-
-        # Setup details (if not skipped)
-        if not is_skip:
-            st.markdown("### Setup Details")
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.markdown(render_pro_metric(
-                    "CONFIG",
-                    f"{orb_config.get('rr', '?')}R",
-                    orb_config.get("sl_mode", "?")
-                ), unsafe_allow_html=True)
-            with col2:
-                filter_text = f"< {filter_threshold*100:.0f}% ATR" if filter_threshold else "None"
-                filter_detail = f"~{atr * filter_threshold:.1f}pts" if (filter_threshold and atr) else "All sizes OK"
-                st.markdown(render_pro_metric(
-                    "FILTER",
-                    filter_text,
-                    filter_detail
-                ), unsafe_allow_html=True)
-            with col3:
-                risk_pct = "0.50%" if orb_config.get("tier", "DAY") == "NIGHT" else "0.25%"
-                st.markdown(render_pro_metric(
-                    "POSITION RISK",
-                    risk_pct
-                ), unsafe_allow_html=True)
+st.divider()
 
 # ========================================================================
 # LIVE TRADING CHART with TRADE ZONES
@@ -892,60 +945,8 @@ try:
             height=CHART_HEIGHT
         )
 
-        # Display chart with ORB status card on the right
-        chart_col, orb_status_col = st.columns([3, 1])
-
-        with chart_col:
-            st.plotly_chart(fig, use_container_width=True)
-
-        with orb_status_col:
-            st.markdown("### 📊 ORB Status")
-
-            # Current ORB info
-            if orb_high and orb_low:
-                orb_size_pts = orb_high - orb_low
-                st.metric("ORB High", f"${orb_high:.2f}")
-                st.metric("ORB Low", f"${orb_low:.2f}")
-                st.metric("Size", f"{orb_size_pts:.2f} pts")
-
-                # Filter status
-                if filter_passed:
-                    st.success("✅ Filter PASSED")
-                else:
-                    st.error("❌ Filter FAILED")
-            else:
-                st.info("⏳ No active ORB")
-
-            st.divider()
-
-            # Next ORB countdown (compact)
-            now = datetime.now(TZ_LOCAL)
-            orb_times = {
-                "0900": (9, 0), "1000": (10, 0), "1100": (11, 0),
-                "1800": (18, 0), "2300": (23, 0), "0030": (0, 30)
-            }
-
-            next_orb_name = None
-            next_orb_start = None
-            min_delta = timedelta(days=1)
-
-            for orb_name, (hour, minute) in orb_times.items():
-                orb_start = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-                if hour == 0 and now.hour >= 12:
-                    orb_start += timedelta(days=1)
-                if orb_start > now:
-                    delta = orb_start - now
-                    if delta < min_delta:
-                        min_delta = delta
-                        next_orb_name = orb_name
-                        next_orb_start = orb_start
-
-            if next_orb_name:
-                time_until = (next_orb_start - now).total_seconds()
-                hours = int(time_until // 3600)
-                minutes = int((time_until % 3600) // 60)
-                st.markdown(f"**Next ORB**: {next_orb_name}")
-                st.markdown(f"⏱️ {hours}h {minutes}m")
+        # Display the chart
+        st.plotly_chart(fig, use_container_width=True)
 
         # Trade levels summary below chart
         if entry_price and direction:
@@ -1078,6 +1079,32 @@ if evaluation.action in [ActionType.ENTER, ActionType.MANAGE]:
         st.stop()
 
     st.divider()
+
+    # ====================================================================
+    # DIRECTIONAL BIAS (for 11:00 ORB only)
+    # ====================================================================
+    if orb_time == "1100" and evaluation.orb_high and evaluation.orb_low:
+        st.markdown("### 🎯 DIRECTIONAL BIAS PREDICTION")
+
+        try:
+            bias = st.session_state.directional_bias_detector.get_directional_bias(
+                instrument=symbol,
+                orb_time=orb_time,
+                orb_high=evaluation.orb_high,
+                orb_low=evaluation.orb_low,
+                current_date=datetime.now()
+            )
+
+            render_directional_bias_indicator(bias)
+
+            if bias.has_bias():
+                st.info(f"💡 **Trading Tip**: Consider focusing on {bias.preferred_direction} breakout based on current market structure.")
+
+        except Exception as e:
+            logger.error(f"Error calculating directional bias: {e}")
+            st.caption("⚠️ Directional bias unavailable (insufficient data)")
+
+        st.divider()
 
     # Prominent trade details card
     st.markdown("### 📍 TRADE DETAILS")
