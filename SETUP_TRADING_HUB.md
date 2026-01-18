@@ -457,7 +457,7 @@ backgroundColor = "#ffffff"
 - **Project Documentation:**
   - WORKFLOW_GUIDE.md - Complete workflow
   - TRADING_PLAYBOOK.md - Trading rules
-  - DATABASE_SCHEMA.md - Data structure
+  - DATABASE_SCHEMA_SOURCE_OF_TRUTH.md - Data structure
   - ZERO_LOOKAHEAD_RULES.md - Temporal rules
 
 ---
