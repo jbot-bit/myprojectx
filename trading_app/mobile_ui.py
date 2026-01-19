@@ -2140,8 +2140,9 @@ def render_chart_analysis_card(instrument="MGC"):
                         </div>
                         """
 
+                    # Render header and score
                     st.markdown(f"""
-                    <div class="mobile-metric" style="border-left: 4px solid {tier_color}; margin-bottom: 16px;">
+                    <div class="mobile-metric" style="border-left: 4px solid {tier_color}; margin-bottom: 8px; padding-bottom: 12px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div style="font-size: 18px; font-weight: 700;">#{i} {setup_name}</div>
                             <span style="background: {tier_color}; color: #000; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 700;">{tier}</span>
@@ -2152,20 +2153,27 @@ def render_chart_analysis_card(instrument="MGC"):
                         <div style="font-size: 13px; color: #9ca3af; line-height: 1.4; margin-bottom: 8px;">
                             {reasoning}
                         </div>
-                        {trade_levels_html}
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px;">
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Win Rate</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{win_rate:.1f}%</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Avg R</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">+{avg_r:.2f}</div>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Trades/Yr</div>
-                                <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{annual_trades}</div>
-                            </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # Render trade plan separately to avoid HTML escaping
+                    if trade_levels_html:
+                        st.markdown(trade_levels_html, unsafe_allow_html=True)
+
+                    # Render stats
+                    st.markdown(f"""
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 12px; margin-bottom: 16px;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Win Rate</div>
+                            <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{win_rate:.1f}%</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Avg R</div>
+                            <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">+{avg_r:.2f}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Trades/Yr</div>
+                            <div style="font-size: 16px; font-weight: 700; color: #f9fafb;">{annual_trades}</div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)

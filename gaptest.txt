@@ -1,0 +1,154 @@
+Here is a **clean, strict prompt** you can paste straight into Claude.
+
+Read it once.
+If approved, I can refine or add guardrails next.
+
+---
+
+### 📌 **CLAUDE ANALYSIS PROMPT — GAP CONTINUATION STRATEGY**
+
+**Objective**
+Identify whether **price gaps after a market closure** produce a **repeatable continuation edge** with:
+
+* defined entry
+* defined stop
+* defined TP
+* zero lookahead
+* statistically valid expectancy
+
+This is **research only**. No assumptions. No narrative bias.
+
+---
+
+### 1️⃣ Define “Gap” (do not assume)
+
+You must **explicitly test multiple gap definitions**, including but not limited to:
+
+* **Time-based gaps**
+
+  * 30m, 60m, 90m, overnight
+* **Session gaps**
+
+  * Asia open
+  * London open
+  * NY open
+  * Post-holiday reopen
+  * Weekend reopen
+* **Structural gaps**
+
+  * Open price outside previous N-minute range
+  * Open price beyond prior session high/low
+* **ATR-normalised gaps**
+
+  * Gap size as % of ATR(20)
+
+Each gap type must be **tagged separately**.
+
+---
+
+### 2️⃣ Entry logic (must be mechanical)
+
+For each gap type, test **multiple entry models**, e.g.:
+
+* Immediate market continuation
+* First pullback continuation
+* ORB-style confirmation
+* N-minute close acceptance beyond gap
+* Retest + continuation
+
+No discretionary logic.
+All entries must be rule-based.
+
+---
+
+### 3️⃣ Stop logic (must be fixed & known at entry)
+
+Test stops such as:
+
+* Gap midpoint
+* Gap origin
+* Opposite side of prior range
+* Fixed % of gap size
+* Fixed % of ATR
+
+Stop must be **known at entry** and **never adaptive**.
+
+---
+
+### 4️⃣ Take profit logic
+
+Test **multiple TP models**, including:
+
+* Fixed R multiples (0.5R, 1R, 1.5R, 2R, 3R)
+* Gap-measured move
+* Prior session range projection
+* Time-based exit (fail-safe)
+
+Track **MAE / MFE**.
+
+---
+
+### 5️⃣ Filters (explicitly optional)
+
+Test with and without filters such as:
+
+* Day of week
+* Holiday vs normal day
+* Prior session trend
+* Volatility regime (ATR quartiles)
+* Asia / London / NY session context
+
+Filters must be **additive**, not baked in.
+
+---
+
+### 6️⃣ Validation rules (MANDATORY)
+
+* Zero lookahead
+* Time-split IS / OOS
+* Robustness across thresholds
+* Reject if:
+
+  * Edge disappears with small parameter changes
+  * Sample size < minimum statistical relevance
+* No curve fitting
+
+---
+
+### 7️⃣ Output required (no fluff)
+
+Claude must output:
+
+* Exact ruleset(s) that survive validation
+* Entry / stop / TP clearly defined
+* Win rate, avg R, expectancy
+* Trade frequency
+* Regime where it **works**
+* Regime where it **fails**
+* Clear **GO / NO-GO** verdict
+
+If no edge exists, say so.
+
+---
+
+### 8️⃣ Explicit exclusions
+
+Do **NOT**:
+
+* Reuse ORB logic unless justified
+* Assume gaps must fill
+* Assume continuation without stats
+* Mix session labels not known at entry
+
+---
+
+### Final instruction
+
+> Treat this as **edge discovery**, not strategy storytelling.
+> If the data does not support it, reject it.
+
+---
+
+**Confirm:**
+
+* Do you want this scoped to **MGC only** first, or **all instruments**?
