@@ -1,0 +1,249 @@
+Yes — **but only if the prompt explicitly treats the DB + edges + research + audits as “must-include assets”** and uses a **manifest-driven copy** (not “best guess”). Your current prompt was good, but it didn’t *force* inclusion of the full research/edge pipeline as a first-class requirement.
+
+Here’s the upgraded Claude prompt that **guarantees**:
+
+* **DB included** (gold.db + trades.db + any app DB)
+* **Validated edges included** (validated_setups + strategy files)
+* **Research/exports included** (exports/, outputs/, reports you actually use)
+* **Audit/validation included** (audit system + tests)
+* **No duplicates / no old versions**
+* **One canonical source of truth**
+* **Future-proof structure**
+
+It aligns with your documented project layout + audit system expectations.    
+
+---
+
+## Claude Prompt (paste as-is)
+
+```text
+You are working on an existing trading system repo (myprojectx) that is disorganized (>5GB) with duplicates/old versions.
+A clean target directory exists:
+
+TARGET (empty or new):
+OneDrive/myprojectx2/
+
+GOAL:
+Create a SINGLE source of truth project in myprojectx2 that:
+1) Runs the MOBILE Streamlit app
+2) Preserves ALL required databases and validated edges
+3) Preserves the research workflow (edge discovery, exports, audit reports)
+4) Eliminates duplicates/old versions/archives from the active project
+5) Prevents future mess via enforceable structure + rules
+
+THIS IS COPY/MIGRATE ONLY.
+Do NOT delete or modify the original repo.
+No feature changes. No strategy changes. No logic changes unless required to fix broken imports/paths AFTER migration.
+
+────────────────────────────────────────────
+ABSOLUTE MUST-INCLUDE ASSETS (NON-NEGOTIABLE)
+────────────────────────────────────────────
+You MUST include (if present anywhere in the mess) the following categories:
+
+A) MOBILE APP BOOT PATH
+- streamlit_app.py (if used)
+- trading_app/app_mobile.py (or whatever mobile entry is)
+- any Streamlit config (.streamlit/config.toml)
+
+B) CORE APP PACKAGE
+- trading_app/ (only the canonical version)
+- requirements.txt / pyproject (whichever is used)
+
+C) DATABASES (CRITICAL)
+Include ALL DBs used by the system:
+- gold.db (DuckDB main market DB)
+- trades.db (journal DB) if present
+- trading_app/trading_app.db (if that exists and is used)
+Also include any schema source-of-truth docs / migrations required to rebuild.
+
+D) VALIDATED EDGES + STRATEGY SOURCE OF TRUTH
+Include everything required to reproduce “validated_setups” and trade logic:
+- validated_strategies.py
+- execution_engine.py (canonical)
+- populate_validated_setups.py
+- test_app_sync.py
+- audit_master.py + audits/* (audit framework)
+- the STEP*.txt documents if audits depend on them
+
+E) RESEARCH + EXPORT PIPELINE (KEEP IT USABLE)
+Include the folders/files that are part of ongoing edge discovery:
+- exports/
+- outputs/ (if used)
+- NQ/ (if used)
+- any scripts that produce research outputs that you actively rely on (NOT archives)
+
+F) DOCUMENTATION THAT DEFINES CANONICAL TRUTH
+Include key docs that define what’s correct:
+- README.md
+- PROJECT_STRUCTURE.md
+- DATABASE_SCHEMA_SOURCE_OF_TRUTH.md
+- AUDIT_STATUS_JAN17.md (or latest)
+- TRADING_PLAYBOOK.md / UNICORN_SETUPS_CORRECTED.md (if referenced)
+
+────────────────────────────────────────────
+RULES TO PREVENT SCREWUPS
+────────────────────────────────────────────
+1) MANIFEST-FIRST: Build a manifest of what will be copied before copying anything.
+2) CANONICAL-ONLY: If duplicates exist, choose ONE canonical copy and explicitly reject others.
+3) NO ARCHIVE IMPORT: NEVER import from _archive/ or similarly named folders unless the manifest proves it is required for runtime or research workflow.
+4) NO SILENT DECISIONS: Any ambiguity -> output the competing candidates and pick one using clear rules.
+5) PATH-SAFE: After copy, update ONLY import paths / relative file references needed to run in new structure. Do not change business logic.
+
+────────────────────────────────────────────
+STEP 1 — INVENTORY (READ ONLY)
+────────────────────────────────────────────
+Recursively scan the current repo and produce:
+- file list with size + modified date
+- detect duplicates by:
+  - identical filenames in multiple locations
+  - identical content hash (sha256)
+- identify “likely canonical” by:
+  - referenced by imports
+  - referenced by Streamlit entry
+  - referenced by docs (README/PROJECT_STRUCTURE)
+  - newest is NOT always right; prefer referenced + audited
+
+Output:
+1) mobile boot chain (what file launches what)
+2) dependency graph (imports) for the mobile app
+3) data dependencies (which DB files are opened and from where)
+4) research workflow dependencies (what scripts read/write exports)
+
+DO NOT COPY YET.
+
+────────────────────────────────────────────
+STEP 2 — CANONICAL SELECTION (NO COPY YET)
+────────────────────────────────────────────
+For any duplicate/competing versions:
+- list candidates
+- show:
+  - path
+  - modified date
+  - size
+  - references (imported by what)
+  - whether it matches docs/audit expectations
+Pick ONE canonical.
+Mark the rest as EXCLUDED and WHY.
+
+If you cannot safely choose, mark “AMBIGUOUS” and STOP for user decision.
+
+────────────────────────────────────────────
+STEP 3 — DESIGN NEW STRUCTURE (TARGET LAYOUT)
+────────────────────────────────────────────
+Create this structure in myprojectx2:
+
+myprojectx2/
+  /app                (streamlit entry + launch wrappers)
+  /trading_app         (the package)
+  /data
+     /db              (gold.db, trades.db, etc)
+     /exports         (exports/)
+     /outputs         (outputs/, NQ/ if applicable)
+  /research            (research scripts used for edge discovery)
+  /audits              (audit_master.py, audits/*, STEP*.txt, reports templates)
+  /docs                (canonical docs)
+  requirements.txt
+  README_MIGRATION.md  (new)
+
+No duplicates. One version only.
+
+────────────────────────────────────────────
+STEP 4 — COPY PLAN (DRY RUN)
+────────────────────────────────────────────
+Generate a copy plan table:
+- source path -> destination path
+- reason included
+- which component depends on it (runtime / db / audits / research)
+
+DO NOT COPY YET.
+
+────────────────────────────────────────────
+STEP 5 — EXECUTE COPY (ONLY AFTER PLAN IS PRINTED)
+────────────────────────────────────────────
+After the plan is printed (and only then), execute the copy.
+
+Preserve:
+- timestamps where possible
+- file permissions where applicable
+
+No deletions in original repo.
+
+────────────────────────────────────────────
+STEP 6 — FIX REFERENCES (MINIMAL)
+────────────────────────────────────────────
+Only if needed:
+- update hardcoded paths to DB locations
+- update Streamlit “main file path” references
+- ensure relative paths work from myprojectx2 root
+
+NO LOGIC CHANGES.
+
+────────────────────────────────────────────
+STEP 7 — VALIDATE COMPLETENESS
+────────────────────────────────────────────
+Run these checks from myprojectx2:
+
+- import check: can the mobile entry import trading_app successfully
+- DB open check: can it open gold.db
+- audit check: python audit_master.py (or quick)
+- sync check: python test_app_sync.py
+
+If any fail, report exact failure and propose minimal fix.
+
+────────────────────────────────────────────
+STEP 8 — PREVENT FUTURE MESS (ENFORCEMENT)
+────────────────────────────────────────────
+Create README_MIGRATION.md that includes:
+- folder rules (where new files go)
+- “NO DUPLICATES” rule
+- experiment policy (experiments MUST go in /research/experiments and never mixed into /trading_app)
+- archive policy (how to archive without breaking canonical)
+- single source of truth list (the few canonical docs + code files)
+
+FINAL OUTPUT REQUIRED:
+1) inventory summary
+2) canonical selection decisions
+3) copy plan
+4) executed migration summary
+5) validation results
+6) enforcement rules
+
+If at any point you are uncertain whether something is required, INCLUDE it but tag it as “REVIEW” in the report (do not exclude silently).
+```
+
+---
+
+### Quick check-in
+
+Do you want the new folder to include **everything needed to keep doing edge research offline** (scripts + outputs), or do you want research kept **minimal** and archived separately?
+
+
+
+────────────────────────────────────────────
+SYNC / TRUTH HIERARCHY (CRITICAL)
+────────────────────────────────────────────
+Assume the repo is NOT in sync. Some docs/code/db may conflict.
+
+You MUST build the migration using this truth order:
+
+1) What the MOBILE APP actually imports/runs (entry chain + imports)  ← runtime truth
+2) What the AUDIT SYSTEM validates and passes (audit_master.py + audits/*)  ← correctness truth
+3) What test_app_sync.py verifies (config ↔ validated_setups consistency)  ← consistency truth
+4) What the DATABASE contains (gold.db schema + validated_setups content)  ← data truth
+5) Documentation (README / PROJECT_STRUCTURE / playbooks)  ← informative only
+
+If a document contradicts runtime/audit/db, the document is NOT canonical.
+DO NOT trust “latest modified date” as truth.
+
+CONFLICT HANDLING:
+- Detect conflicts explicitly (list them)
+- Prefer runtime + audit + db over docs
+- Do NOT “fix” logic during migration
+- If something is broken:
+  - copy the canonical runtime/audit/db version
+  - mark the conflicting items as EXCLUDED or REVIEW
+  - write a “SYNC_GAPS.md” report in myprojectx2 listing every mismatch
+
+ABSOLUTE RULE:
+Migration must preserve what actually runs + what passes audits,
+even if docs are outdated.
