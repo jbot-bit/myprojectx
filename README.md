@@ -6,6 +6,83 @@
 
 ---
 
+## 🤖 AI Handover Context (Updated: 2026-01-19)
+
+**System Status:** ✅ Fully audited, synchronized, and production-ready
+
+### Recent Session Changes (Jan 19, 2026)
+
+**1. Mobile UI Fixes**
+- Fixed `datetime` scoping issue in `trading_app/mobile_ui.py`
+- Fixed HTML rendering in strategy recommendations (separated into multiple st.markdown() calls)
+- Added clear action status for all ORBs: ⏰ UPCOMING, ⏳ FORMING NOW, ⏳ WAIT FOR BREAKOUT, 🚀 READY TO TRADE LONG, 🔻 READY TO TRADE SHORT, ✅ TRADE IN PROGRESS
+- All ORBs now show complete trade details: Entry, Stop (with logic), Target (with RR), Risk/Reward in points
+
+**2. Gap Research Completed & Archived**
+- Analyzed 526 gaps (2024-2026) for continuation vs fill behavior
+- **KEY FINDING:** 94.6% of gaps eventually fill (return to prev_close), but many run away FIRST before filling
+- **Gap Fade Strategy:** Trade ONLY gaps <1.0 ticks immediately → 74% win rate (228/308 trades)
+- **Gap Continuation Strategy:** Also viable → +0.52R expectancy, 25.3% win rate with 5R targets
+- **CRITICAL:** "Eventual fill" ≠ "immediate fill" - gaps can run 20-400+ ticks away before filling
+- All research consolidated to `GAP_RESEARCH_COMPLETE.md`, experiments archived to `_archive/gap_research_jan2026/`
+
+**3. Files Added/Modified**
+- **Modified:** `trading_app/mobile_ui.py` (HTML rendering fix + action status clarity)
+- **Added:** `GAP_RESEARCH_COMPLETE.md` (consolidated gap research guide)
+- **Archived:** 22 gap research files → `_archive/gap_research_jan2026/`
+
+### Critical Files & Their Purpose
+
+**Data Pipeline:**
+- `gold.db` - Main DuckDB database (bars_1m, bars_5m, daily_features, validated_setups)
+- `backfill_databento_continuous.py` - Primary data source (Databento GLBX.MDP3)
+- `build_daily_features_v2.py` - Zero-lookahead feature builder (PRODUCTION)
+
+**Trading Apps:**
+- `trading_app/app_mobile.py` - Mobile Streamlit app (Streamlit Cloud deployment)
+- `streamlit_app.py` - Entry point for Streamlit Cloud
+- `trading_app/config.py` - MUST stay synchronized with validated_setups table
+
+**Validation:**
+- `test_app_sync.py` - **RUN AFTER ANY validated_setups OR config.py CHANGES**
+- `audit_master.py` - 38-test audit system (100% pass rate as of Jan 17)
+
+**Strategy Source of Truth:**
+- `validated_setups` table in gold.db (19 setups: 8 MGC, 5 NQ, 6 MPL)
+- `trading_app/config.py` - Python representation (must match database)
+- `populate_validated_setups.py` - Rebuild validated_setups from scratch
+
+### Synchronization Status
+
+✅ **Database ↔ Config:** Synchronized (test_app_sync.py passes)
+✅ **Audit System:** 38/38 tests passing
+✅ **ORB Windows:** All extended to 09:00 next day (scan window bug fixed Jan 16)
+✅ **Mobile App:** Deployed to Streamlit Cloud, clear action statuses working
+
+### Known Issues & Warnings
+
+⚠️ **Gap Analysis Caveat:** 94.6% fill rate measures "eventual fill within 24 hours", NOT "immediate fill before stop-out". For trading, only <1.0 tick gaps have 74% immediate fill rate.
+
+⚠️ **Never Update validated_setups Without Updating config.py:** This will cause apps to use wrong RR/filters. ALWAYS run `test_app_sync.py` after changes.
+
+⚠️ **Session Tracking:** System tracks Asia/London/NY sessions with deterministic type codes (sweep/expansion/consolidation) in daily_features_v2. No advanced session tracking beyond this currently exists.
+
+### Project Structure Compliance
+
+- Root directory: Production code only (29 Python files, clean)
+- `_archive/`: All experiments, old versions, research
+- Gap research: Properly archived (Jan 19)
+- No duplicates, one canonical source per file
+
+### Next Session Priorities
+
+1. Check Streamlit Cloud deployment status (datetime fix + HTML rendering fix)
+2. Review GAP_RESEARCH_COMPLETE.md if gap trading interests you
+3. Run `python test_app_sync.py` to verify sync still passes
+4. If adding new strategies, update validated_setups + config.py + run test
+
+---
+
 ## Quick Start
 
 ### 1. Daily Morning Routine
